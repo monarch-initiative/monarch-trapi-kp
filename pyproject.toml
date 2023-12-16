@@ -1,0 +1,90 @@
+[tool.poetry]
+name = "MonarchTranslatorARA"
+version = "0.0.0"
+description = "TRAPI ARA wrapper for the Monarch Initiative Knowledge Graph & System"
+authors = [
+    "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
+    "Kevin Schaper <kevin@tislab.org>"
+]
+maintainers = ["Richard Bruskiewich <richard.bruskiewich@delphinai.com>"]
+license = "BSD 3-Clause"
+readme = "README.md"
+
+homepage = "https://monarchinitiative.org/"
+repository = "https://github.com/monarch-initiative/monarch-translator-ara"
+documentation = "https://github.com/monarch-initiative/monarch-translator-ara/README.md"
+keywords = [
+    "LBNL",
+    "NCATS",
+    "Monarch Initiative",
+    "Biomedical Data Translator",
+    "Translator",
+    "ReasonerAPI",
+    "TRAPI",
+    "Biolink Model"
+]
+classifiers = [
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3.9"
+]
+
+packages = [
+    {include = "mta"}
+]
+
+include = [
+    { path = "tests" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+pytest = "^7.4.3"
+pytest-asyncio = "^0.21.1"
+pyaml = "^23.9.7"
+fastapi = "^0.105.0"
+starlette = "^0.27.0"
+pydantic = "^1.10.13"
+reasoner-pydantic = "^4.1.6"
+coverage = "^7.3.3"
+uvicorn = "^0.24.0.post1"
+#reasoner-transpiler = "^2.0.2"
+#httpx = "^0.18.2"
+#pytest-httpx = "^0.12.0"
+#jsonasobj = "^1.3.1"
+#httpcore = "^0.13.6"
+opentelemetry-sdk = "^1.21.0"
+opentelemetry-exporter-jaeger = "^1.21.0"
+opentelemetry-instrumentation-fastapi = "^0.42b0"
+opentelemetry-instrumentation-httpx = "^0.42b0"
+
+# [tool.poetry.group.dev.dependencies]
+
+[tool.poetry.urls]
+"Change Log" = "https://github.com/monarch-initiative/monarch-translator-ara/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/monarch-initiative/monarch-translator-ara/issues"
+
+[tool.poetry.extras]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "pep440"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(message)s"
+
+log_file = "pytest.log"
+log_file_level = "INFO"
+log_file_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_file_date_format = "%Y-%m-%d %H:%M:%S"
