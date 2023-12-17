@@ -1,4 +1,5 @@
 # monarch-translator-ara
+
 NCATS Translator ARA TRAPI wrapper for the Monarch Initiative system
 
 ## Installation
@@ -11,7 +12,6 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
 
     poetry shell
     poetry install
-
  
 #### Configure MTA settings
    
@@ -43,7 +43,6 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
    docker run --env-file .env\
     --name mta\
     -p 8080:8080\
-    --network <network_where_neo4j_is_running>\
     mta-tst
 
   ```
