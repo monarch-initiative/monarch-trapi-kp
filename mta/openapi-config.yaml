@@ -1,0 +1,21 @@
+# Adds more configs to default open api config
+x-translator:
+  component: ARA
+  team: [] # add teams
+  biolink-version: # picked up from environment variable `BL_VERSION`
+  infores: # picked up from environment variable `PROVENANCE_TAG'
+x-trapi:
+  version: 1.4.0
+contact:
+  email: "default@mail.org" # email
+  name: "default-name" # name
+  x-id: "default link" # link if available
+  x-role: "default-role" # role
+termsOfService: "" # link to terms of service
+tags:
+  - name: trapi
+description: "" # Description for the whole spec
+title: "" # title for the whole spec, overrides MTA_TITLE env value
+servers:
+  - description: Default server
+    url: http://localhost:8080 # full url not this will be the url used when using openapi docs

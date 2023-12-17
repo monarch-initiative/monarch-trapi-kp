@@ -49,10 +49,9 @@ if os.environ.get("OTEL_ENABLED"):
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     from opentelemetry import trace
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
-    from opentelemetry.sdk.resources import SERVICE_NAME as telemetery_service_name_key, Resource
+    from opentelemetry.sdk.resources import SERVICE_NAME as TELEMETRY_SERVICE_NAME, Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
     # httpx connections need to be open a little longer by the otel decorators
     # but some libs display warnings of resource being unclosed.
@@ -63,7 +62,7 @@ if os.environ.get("OTEL_ENABLED"):
     assert service_name and isinstance(service_name, str)
     trace.set_tracer_provider(
         TracerProvider(
-            resource=Resource.create({telemetery_service_name_key: service_name})
+            resource=Resource.create({TELEMETRY_SERVICE_NAME: service_name})
         )
     )
     jaeger_exporter = JaegerExporter(
