@@ -32,8 +32,8 @@ APP.mount('/', APP_COMMON, '')
 # This will create an aggregate openapi spec.
 APP.include_router(APP_TRAPI_1_4.router, prefix='/1.4')
 APP.include_router(APP_COMMON.router)
-# Construct app /openapi.json # Note this is not to be registered on smart api . Instead /1.1/openapi.json
-# or /1.2/openapi.json should be used.
+# Construct app /openapi.json # Note this is not to be registered on smart api.
+# Either /1.1/openapi.json or /1.2/openapi.json should be used instead.
 APP.openapi_schema = construct_open_api_schema(app=APP, trapi_version='N/A')
 
 # CORS
@@ -59,7 +59,9 @@ if os.environ.get("OTEL_ENABLED"):
     logging.captureWarnings(capture=True)
     warnings.filterwarnings("ignore", category=ResourceWarning)
     service_name = os.environ.get('MTA_TITLE', 'MTA')
+
     assert service_name and isinstance(service_name, str)
+
     trace.set_tracer_provider(
         TracerProvider(
             resource=Resource.create({TELEMETRY_SERVICE_NAME: service_name})
@@ -69,6 +71,9 @@ if os.environ.get("OTEL_ENABLED"):
         agent_host_name=os.environ.get("JAEGER_HOST", "localhost"),
         agent_port=int(os.environ.get("JAEGER_PORT", "6831")),
     )
+
+    # TODO: OpenTelemetry version discord: now missing this method...
+    #       This needs to be fixed once we start using OpenTelemetry!
     trace.get_tracer_provider().add_span_processor(
         BatchSpanProcessor(jaeger_exporter)
     )
