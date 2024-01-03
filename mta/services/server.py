@@ -55,7 +55,7 @@ if os.environ.get("OTEL_ENABLED"):
 
     # httpx connections need to be open a little longer by the otel decorators
     # but some libs display warnings of resource being unclosed.
-    # these supresses such warnings.
+    # This suppresses such warnings.
     logging.captureWarnings(capture=True)
     warnings.filterwarnings("ignore", category=ResourceWarning)
     service_name = os.environ.get('MTA_TITLE', 'MTA')
