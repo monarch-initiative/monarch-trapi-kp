@@ -11,9 +11,11 @@ from mta.models.shared import (
     MetaKnowledgeGraph
 )
 
-
-class CypherRequest(BaseModel):
-    query: str
+#
+# TODO: Deprecated code: Not directly using Neo4j in the Monarch ARA
+#
+# class CypherRequest(BaseModel):
+#     query: str
 
 
 class SimpleSpecElement(BaseModel):
@@ -45,25 +47,27 @@ class TypeSummary(BaseModel):
 
 GraphSummaryResponse = Dict[TypeSet, TypeSummary]
 
-
-class CypherDatum(BaseModel):
-    row: List
-    meta: List
-
-
-class CypherResult(BaseModel):
-    columns: List[str]
-    data: List[CypherDatum]
-
-
-class CypherError(BaseModel):
-    code: str
-    message: str
-
-
-class CypherResponse(BaseModel):
-    results: List[CypherResult]
-    errors: List[CypherError]
+#
+# TODO: Deprecated code: Not directly using Neo4j in the Monarch ARA
+#
+# class CypherDatum(BaseModel):
+#     row: List
+#     meta: List
+#
+#
+# class CypherResult(BaseModel):
+#     columns: List[str]
+#     data: List[CypherDatum]
+#
+#
+# class CypherError(BaseModel):
+#     code: str
+#     message: str
+#
+#
+# class CypherResponse(BaseModel):
+#     results: List[CypherResult]
+#     errors: List[CypherError]
 
 
 PredicatesResponse = Dict[str, Dict[str, List[str]]]
