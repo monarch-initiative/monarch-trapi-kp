@@ -4,7 +4,7 @@ from fastapi import Body, Depends, FastAPI, Response, status
 from reasoner_transpiler.exceptions import InvalidPredicateError
 from mta.models.models_trapi_1_4 import (
     MetaKnowledgeGraph,
-    Message,
+    # Message,
     ReasonerRequest
 )
 from mta.models.shared import SRITestData
@@ -24,15 +24,8 @@ from mta.services.util.api_utils import (
 APP_TRAPI_1_4 = FastAPI(openapi_url="/openapi.json", docs_url="/docs", root_path='/1.4')
 
 
-async def get_meta_knowledge_graph(
-        graph_metadata: GraphMetadata = Depends(get_graph_metadata),
-) -> MetaKnowledgeGraph:
-    """Handle /meta_knowledge_graph."""
-    meta_kg = await graph_metadata.get_meta_kg()
-    return meta_kg
-
 #
-# SRI Testing is deprecated?
+# TODO: SRI Testing data is deprecated?
 #
 # async def get_sri_testing_data(
 #         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
@@ -40,7 +33,40 @@ async def get_meta_knowledge_graph(
 #     """Handle /sri_testing_data."""
 #     sri_test_data = await graph_metadata.get_sri_testing_data()
 #     return sri_test_data
+#
+# APP_TRAPI_1_4.add_api_route(
+#     "/sri_testing_data",
+#     get_sri_testing_data,
+#     methods=["GET"],
+#     response_model=SRITestData,
+#     response_model_exclude_none=True,
+#     summary="Test data for usage by the SRI Testing Harness.",
+#     description="Returns a list of edges that are representative examples of the knowledge graph.",
+#     tags=["trapi"]
+# )
 
+
+async def get_meta_knowledge_graph(
+        graph_metadata: GraphMetadata = Depends(get_graph_metadata),
+) -> Response:
+    """
+    Handle /meta_knowledge_graph.
+    :return: starlette Response wrapped MetaKnowledgeGraph.
+    :rtype: Response(MetaKnowledgeGraph)
+    """
+    meta_kg = await graph_metadata.get_meta_kg()
+    return Response(meta_kg)
+
+
+APP_TRAPI_1_4.add_api_route(
+    path="/meta_knowledge_graph",
+    endpoint=get_meta_knowledge_graph,
+    methods=["GET"],
+    response_model=MetaKnowledgeGraph,
+    summary="Meta knowledge graph representation of this TRAPI web service.",
+    description="Returns meta knowledge graph representation of this TRAPI web service.",
+    tags=["trapi"]
+)
 
 
 async def reasoner_api(
@@ -51,8 +77,12 @@ async def reasoner_api(
             example=get_example("reasoner-trapi-1.3"),
         ),
         graph_interface: GraphInterface = Depends(get_graph_interface),
-):
-    """Handle TRAPI request."""
+) -> Response:
+    """
+    Handle TRAPI request.
+    :return: starlette Response wrapped ReasonerRequest.
+    :rtype: Response(ReasonerRequest)
+    """
     request_json = request.dict(by_alias=True)
 
     # default workflow
@@ -66,7 +96,7 @@ async def reasoner_api(
         except InvalidPredicateError as e:
             response.status_code = status.HTTP_400_BAD_REQUEST
             request_json["description"] = str(e)
-            return request_json
+            return Response(request_json)
 
     #
     # TODO: don't have overlays in this first iteration?
@@ -81,33 +111,12 @@ async def reasoner_api(
     #     response_message = await overlay.annotate_node(request_json['message'])
     #     request_json.update({'message': response_message, 'workflow': workflow})
 
-    return request_json
+    return Response(request_json)
 
 
 APP_TRAPI_1_4.add_api_route(
-    "/meta_knowledge_graph",
-    get_meta_knowledge_graph,
-    methods=["GET"],
-    response_model=MetaKnowledgeGraph,
-    summary="Meta knowledge graph representation of this TRAPI web service.",
-    description="Returns meta knowledge graph representation of this TRAPI web service.",
-    tags=["trapi"]
-)
-
-APP_TRAPI_1_4.add_api_route(
-    "/sri_testing_data",
-    get_sri_testing_data,
-    methods=["GET"],
-    response_model=SRITestData,
-    response_model_exclude_none=True,
-    summary="Test data for usage by the SRI Testing Harness.",
-    description="Returns a list of edges that are representative examples of the knowledge graph.",
-    tags=["trapi"]
-)
-
-APP_TRAPI_1_4.add_api_route(
-    "/query",
-    reasoner_api,
+    path="/query",
+    endpoint=reasoner_api,
     methods=["POST"],
     response_model=ReasonerRequest,
     summary="Query reasoner via one of several inputs.",
