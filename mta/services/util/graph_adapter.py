@@ -5,12 +5,15 @@ from starlette.responses import Response
 # from bmt import Toolkit
 
 
+LATEST_BIOLINK_MODEL = "1.4.0"
+
+
 class GraphInterface:
     """
     Singleton class for interfacing with the graph.
     """
     class _GraphInterface:
-        def __init__(self, query_timeout, bl_version="3.1"):
+        def __init__(self, query_timeout, bl_version=LATEST_BIOLINK_MODEL):
             self.schema = None
             # used to keep track of derived inverted predicates
             # self.inverted_predicates = defaultdict(lambda: defaultdict(set))
@@ -51,10 +54,13 @@ class GraphInterface:
 
     instance = None
 
-    def __init__(self, query_timeout=600, bl_version="4.1.0"):
+    def __init__(self, query_timeout=600, bl_version=LATEST_BIOLINK_MODEL):
         # create a new instance if not already created.
         if not GraphInterface.instance:
-            GraphInterface.instance = GraphInterface._GraphInterface(query_timeout=query_timeout, bl_version=bl_version)
+            GraphInterface.instance = GraphInterface._GraphInterface(
+                query_timeout=query_timeout,
+                bl_version=bl_version
+            )
 
     def __getattr__(self, item):
         # proxy function calls to the inner object.

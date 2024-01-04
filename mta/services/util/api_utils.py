@@ -31,6 +31,7 @@ def get_graph_interface():
 #     )
 #
 
+
 def get_graph_metadata():
     """Get graph metadata"""
     return GraphMetadata()
@@ -42,8 +43,8 @@ def get_graph_metadata():
 
 
 def construct_open_api_schema(app, trapi_version, prefix=""):
-    mta_title = config.get('MTA_TITLE', 'Plater API')
-    mta_version = os.environ.get('MTA_VERSION', '1.4.0-2')
+    mta_title = config.get('MTA_TITLE', 'Monarch Translator ARA')
+    mta_version = os.environ.get('MTA_VERSION', '1.4.0')
     server_url = os.environ.get('PUBLIC_URL', '')
     if app.openapi_schema:
         return app.openapi_schema

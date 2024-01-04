@@ -26,7 +26,7 @@ APP = FastAPI()
 # Mount 1.4 app at /1.4
 APP.mount('/1.4', APP_TRAPI_1_4, 'Trapi 1.4')
 
-# Mount default app at /
+# Mount non-TRAPI supplemental API endpoints at /
 APP.mount('/', APP_COMMON, '')
 
 # Add all routes of each app for open api generation at /openapi.json
@@ -34,8 +34,9 @@ APP.mount('/', APP_COMMON, '')
 APP.include_router(APP_TRAPI_1_4.router, prefix='/1.4')
 APP.include_router(APP_COMMON.router)
 
-# Construct app /openapi.json # Note this is not to be registered on smart api.
-# Either /1.1/openapi.json or /1.2/openapi.json should be used instead.
+# Construct app /openapi.json... Note that this schema
+# will not be registered on the Translator SmartAPI registry.
+# Instead, /1.4/openapi.json should be SmartAPI registered.
 APP.openapi_schema = construct_open_api_schema(app=APP, trapi_version='N/A')
 
 # CORS
