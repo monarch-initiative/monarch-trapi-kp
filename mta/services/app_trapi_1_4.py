@@ -12,7 +12,7 @@ from mta.models.shared import SRITestData
 from mta.services.util.graph_adapter import GraphInterface
 from mta.services.util.metadata import GraphMetadata
 from mta.services.util.question import Question
-from mta.services.util.overlay import Overlay
+# from mta.services.util.overlay import Overlay
 from mta.services.util.api_utils import (
     get_graph_interface,
     get_graph_metadata,
@@ -31,13 +31,16 @@ async def get_meta_knowledge_graph(
     meta_kg = await graph_metadata.get_meta_kg()
     return meta_kg
 
+#
+# SRI Testing is deprecated?
+#
+# async def get_sri_testing_data(
+#         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
+# ) -> SRITestData:
+#     """Handle /sri_testing_data."""
+#     sri_test_data = await graph_metadata.get_sri_testing_data()
+#     return sri_test_data
 
-async def get_sri_testing_data(
-        graph_metadata: GraphMetadata = Depends(get_graph_metadata),
-) -> SRITestData:
-    """Handle /sri_testing_data."""
-    sri_test_data = await graph_metadata.get_sri_testing_data()
-    return sri_test_data
 
 
 async def reasoner_api(
@@ -51,6 +54,7 @@ async def reasoner_api(
 ):
     """Handle TRAPI request."""
     request_json = request.dict(by_alias=True)
+
     # default workflow
     workflow = request_json.get('workflow') or [{"id": "lookup"}]
     workflows = {wkfl['id']: wkfl for wkfl in workflow}
@@ -63,14 +67,20 @@ async def reasoner_api(
             response.status_code = status.HTTP_400_BAD_REQUEST
             request_json["description"] = str(e)
             return request_json
-    elif 'overlay_connect_knodes' in workflows:
-        overlay = Overlay(graph_interface=graph_interface)
-        response_message = await overlay.connect_k_nodes(request_json['message'])
-        request_json.update({'message': response_message, 'workflow': workflow})
-    elif 'annotate_nodes' in workflows:
-        overlay = Overlay(graph_interface=graph_interface)
-        response_message = await overlay.annotate_node(request_json['message'])
-        request_json.update({'message': response_message, 'workflow': workflow})
+
+    #
+    # TODO: don't have overlays in this first iteration?
+    #
+    # elif 'overlay_connect_knodes' in workflows:
+    #     overlay = Overlay(graph_interface=graph_interface)
+    #     response_message = await overlay.connect_k_nodes(request_json['message'])
+    #     request_json.update({'message': response_message, 'workflow': workflow})
+    #
+    # elif 'annotate_nodes' in workflows:
+    #     overlay = Overlay(graph_interface=graph_interface)
+    #     response_message = await overlay.annotate_node(request_json['message'])
+    #     request_json.update({'message': response_message, 'workflow': workflow})
+
     return request_json
 
 

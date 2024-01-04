@@ -46,19 +46,22 @@ class GraphMetadata:
                     if not attribute_info['attribute_type_id']:
                         attribute_info['attribute_type_id'] = 'biolink:Attribute'
 
-        async def get_sri_testing_data(self):
-            if not self.sri_testing_data:
-                self.retrieve_sri_test_data()
-            return self.sri_testing_data
-
-        def retrieve_sri_test_data(self):
-            with open(os.path.join(os.path.dirname(__file__), '..', '..', 'metadata', 'sri_testing_data.json')) as f:
-                self.sri_testing_data = json.load(f)
-
-            # version is technically not part of the spec anymore
-            # but this ensures validation with the model until it's removed
-            if 'version' not in self.sri_testing_data:
-                self.sri_testing_data['version'] = config.get('BL_VERSION')
+        #
+        # TODO: SRI Testing data is deprecated?
+        #
+        # async def get_sri_testing_data(self):
+        #     if not self.sri_testing_data:
+        #         self.retrieve_sri_test_data()
+        #     return self.sri_testing_data
+        #
+        # def retrieve_sri_test_data(self):
+        #     with open(os.path.join(os.path.dirname(__file__), '..', '..', 'metadata', 'sri_testing_data.json')) as f:
+        #         self.sri_testing_data = json.load(f)
+        #
+        #     # version is technically not part of the spec anymore
+        #     # but this ensures validation with the model until it's removed
+        #     if 'version' not in self.sri_testing_data:
+        #         self.sri_testing_data['version'] = config.get('BL_VERSION')
 
     instance = None
 
