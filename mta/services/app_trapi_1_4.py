@@ -7,7 +7,7 @@ from mta.models.models_trapi_1_4 import (
     # Message,
     ReasonerRequest
 )
-from mta.models.shared import SRITestData
+# from mta.models.shared import SRITestData
 
 from mta.services.util.graph_adapter import GraphInterface
 from mta.services.util.metadata import GraphMetadata

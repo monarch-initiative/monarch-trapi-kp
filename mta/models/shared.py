@@ -21,10 +21,10 @@ class SRITestEdge(BaseModel):
     qualifiers: Optional[List] = None
 
 
-class SRITestData(BaseModel):
-    version: str
-    source_type: str
-    edges: List[SRITestEdge]
+# class SRITestData(BaseModel):
+#     version: str
+#     source_type: str
+#     edges: List[SRITestEdge]
 
 
 class ReasonerRequest(ReasonerRequestBaseClass):
