@@ -3,19 +3,22 @@ import yaml
 from fastapi.openapi.utils import get_openapi
 import json
 import os
-#
-# This PLATER copied code not likely needed
-#
-# from mta.services.util.graph_adapter import GraphInterface
-# from mta.services.util.metadata import GraphMetadata
+
+from mta.services.util.graph_adapter import GraphInterface
+from mta.services.util.metadata import GraphMetadata
 # from mta.services.util.bl_helper import BLHelper
 from mta.services.config import config
 
+
+def get_graph_interface():
+    """Get graph interface."""
+    return GraphInterface(
+        bl_version=config.get('BL_VERSION')
+    )
 #
-# This PLATER copied code not likely needed
+# Deprecated PLATER specific code version
 #
-# def get_graph_interface():
-#     """Get graph interface."""
+#
 #     return GraphInterface(
 #         host=config.get('NEO4J_HOST'),
 #         port=config.get('NEO4J_HTTP_PORT'),
@@ -27,10 +30,11 @@ from mta.services.config import config
 #         bl_version=config.get('BL_VERSION')
 #     )
 #
-#
-# def get_graph_metadata():
-#     return GraphMetadata()
-#
+
+def get_graph_metadata():
+    """Get graph metadata"""
+    return GraphMetadata()
+
 #
 # def get_bl_helper():
 #     """Get Biolink helper."""

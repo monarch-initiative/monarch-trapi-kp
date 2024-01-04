@@ -1,24 +1,34 @@
 """FastAPI app."""
-import json
+# import json
 from typing import Any, Dict, List
 
-from fastapi import Body, Depends, FastAPI
-from fastapi.responses import JSONResponse
-
-from mta.models.models_trapi_1_4 import (
-    Message, ReasonerRequest, CypherRequest, SimpleSpecResponse, SimpleSpecElement,
-    GraphSummaryResponse, CypherResponse, PredicatesResponse
+from fastapi import (
+    # Body,
+    Depends,
+    FastAPI
 )
-from mta.services.util.bl_helper import BLHelper
+# from fastapi.responses import JSONResponse
+#
+# from mta.models.models_trapi_1_4 import (
+#     Message,
+#     ReasonerRequest,
+#     # CypherRequest,
+#     SimpleSpecResponse,
+#     SimpleSpecElement,
+#     GraphSummaryResponse,
+#     # CypherResponse,
+#     PredicatesResponse
+# )
+# from mta.services.util.bl_helper import BLHelper
 from mta.services.util.graph_adapter import GraphInterface
 from mta.services.util.metadata import GraphMetadata
-from mta.services.util.overlay import Overlay
-from mta.services.util.question import Question
+# from mta.services.util.overlay import Overlay
+# from mta.services.util.question import Question
 from mta.services.util.api_utils import (
     get_graph_interface,
-    get_bl_helper,
+    # get_bl_helper,
     construct_open_api_schema,
-    get_example,
+    # get_example,
     get_graph_metadata
 )
 
@@ -26,60 +36,65 @@ from mta.services.util.api_utils import (
 APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs')
 
 
-async def cypher(
-        request: CypherRequest = Body(
-            ...,
-            example={"query": "MATCH (n) RETURN count(n)"},
-        ),
-        graph_interface: GraphInterface = Depends(get_graph_interface),
-) -> CypherResponse:
-    """Handle cypher."""
-    request = request.dict()
-    results = await graph_interface.run_cypher(
-        request["query"],
-        return_errors=True,
-    )
-    return results
+#
+# TODO: Deprecated code: Not directly using Neo4j cypher in the Monarch ARA
+#
+# async def cypher(
+#         request: CypherRequest = Body(
+#             ...,
+#             example={"query": "MATCH (n) RETURN count(n)"},
+#         ),
+#         graph_interface: GraphInterface = Depends(get_graph_interface),
+# ) -> CypherResponse:
+#     """Handle cypher."""
+#     request = request.dict()
+#     results = await graph_interface.run_cypher(
+#         request["query"],
+#         return_errors=True,
+#     )
+#     return results
+#
+#
+# APP_COMMON.add_api_route(
+#     "/cypher",
+#     cypher,
+#     methods=["POST"],
+#     response_model=CypherResponse,
+#     summary="Run cypher query",
+#     description=(
+#         "Runs cypher query against the Neo4j instance, and returns an "
+#         "equivalent response expected from a Neo4j HTTP endpoint "
+#         "(https://neo4j.com/docs/rest-docs/current/)."
+#     ),
+# )
 
-
-APP_COMMON.add_api_route(
-    "/cypher",
-    cypher,
-    methods=["POST"],
-    response_model=CypherResponse,
-    summary="Run cypher query",
-    description=(
-        "Runs cypher query against the Neo4j instance, and returns an "
-        "equivalent response expected from a Neo4j HTTP endpoint "
-        "(https://neo4j.com/docs/rest-docs/current/)."
-    ),
-)
-
-
-async def overlay(
-        request: ReasonerRequest = Body(
-            ...,
-            example={"message": get_example("overlay")},
-        ),
-        graph_interface: GraphInterface = Depends(get_graph_interface),
-) -> Message:
-    """Handle TRAPI request."""
-    overlay_class = Overlay(graph_interface)
-    return await overlay_class.overlay_support_edges(request.dict()["message"])
-
-
-APP_COMMON.add_api_route(
-    "/overlay",
-    overlay,
-    methods=["POST"],
-    response_model=Message,
-    description=(
-        "Given a ReasonerAPI graph, add support edges "
-        "for any nodes linked in result bindings."
-    ),
-    summary="Overlay results with available connections between each node.",
-    tags=["translator"]
-)
+#
+# TODO: excluding this overlay() code in a first iteration of the Monarch ARA
+#
+# async def overlay(
+#         request: ReasonerRequest = Body(
+#             ...,
+#             example={"message": get_example("overlay")},
+#         ),
+#         graph_interface: GraphInterface = Depends(get_graph_interface),
+# ) -> Message:
+#     """Handle TRAPI request."""
+#     overlay_class = Overlay(graph_interface)
+#     return await overlay_class.overlay_support_edges(request.dict()["message"])
+#
+#
+# APP_COMMON.add_api_route(
+#     "/overlay",
+#     overlay,
+#     methods=["POST"],
+#     response_model=Message,
+#     description=(
+#         "Given a ReasonerAPI graph, add support edges "
+#         "for any nodes linked in result bindings."
+#     ),
+#     summary="Overlay results with available connections between each node.",
+#     tags=["translator"]
+# )
 
 
 async def metadata(
@@ -153,67 +168,70 @@ APP_COMMON.add_api_route(
 )
 
 
-async def simple_spec(
-        source: str = None,
-        target: str = None,
-        graph_interface: GraphInterface = Depends(get_graph_interface),
-        bl_helper: BLHelper = Depends(get_bl_helper),
-) -> SimpleSpecResponse:
-    """Handle simple spec."""
-    source_id = source
-    target_id = target
-    if source_id or target_id:
-        minischema = []
-        mini_schema_raw = await graph_interface.get_mini_schema(
-            source_id,
-            target_id,
-        )
-        for row in mini_schema_raw:
-            source_labels = await bl_helper.get_most_specific_concept(
-                row['source_label']
-            )
-            target_labels = await bl_helper.get_most_specific_concept(
-                row['target_label']
-            )
-            for source_type in source_labels:
-                for target_type in target_labels:
-                    minischema.append((
-                        source_type,
-                        row['predicate'],
-                        target_type,
-                    ))
-        minischema = list(set(minischema))  # remove dups
-        return list(map(lambda x: SimpleSpecElement(**{
-                'source_type': x[0],
-                'target_type': x[2],
-                'edge_type': x[1],
-            }), minischema))
-    else:
-        schema = graph_interface.get_schema()
-        reformatted_schema = []
-        for source_type in schema:
-            for target_type in schema[source_type]:
-                for edge in schema[source_type][target_type]:
-                    reformatted_schema.append(SimpleSpecElement(**{
-                        'source_type': source_type,
-                        'target_type': target_type,
-                        'edge_type': edge
-                    }))
-        return reformatted_schema
-
-
-APP_COMMON.add_api_route(
-    "/simple_spec",
-    simple_spec,
-    methods=["GET"],
-    response_model=SimpleSpecResponse,
-    summary="Get one-hop connection schema",
-    description=(
-        "Returns a list of available predicates when choosing a single source "
-        "or target curie. Calling this endpoint with no query parameters will "
-        "return all possible hops for all types."
-    ),
-)
+#
+# TODO: excluding this simple_spec() code in a first iteration of the Monarch ARA
+#
+# async def simple_spec(
+#         source: str = None,
+#         target: str = None,
+#         graph_interface: GraphInterface = Depends(get_graph_interface),
+#         bl_helper: BLHelper = Depends(get_bl_helper),
+# ) -> SimpleSpecResponse:
+#     """Handle simple spec."""
+#     source_id = source
+#     target_id = target
+#     if source_id or target_id:
+#         minischema = []
+#         mini_schema_raw = await graph_interface.get_mini_schema(
+#             source_id,
+#             target_id,
+#         )
+#         for row in mini_schema_raw:
+#             source_labels = await bl_helper.get_most_specific_concept(
+#                 row['source_label']
+#             )
+#             target_labels = await bl_helper.get_most_specific_concept(
+#                 row['target_label']
+#             )
+#             for source_type in source_labels:
+#                 for target_type in target_labels:
+#                     minischema.append((
+#                         source_type,
+#                         row['predicate'],
+#                         target_type,
+#                     ))
+#         minischema = list(set(minischema))  # remove dups
+#         return list(map(lambda x: SimpleSpecElement(**{
+#                 'source_type': x[0],
+#                 'target_type': x[2],
+#                 'edge_type': x[1],
+#             }), minischema))
+#     else:
+#         schema = graph_interface.get_schema()
+#         reformatted_schema = []
+#         for source_type in schema:
+#             for target_type in schema[source_type]:
+#                 for edge in schema[source_type][target_type]:
+#                     reformatted_schema.append(SimpleSpecElement(**{
+#                         'source_type': source_type,
+#                         'target_type': target_type,
+#                         'edge_type': edge
+#                     }))
+#         return reformatted_schema
+#
+#
+# APP_COMMON.add_api_route(
+#     "/simple_spec",
+#     simple_spec,
+#     methods=["GET"],
+#     response_model=SimpleSpecResponse,
+#     summary="Get one-hop connection schema",
+#     description=(
+#         "Returns a list of available predicates when choosing a single source "
+#         "or target curie. Calling this endpoint with no query parameters will "
+#         "return all possible hops for all types."
+#     ),
+# )
 
 
 APP_COMMON.openapi_schema = construct_open_api_schema(app=APP_COMMON, trapi_version="N/A")
