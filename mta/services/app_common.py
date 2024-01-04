@@ -1,7 +1,9 @@
-"""FastAPI app."""
+"""
+FastAPI app wrapper of generic methods.
+"""
 # import json
-from typing import Any, Dict, List
-
+from typing import Any, List
+from starlette.responses import Response
 from fastapi import (
     # Body,
     Depends,
@@ -99,15 +101,14 @@ APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs'
 
 async def metadata(
         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
-) -> Any:
+) -> Response:
     """Handle /metadata."""
-    response = await graph_metadata.get_metadata()
-    return response
+    return await graph_metadata.get_metadata()
 
 
 APP_COMMON.add_api_route(
-    "/metadata",
-    metadata,
+    path="/metadata",
+    endpoint=metadata,
     methods=["GET"],
     response_model=Any,
     summary="Metadata about the knowledge graph.",
@@ -120,7 +121,7 @@ async def one_hop(
         target_type: str,
         curie: str,
         graph_interface: GraphInterface = Depends(get_graph_interface),
-) -> List[Dict]:
+) -> Response:
     """Handle one-hop."""
     return await graph_interface.get_single_hops(
         source_type,
@@ -130,8 +131,8 @@ async def one_hop(
 
 
 APP_COMMON.add_api_route(
-    "/{source_type}/{target_type}/{curie}",
-    one_hop,
+    path="/{source_type}/{target_type}/{curie}",
+    endpoint=one_hop,
     methods=["GET"],
     response_model=List,
     summary=(
@@ -140,8 +141,8 @@ APP_COMMON.add_api_route(
         "with a source"
     ),
     description=(
-        "Returns one hop paths from `source_node_type`  with `curie` "
-        "to `target_node_type`."
+        "Returns one hop paths from `source_node_type` "
+        "with `curie` to `target_node_type`."
     ),
 )
 
@@ -150,7 +151,7 @@ async def node(
         node_type: str,
         curie: str,
         graph_interface: GraphInterface = Depends(get_graph_interface),
-) -> List[List[Dict]]:
+) -> Response:
     """Handle node lookup."""
     return await graph_interface.get_node(
         node_type,
@@ -159,8 +160,8 @@ async def node(
 
 
 APP_COMMON.add_api_route(
-    "/{node_type}/{curie}",
-    node,
+    path="/{node_type}/{curie}",
+    endpoint=node,
     methods=["GET"],
     response_model=List,
     summary="Find `node` by `curie`",
@@ -176,7 +177,7 @@ APP_COMMON.add_api_route(
 #         target: str = None,
 #         graph_interface: GraphInterface = Depends(get_graph_interface),
 #         bl_helper: BLHelper = Depends(get_bl_helper),
-# ) -> SimpleSpecResponse:
+# ) -> Response:
 #     """Handle simple spec."""
 #     source_id = source
 #     target_id = target
@@ -221,8 +222,8 @@ APP_COMMON.add_api_route(
 #
 #
 # APP_COMMON.add_api_route(
-#     "/simple_spec",
-#     simple_spec,
+#     path="/simple_spec",
+#     endpoint=simple_spec,
 #     methods=["GET"],
 #     response_model=SimpleSpecResponse,
 #     summary="Get one-hop connection schema",
