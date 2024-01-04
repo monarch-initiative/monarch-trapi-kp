@@ -52,6 +52,32 @@ class GraphInterface:
             # return Response(node)
             raise NotImplementedError
 
+        #
+        # TODO: deprecate PLATER neo4j access to graph
+        #
+        # async def run_cypher(self, cypher: str, **kwargs) -> list:
+        #     """
+        #     Runs cypher directly.
+        #     :param cypher: cypher query.
+        #     :type cypher: str
+        #     :return: unprocessed neo4j response.
+        #     :rtype: list
+        #     """
+        #     kwargs['timeout'] = self.query_timeout
+        #     return await self.driver.run(cypher, **kwargs)
+
+        async def run_query(self, **kwargs) -> list:
+            """
+            Drop in replacement for the above PLATER 'run_cypher()' method, accessing Monarch instead.
+            :param **kwargs: query arguments
+            :type cypher: str
+            :return: unprocessed neo4j response.
+            :rtype: list
+            """
+            kwargs['timeout'] = self.query_timeout
+            # return await self.driver.run(cypher, **kwargs)
+            raise NotImplementedError
+
     instance = None
 
     def __init__(self, query_timeout=600, bl_version=LATEST_BIOLINK_MODEL):

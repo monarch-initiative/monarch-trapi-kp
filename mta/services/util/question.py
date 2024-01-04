@@ -182,6 +182,7 @@ class Question:
         # logger.debug(f"cypher: {cypher}")
         s = time.time()
         # TODO: have to fix this 'run_query' call to properly process the question
+        # results = await graph_interface.run_cypher(cypher)
         results = await graph_interface.run_query(self._question_json)
         end = time.time()
         logger.info(f"getting answers took {end - s} seconds")
