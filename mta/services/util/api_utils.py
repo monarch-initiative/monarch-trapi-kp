@@ -1,5 +1,6 @@
+from typing import Any
 import yaml
-
+from fastapi import Response
 from fastapi.openapi.utils import get_openapi
 import json
 import os
@@ -119,3 +120,11 @@ def get_example(operation: str):
         f"{operation}.json",
     )) as stream:
         return json.load(stream)
+
+
+def encode_content(content: Any, encoding: str = "utf-8") -> bytes:
+    return json.dumps(content).encode(encoding)
+
+
+def json_response(content: Any) -> Response:
+    return Response(encode_content(content), media_type="application/json")

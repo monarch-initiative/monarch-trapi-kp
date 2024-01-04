@@ -1,7 +1,7 @@
 """
 GraphAdapter to Monarch graph API
 """
-from starlette.responses import Response
+from typing import Any, List, Dict
 # from bmt import Toolkit
 
 
@@ -22,21 +22,20 @@ class GraphInterface:
             self.bl_version = bl_version
 
         # TODO: add useful _GraphInterface methods here!
-        async def get_node(self, node_type: str, curie: str) -> Response:
+        async def get_node(self, node_type: str, curie: str) -> Dict:
             """
             Returns a node that matches curie as its ID.
             :param node_type: Type of the node.
             :type node_type:str
             :param curie: Curie.
             :type curie: str
-            :return: starlette Response wrapped value of the node in Monarch.
-            :rtype: Response(List)
+            :return: Contents of the node in Monarch.
+            :rtype: Dict
             """
-            # node = list()
-            # return Response(node)
-            raise NotImplementedError
+            # TODO: Implement me!
+            return dict()
 
-        async def get_single_hops(self, source_type: str, target_type: str, curie: str) -> Response:
+        async def get_single_hops(self, source_type: str, target_type: str, curie: str) -> List:
             """
             Returns a triplets of source to target where source id is curie.
             :param source_type: Type of the source node.
@@ -45,12 +44,11 @@ class GraphInterface:
             :type target_type: str
             :param curie: Curie of source node.
             :type curie: str
-            :return: starlette Response wrapped list of triplets where each item contains source node, edge, target.
-            :rtype: Response(List)
+            :return: List of triplets where each item contains source node, edge, target.
+            :rtype: List
             """
-            # node = list()
-            # return Response(node)
-            raise NotImplementedError
+            # TODO: Implement me!
+            return list()
 
         #
         # TODO: deprecate PLATER neo4j access to graph
@@ -66,17 +64,24 @@ class GraphInterface:
         #     kwargs['timeout'] = self.query_timeout
         #     return await self.driver.run(cypher, **kwargs)
 
-        async def run_query(self, **kwargs) -> list:
+        async def run_query(self, question_json: Dict, **kwargs) -> List[Dict[str, Any]]:
             """
             Drop in replacement for the above PLATER 'run_cypher()' method, accessing Monarch instead.
-            :param **kwargs: query arguments
-            :type cypher: str
-            :return: unprocessed neo4j response.
-            :rtype: list
+            :param question_json
+            :param question_json: Python dictionary version of TRAPI Query JSON
+            :type kwargs: Dict
+            :return: List of Query result (JSON) dictionaries
+            :rtype: List[Dict[str, Any]]
             """
             kwargs['timeout'] = self.query_timeout
             # return await self.driver.run(cypher, **kwargs)
-            raise NotImplementedError
+            # TODO: Implement me!
+            result: List[Dict[str, Any]] = [dict()]
+            return result
+
+    def convert_to_dict(self, result) -> List[Dict[str, Any]]:
+        # TODO: Implement me!
+        return [dict(entry) for entry in result]
 
     instance = None
 

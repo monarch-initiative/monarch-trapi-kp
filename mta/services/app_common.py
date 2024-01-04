@@ -31,7 +31,8 @@ from mta.services.util.api_utils import (
     # get_bl_helper,
     construct_open_api_schema,
     # get_example,
-    get_graph_metadata
+    get_graph_metadata,
+    json_response
 )
 
 
@@ -103,7 +104,8 @@ async def metadata(
         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
 ) -> Response:
     """Handle /metadata."""
-    return await graph_metadata.get_metadata()
+    result = await graph_metadata.get_metadata()
+    return json_response(result)
 
 
 APP_COMMON.add_api_route(
@@ -123,11 +125,12 @@ async def one_hop(
         graph_interface: GraphInterface = Depends(get_graph_interface),
 ) -> Response:
     """Handle one-hop."""
-    return await graph_interface.get_single_hops(
+    result = await graph_interface.get_single_hops(
         source_type,
         target_type,
         curie,
     )
+    return json_response(result)
 
 
 APP_COMMON.add_api_route(
@@ -153,10 +156,11 @@ async def node(
         graph_interface: GraphInterface = Depends(get_graph_interface),
 ) -> Response:
     """Handle node lookup."""
-    return await graph_interface.get_node(
+    result = await graph_interface.get_node(
         node_type,
         curie,
     )
+    return json_response(result)
 
 
 APP_COMMON.add_api_route(

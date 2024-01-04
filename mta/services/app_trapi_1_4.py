@@ -17,7 +17,8 @@ from mta.services.util.api_utils import (
     get_graph_interface,
     get_graph_metadata,
     construct_open_api_schema,
-    get_example
+    get_example,
+    json_response
 )
 
 # Mount open api at /1.4/openapi.json
@@ -55,7 +56,7 @@ async def get_meta_knowledge_graph(
     :rtype: Response(MetaKnowledgeGraph)
     """
     meta_kg = await graph_metadata.get_meta_kg()
-    return Response(meta_kg)
+    return json_response(meta_kg)
 
 
 APP_TRAPI_1_4.add_api_route(
@@ -97,7 +98,7 @@ async def reasoner_api(
         except InvalidPredicateError as e:
             response.status_code = status.HTTP_400_BAD_REQUEST
             request_json["description"] = str(e)
-            return Response(request_json)
+            return json_response(request_json)
 
     #
     # TODO: don't have overlays in this first iteration?
@@ -112,7 +113,7 @@ async def reasoner_api(
     #     response_message = await overlay.annotate_node(request_json['message'])
     #     request_json.update({'message': response_message, 'workflow': workflow})
 
-    return Response(request_json)
+    return json_response(request_json)
 
 
 APP_TRAPI_1_4.add_api_route(
