@@ -2,14 +2,23 @@
 
 from fastapi import Body, Depends, FastAPI, Response, status
 from reasoner_transpiler.exceptions import InvalidPredicateError
-from mta.models.models_trapi_1_1 import (MetaKnowledgeGraph, Message, ReasonerRequest)
+from mta.models.models_trapi_1_4 import (
+    MetaKnowledgeGraph,
+    Message,
+    ReasonerRequest
+)
 from mta.models.shared import SRITestData
 
 from mta.services.util.graph_adapter import GraphInterface
 from mta.services.util.metadata import GraphMetadata
 from mta.services.util.question import Question
 from mta.services.util.overlay import Overlay
-from mta.services.util.api_utils import get_graph_interface, get_graph_metadata, construct_open_api_schema, get_example
+from mta.services.util.api_utils import (
+    get_graph_interface,
+    get_graph_metadata,
+    construct_open_api_schema,
+    get_example
+)
 
 # Mount open api at /1.4/openapi.json
 APP_TRAPI_1_4 = FastAPI(openapi_url="/openapi.json", docs_url="/docs", root_path='/1.4')

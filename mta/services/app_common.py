@@ -5,7 +5,7 @@ from typing import Any, Dict, List
 from fastapi import Body, Depends, FastAPI
 from fastapi.responses import JSONResponse
 
-from mta.models.models_trapi_1_0 import (
+from mta.models.models_trapi_1_4 import (
     Message, ReasonerRequest, CypherRequest, SimpleSpecResponse, SimpleSpecElement,
     GraphSummaryResponse, CypherResponse, PredicatesResponse
 )
@@ -14,8 +14,13 @@ from mta.services.util.graph_adapter import GraphInterface
 from mta.services.util.metadata import GraphMetadata
 from mta.services.util.overlay import Overlay
 from mta.services.util.question import Question
-from mta.services.util.api_utils import get_graph_interface, \
-    get_bl_helper, construct_open_api_schema, get_example, get_graph_metadata
+from mta.services.util.api_utils import (
+    get_graph_interface,
+    get_bl_helper,
+    construct_open_api_schema,
+    get_example,
+    get_graph_metadata
+)
 
 
 APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs')
@@ -69,8 +74,8 @@ APP_COMMON.add_api_route(
     methods=["POST"],
     response_model=Message,
     description=(
-        "Given a ReasonerAPI graph, add support edges for any nodes linked in "
-        "result bindings."
+        "Given a ReasonerAPI graph, add support edges "
+        "for any nodes linked in result bindings."
     ),
     summary="Overlay results with available connections between each node.",
     tags=["translator"]

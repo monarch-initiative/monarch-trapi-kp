@@ -25,12 +25,15 @@ APP = FastAPI()
 
 # Mount 1.4 app at /1.4
 APP.mount('/1.4', APP_TRAPI_1_4, 'Trapi 1.4')
+
 # Mount default app at /
 APP.mount('/', APP_COMMON, '')
+
 # Add all routes of each app for open api generation at /openapi.json
 # This will create an aggregate openapi spec.
 APP.include_router(APP_TRAPI_1_4.router, prefix='/1.4')
 APP.include_router(APP_COMMON.router)
+
 # Construct app /openapi.json # Note this is not to be registered on smart api.
 # Either /1.1/openapi.json or /1.2/openapi.json should be used instead.
 APP.openapi_schema = construct_open_api_schema(app=APP, trapi_version='N/A')
