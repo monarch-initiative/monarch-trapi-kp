@@ -1,0 +1,13 @@
+{
+   "message":{
+      "query_graph":{
+         "nodes":{
+            "n0":{
+               "id":"NCBIGene:15",
+               "category":"biolink:Gene"
+            }
+         },
+         "edges":{}
+      }
+   }
+}

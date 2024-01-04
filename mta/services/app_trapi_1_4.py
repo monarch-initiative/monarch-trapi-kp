@@ -73,8 +73,9 @@ async def reasoner_api(
         response: Response,
         request: ReasonerRequest = Body(
             ...,
-            # Works for now but in deployment would be replaced by a mount, specific to backend dataset
-            example=get_example("reasoner-trapi-1.3"),
+            # Works for now but in deployment would be
+            # replaced by a mount, specific to backend dataset
+            example=get_example("reasoner-trapi-1.4"),
         ),
         graph_interface: GraphInterface = Depends(get_graph_interface),
 ) -> Response:
