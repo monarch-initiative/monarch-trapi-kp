@@ -42,9 +42,12 @@ class GraphMetadata:
             # this avoids errors when attribute_type_id is none/null,
             # which should not happen but does currently due to an interaction with the bmt toolkit
             for node_type, node_properties in self.meta_kg['nodes'].items():
-                for attribute_info in node_properties['attributes']:
-                    if not attribute_info['attribute_type_id']:
-                        attribute_info['attribute_type_id'] = 'biolink:Attribute'
+                # Need first to check if 'attributes' key is used as a
+                # node property, since TRAPI says it is nullable: true
+                if 'attributes' in node_properties:
+                    for attribute_info in node_properties['attributes']:
+                        if not attribute_info['attribute_type_id']:
+                            attribute_info['attribute_type_id'] = 'biolink:Attribute'
 
         #
         # TODO: SRI Testing data is deprecated?
