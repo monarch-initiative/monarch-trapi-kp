@@ -4,19 +4,18 @@
           "nodes": {
             "n0": {
               "categories": [
-                "biolink:ChemicalEntity"
+                "biolink:PhenotypicEntity"
               ],
               "ids": [
-                "CHEMBL.COMPOUND:CHEMBL3234626",
-                "CHEMBL.COMPOUND:CHEMBL3234633"
+                "HP:0002104",
+                "HP:0012378",
+                "HP:0012378",
+                "HP:0012378"
               ]
             },
             "n1": {
               "categories": [
-                "biolink:GeneOrGeneProduct"
-              ],
-              "ids": [
-                "NCBIGene:2099"
+                "biolink:Disease"
               ]
             }
           },
@@ -25,25 +24,7 @@
               "subject": "n0",
               "object": "n1",
               "predicates": [
-                "biolink:affects"
-              ],
-              "qualifier_constraints": [
-                {
-                  "qualifier_set": [
-                    {
-                      "qualifier_type_id": "biolink:object_aspect_qualifier",
-                      "qualifier_value": "activity"
-                    },
-                    {
-                      "qualifier_type_id": "biolink:object_direction_qualifier",
-                      "qualifier_value": "increased"
-                    },
-                    {
-                      "qualifier_type_id": "biolink:qualified_predicate",
-                      "qualifier_value": "biolink:causes"
-                    }
-                  ]
-                }
+                "biolink:associated_with"
               ]
             }
           }
