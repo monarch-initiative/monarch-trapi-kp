@@ -1,4 +1,18 @@
 {
-  "nodes": {},
-  "edges": []
+  "nodes": {
+    "biolink:PhenotypicFeature": {
+      "id_prefixes": ["HP"]
+    },
+    "biolink:Disease": {
+      "id_prefixes": ["MONDO"]
+    }
+  },
+  "edges": [
+    {
+      "subject": "biolink:PhenotypicFeature",
+      "predicate": "biolink:associated_with",
+      "object": "biolink:Disease",
+      "association": "biolink:PhenotypicFeatureToDiseaseAssociation"
+    }
+  ]
 }
