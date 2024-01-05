@@ -98,7 +98,6 @@ async def reasoner_api(
         except InvalidPredicateError as e:
             response.status_code = status.HTTP_400_BAD_REQUEST
             request_json["description"] = str(e)
-            return json_response(request_json)
 
     #
     # TODO: don't have overlays in this first iteration?

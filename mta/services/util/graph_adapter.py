@@ -67,10 +67,9 @@ class GraphInterface:
         async def run_query(self, question_json: Dict, **kwargs) -> List[Dict[str, Any]]:
             """
             Drop in replacement for the above PLATER 'run_cypher()' method, accessing Monarch instead.
-            :param question_json
             :param question_json: Python dictionary version of TRAPI Query JSON
-            :type kwargs: Dict
-            :return: List of Query result (JSON) dictionaries
+            :type question_json: Dict
+            :return: List of Query results as (TRAPI JSON) dictionaries
             :rtype: List[Dict[str, Any]]
             """
             kwargs['timeout'] = self.query_timeout
