@@ -122,11 +122,6 @@ class MonarchInterface:
             result: Dict[str, List[str]] = dict()
             return result
 
-    @staticmethod
-    def convert_to_dict(result) -> List[Dict[str, Any]]:
-        # TODO: Implement me!
-        return [dict(entry) for entry in result]
-
     instance = None
 
     def __init__(self, query_timeout=600, bl_version=LATEST_BIOLINK_MODEL):

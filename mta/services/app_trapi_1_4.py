@@ -87,6 +87,7 @@ async def reasoner_api(
     # default workflow
     workflow = request_json.get('workflow') or [{"id": "lookup"}]
     workflows = {wkfl['id']: wkfl for wkfl in workflow}
+    # TODO: do we need a new 'workflow' code to explicitly signal the 'multi-curie' use case?
     if 'lookup' in workflows:
         question = Question(request_json["message"])
         try:

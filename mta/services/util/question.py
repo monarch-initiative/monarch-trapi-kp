@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Optional, List, Dict
 import time
 import copy
 import json
@@ -16,7 +16,11 @@ from mta.services.util.attribute_mapping import (
     get_attribute_bl_info
 )
 from mta.services.util.logutil import LoggingUtil
-from mta.services.util.trapi import extract_trapi_parameters, build_trapi_message
+from mta.services.util.trapi import (
+    TargetQueryType,
+    extract_trapi_parameters,
+    build_trapi_message
+)
 from mta.services.util.monarch_adapter import MonarchInterface
 
 # set the transpiler attribute mappings
@@ -28,7 +32,7 @@ VALUE_TYPES = map_data['value_type_map']
 logger = LoggingUtil.init_logging(
     __name__,
     config.get('logging_level'),
-    config.get('logging_format'),
+    config.get('logging_format')
 )
 
 
@@ -166,12 +170,22 @@ class Question:
         :return: Dict, TRAPI JSON Response object
         """
         logger.info(f"answering query_graph: {json.dumps(self._question_json)}")
-        s = time.time()
-        parameters: Dict = extract_trapi_parameters(self._question_json)
-        results: Dict[str, List[str]] = await monarch_interface.run_query(parameters)
-        end = time.time()
-        logger.info(f"getting answers took {end - s} seconds")
-        trapi_message = build_trapi_message(results)
+        parameters: Optional[List[str]] = extract_trapi_parameters(
+            trapi_json=self._question_json,
+            # TODO: the 'target_query_input' argument feels hacky -
+            #       'answer' should be more agnostic about the query.
+            target_query_input=TargetQueryType.HP_IDS
+        )
+        trapi_message: Dict = dict()
+        if parameters:
+            results: Dict[str, List[str]]
+            start = time.time()
+            results = await monarch_interface.run_query(parameters)
+            end = time.time()
+            logger.info(f"getting answers took {end - start} seconds")
+            trapi_message = build_trapi_message(results)
+
+        # May be unaltered if parameters were unavailable
         self._question_json.update(self.transform_attributes(trapi_message))
         self._question_json = Question.apply_attribute_constraints(self._question_json)
         return self._question_json
