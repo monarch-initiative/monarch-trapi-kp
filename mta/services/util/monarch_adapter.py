@@ -1,7 +1,7 @@
 """
 GraphAdapter to Monarch graph API
 """
-from typing import Any, List, Dict
+from typing import List, Dict
 from enum import Enum
 # from bmt import Toolkit
 
@@ -64,14 +64,16 @@ class MonarchInterface:
             return list()
 
         @staticmethod
-        def get_phenotype_ids(trapi_query: Dict) -> List[str]:
-            return list()
-
-        @staticmethod
         async def semsim_search(
                 identifiers: List[str],
-                group: SemsimSearchCategory = SemsimSearchCategory.HGNC
+                group: SemsimSearchCategory
         ) -> Dict[str, List[str]]:
+            """
+            Generalized call to Monarch SemSim search endpoint.
+            :param identifiers: list of identifiers to be matched.
+            :param group: concept category targeted for matching.
+            :return:
+            """
             #
             # curl -X 'POST' \
             #   'http://api-v3.monarchinitiative.org/v3/api/semsim/search' \
@@ -97,29 +99,32 @@ class MonarchInterface:
 
             return dict()
 
-        async def phenotype_semsim_to_disease(self, trapi_query: Dict) -> Dict[str, List[str]]:
+        async def phenotype_semsim_to_disease(self, phenotype_ids: List[str]) -> Dict[str, List[str]]:
             """
-            :param trapi_query: Python dictionary version of TRAPI Query JSON
-            :type trapi_query: Dict
+            :param phenotype_ids: list of (HPO?) phenotype identifiers
+            :type phenotype_ids: List[str]
             :return: Dictionary indexed by (MONDO) disease CURIEs
                      against lists of matching phenotype feature CURIEs
             :rtype: Dict[str, List[str]]
             """
-            hp_ids: List[str] = self.get_phenotype_ids(trapi_query)
-            result: Dict[str, List[str]] = await self.semsim_search(identifiers=hp_ids)
+            result: Dict[str, List[str]] = await self.semsim_search(
+                identifiers=phenotype_ids, group=SemsimSearchCategory.HGNC
+            )
             return result
 
-        async def run_query(self, parameters: Dict) -> Dict[str, List[str]]:
+        async def run_query(self, identifiers: List[str]) -> Dict[str, List[str]]:
             """
-            Run a query against the Monarch API.
-            :param parameters: Python dictionary version of query parameters
-            :type parameters: Dict
-            :return: Dictionary of Monarch hits along with List of matched input identifiers.
+            Simple highly specialized query MVP use case against Monarch (eventually needs to be generalized):
+                 Sends a list of phenotype (HP ontology term) CURIEs to a
+                 Semantic Similarity search of the Monarch API for matching diseases.
+                 No scoring metrics are returned (yet) from semsimian in this iteration.
+
+            :param identifiers: Python dictionary version of query parameters
+            :type identifiers: Dict
+            :return: Dictionary of Monarch 'object' identifier hits indexing Lists of matched 'subject' identifiers.
             :rtype: Dict[str, List[str]]
             """
-            parameters['timeout'] = self.query_timeout
-            # TODO: Implement me!
-            result: Dict[str, List[str]] = dict()
+            result: Dict[str, List[str]] = await self.phenotype_semsim_to_disease(phenotype_ids=identifiers)
             return result
 
     instance = None

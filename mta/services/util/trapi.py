@@ -1,5 +1,7 @@
 """
-TRAPI JSON accessing data utilities
+TRAPI JSON accessing data utilities.
+This module knows about the TRAPI syntax such that it can
+extract parameters and build TRAPI Responses from results
 """
 from typing import Optional, List, Dict
 from enum import Enum
@@ -26,10 +28,9 @@ def extract_trapi_parameters(
     #       "query_graph": {
     #           "nodes": {
     # ...
-    assert "message" in trapi_json
-    assert "query_graph" in trapi_json["message"]
-    assert "nodes" in trapi_json["message"]["query_graph"]
-    nodes: Dict = trapi_json["message"]["query_graph"]
+    assert "query_graph" in trapi_json
+    assert "nodes" in trapi_json["query_graph"]
+    nodes: Dict = trapi_json["query_graph"]["nodes"]
     for node_id, details in nodes.items():
         # Simplistic first implementation: return
         # the ids presumed to be HP ontology term CURIEs
