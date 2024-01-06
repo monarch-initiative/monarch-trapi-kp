@@ -109,19 +109,17 @@ class MonarchInterface:
             result: Dict[str, List[str]] = await self.semsim_search(identifiers=hp_ids)
             return result
 
-        async def run_query(self, params: Dict, mode: str = "") -> List[Dict[str, Any]]:
+        async def run_query(self, parameters: Dict) -> Dict[str, List[str]]:
             """
-            Drop in replacement for the above PLATER 'run_cypher()' method, accessing Monarch instead.
-            :param params: Python dictionary version of query parameters
-            :type params: Dict
-            :param mode: type of query being attempted(?)
-            :type params: str
-            :return: List of Query results as (TRAPI JSON) dictionaries
-            :rtype: List[Dict[str, Any]]
+            Run a query against the Monarch API.
+            :param parameters: Python dictionary version of query parameters
+            :type parameters: Dict
+            :return: Dictionary of Monarch hits along with List of matched input identifiers.
+            :rtype: Dict[str, List[str]]
             """
-            params['timeout'] = self.query_timeout
+            parameters['timeout'] = self.query_timeout
             # TODO: Implement me!
-            result: List[Dict[str, Any]] = [dict()]
+            result: Dict[str, List[str]] = dict()
             return result
 
     @staticmethod

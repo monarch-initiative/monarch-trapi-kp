@@ -1,15 +1,14 @@
-from typing import Dict
+from typing import List, Dict
 import time
 import copy
 import json
 
 import reasoner_transpiler as reasoner
-from reasoner_transpiler.cypher import get_query  # , RESERVED_NODE_PROPS, cypher_expression
+from reasoner_transpiler.cypher import get_query
 from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
 from mta.services.config import config
-from mta.services.util.monarch_adapter import MonarchInterface
 from mta.services.util.constraints import check_attributes
 from mta.services.util.attribute_mapping import (
     map_data,
@@ -17,6 +16,8 @@ from mta.services.util.attribute_mapping import (
     get_attribute_bl_info
 )
 from mta.services.util.logutil import LoggingUtil
+from mta.services.util.trapi import extract_trapi_parameters, build_trapi_message
+from mta.services.util.monarch_adapter import MonarchInterface
 
 # set the transpiler attribute mappings
 reasoner.cypher.ATTRIBUTE_TYPES = map_data['attribute_type_map']
@@ -53,19 +54,6 @@ class Question:
 
         # self.toolkit = toolkit
         self.provenance = config.get('PROVENANCE_TAG', 'infores:monarchinitiative')
-
-    # def compile_cypher(self, **kwargs):
-    #     query_graph = copy.deepcopy(self._question_json[Question.QUERY_GRAPH_KEY])
-    #     edges = query_graph.get('edges')
-    #     for e in edges:
-    #         # removes "biolink:" from constraint names. since these are not encoded in the graph.
-    #         # TODO revert this when we switch to having biolink: in the graphs
-    #         if edges[e]['qualifier_constraints']:
-    #             for qualifier in edges[e]['qualifier_constraints']:
-    #                 for item in qualifier['qualifier_set']:
-    #                     item['qualifier_type_id'] = item['qualifier_type_id'].replace('biolink:', '')
-    #     return get_query(query_graph, **kwargs)
-    #
 
     def _construct_sources_tree(self, sources):
         # if primary source and aggregator source are specified in the graph,
@@ -161,7 +149,7 @@ class Question:
 
         return kg_items
 
-    def transform_attributes(self, trapi_message, monarch_interface: MonarchInterface):
+    def transform_attributes(self, trapi_message):
         self.format_attribute_trapi(trapi_message.get('knowledge_graph', {}).get('nodes', {}), node=True)
         self.format_attribute_trapi(trapi_message.get('knowledge_graph', {}).get('edges', {}))
         for r in trapi_message.get("results", []):
@@ -172,18 +160,19 @@ class Question:
 
     async def answer(self, monarch_interface: MonarchInterface):
         """
-        Updates the query graph with answers from the Monarch backend
+        Gives a TRAPI response by updating the query graph
+        with answers retrieved from the Monarch backend.
         :param monarch_interface: interface for Monarch
-        :return: None
+        :return: Dict, TRAPI JSON Response object
         """
         logger.info(f"answering query_graph: {json.dumps(self._question_json)}")
         s = time.time()
-        # TODO: have to fix this 'run_query' call to properly process the question
-        results = await monarch_interface.run_query(self._question_json)
+        parameters: Dict = extract_trapi_parameters(self._question_json)
+        results: Dict[str, List[str]] = await monarch_interface.run_query(parameters)
         end = time.time()
         logger.info(f"getting answers took {end - s} seconds")
-        results_dict = monarch_interface.convert_to_dict(results)
-        self._question_json.update(self.transform_attributes(results_dict[0], monarch_interface))
+        trapi_message = build_trapi_message(results)
+        self._question_json.update(self.transform_attributes(trapi_message))
         self._question_json = Question.apply_attribute_constraints(self._question_json)
         return self._question_json
 
