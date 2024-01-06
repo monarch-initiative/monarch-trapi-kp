@@ -2,6 +2,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 
+
 class LoggingUtil(object):
     """ Logging utility controlling format and setting initial logging level """
 
