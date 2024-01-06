@@ -2,12 +2,9 @@
 
 from fastapi import Body, Depends, FastAPI, Response, status
 from reasoner_transpiler.exceptions import InvalidPredicateError
-from mta.models.models_trapi_1_4 import (
-    MetaKnowledgeGraph,
-    # Message,
-    ReasonerRequest
-)
-# from mta.models.shared import SRITestData
+from reasoner_pydantic import MetaKnowledgeGraph
+from mta.models.models_trapi_1_4 import ReasonerRequest
+
 
 from mta.services.util.monarch_adapter import MonarchInterface
 from mta.services.util.metadata import GraphMetadata
