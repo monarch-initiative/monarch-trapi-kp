@@ -125,11 +125,7 @@ async def one_hop(
         monarch_interface: MonarchInterface = Depends(get_monarch_interface),
 ) -> Response:
     """Handle one-hop."""
-    result = await monarch_interface.get_single_hops(
-        source_type,
-        target_type,
-        curie,
-    )
+    result = await monarch_interface.get_single_hops(source_type, target_type, curie)
     return json_response(result)
 
 
@@ -156,10 +152,7 @@ async def node(
         monarch_interface: MonarchInterface = Depends(get_monarch_interface)
 ) -> Response:
     """Handle node lookup."""
-    result = await monarch_interface.get_node(
-        node_type,
-        curie,
-    )
+    result = await monarch_interface.get_node(node_type, curie)
     return json_response(result)
 
 

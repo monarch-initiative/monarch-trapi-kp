@@ -78,7 +78,7 @@ async def reasoner_api(
             # replaced by a mount, specific to backend dataset
             example=get_example("reasoner-trapi-1.4"),
         ),
-        graph_interface: MonarchInterface = Depends(get_monarch_interface)
+        monarch_interface: MonarchInterface = Depends(get_monarch_interface)
 ) -> Response:
     """
     Handle TRAPI request.
@@ -93,7 +93,7 @@ async def reasoner_api(
     if 'lookup' in workflows:
         question = Question(request_json["message"])
         try:
-            response_message = await question.answer(graph_interface)
+            response_message = await question.answer(monarch_interface)
             request_json.update({'message': response_message, 'workflow': workflow})
         except InvalidPredicateError as e:
             response.status_code = status.HTTP_400_BAD_REQUEST

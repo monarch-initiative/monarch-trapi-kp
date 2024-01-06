@@ -68,7 +68,7 @@ class MonarchInterface:
             return list()
 
         @staticmethod
-        def semsim_search(
+        async def semsim_search(
                 identifiers: List[str],
                 group: SemsimSearchCategory = SemsimSearchCategory.HGNC
         ) -> Dict[str, List[str]]:
@@ -97,7 +97,7 @@ class MonarchInterface:
 
             return dict()
 
-        def phenotype_semsim_to_disease(self, trapi_query: Dict) -> Dict[str, List[str]]:
+        async def phenotype_semsim_to_disease(self, trapi_query: Dict) -> Dict[str, List[str]]:
             """
             :param trapi_query: Python dictionary version of TRAPI Query JSON
             :type trapi_query: Dict
@@ -106,26 +106,26 @@ class MonarchInterface:
             :rtype: Dict[str, List[str]]
             """
             hp_ids: List[str] = self.get_phenotype_ids(trapi_query)
-            result: Dict[str, List[str]] = self.semsim_search(identifiers=hp_ids)
+            result: Dict[str, List[str]] = await self.semsim_search(identifiers=hp_ids)
             return result
 
-        def run_query(self, params: Dict, mode: str = ""):
-            pass
-
-        async def run_query(self, question_json: Dict, **kwargs) -> List[Dict[str, Any]]:
+        async def run_query(self, params: Dict, mode: str = "") -> List[Dict[str, Any]]:
             """
             Drop in replacement for the above PLATER 'run_cypher()' method, accessing Monarch instead.
-            :param question_json: Python dictionary version of TRAPI Query JSON
-            :type question_json: Dict
+            :param params: Python dictionary version of query parameters
+            :type params: Dict
+            :param mode: type of query being attempted(?)
+            :type params: str
             :return: List of Query results as (TRAPI JSON) dictionaries
             :rtype: List[Dict[str, Any]]
             """
-            kwargs['timeout'] = self.query_timeout
+            params['timeout'] = self.query_timeout
             # TODO: Implement me!
             result: List[Dict[str, Any]] = [dict()]
             return result
 
-    def convert_to_dict(self, result) -> List[Dict[str, Any]]:
+    @staticmethod
+    def convert_to_dict(result) -> List[Dict[str, Any]]:
         # TODO: Implement me!
         return [dict(entry) for entry in result]
 
