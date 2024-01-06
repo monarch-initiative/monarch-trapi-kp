@@ -4,19 +4,6 @@ Pydantic models.
 from typing import Dict, List
 from pydantic import BaseModel, constr
 
-from mta.models.shared import (
-    ReasonerRequest,
-    Message,
-    Response,
-    MetaKnowledgeGraph
-)
-
-#
-# TODO: Deprecated code: Not directly using Neo4j in the Monarch ARA
-#
-# class CypherRequest(BaseModel):
-#     query: str
-
 
 class SimpleSpecElement(BaseModel):
     source_type: str

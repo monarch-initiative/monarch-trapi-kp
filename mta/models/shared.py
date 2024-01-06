@@ -1,15 +1,10 @@
 from typing import Dict, List, Optional
 from pydantic import BaseModel, validator, root_validator
-from reasoner_pydantic import Query as ReasonerRequestBaseClass, \
-    Message, \
-    Response, \
-    BiolinkEntity, \
-    BiolinkPredicate, \
-    MetaNode, \
-    MetaEdge, \
-    MetaKnowledgeGraph, \
-    QNode, \
+from reasoner_pydantic import (
+    Query as ReasonerRequestBaseClass,
+    QNode,
     QEdge
+)
 
 
 class SRITestEdge(BaseModel):

@@ -20,10 +20,11 @@ class Config(dict):
         return resource_path
 
     def __init__(self, config, prefix=''):
-        '''
+        """
         if not config.startswith (os.sep):
             config = os.path.join (os.path.dirname (__file__), config)
-        '''
+        """
+        dict.__init__(self)
         if isinstance(config, str):
             config_path = Config.get_resource_path(config)
             with open(config_path, 'r') as f:
