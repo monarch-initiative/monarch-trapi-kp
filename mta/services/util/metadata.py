@@ -1,9 +1,9 @@
 """
-Graph Metadata wrapper
+Accesses Graph Metadata normally published in the
+Translator SmartAPI Registry but cached locally?
 """
 import os
 import json
-from mta.services.config import config
 
 
 class GraphMetadata:

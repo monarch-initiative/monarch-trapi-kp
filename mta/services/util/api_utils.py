@@ -5,32 +5,16 @@ from fastapi.openapi.utils import get_openapi
 import json
 import os
 
-from mta.services.util.graph_adapter import GraphInterface
+from mta.services.util.monarch_adapter import MonarchInterface
 from mta.services.util.metadata import GraphMetadata
+
 # from mta.services.util.bl_helper import BLHelper
 from mta.services.config import config
 
 
-def get_graph_interface():
+def get_monarch_interface():
     """Get graph interface."""
-    return GraphInterface(
-        bl_version=config.get('BL_VERSION')
-    )
-#
-# Deprecated PLATER specific code version
-#
-#
-#     return GraphInterface(
-#         host=config.get('NEO4J_HOST'),
-#         port=config.get('NEO4J_HTTP_PORT'),
-#         auth=(
-#             config.get('NEO4J_USERNAME'),
-#             config.get('NEO4J_PASSWORD')
-#         ),
-#         query_timeout=int(config.get('NEO4J_QUERY_TIMEOUT')),
-#         bl_version=config.get('BL_VERSION')
-#     )
-#
+    return MonarchInterface(bl_version=config.get('BL_VERSION'))
 
 
 def get_graph_metadata():

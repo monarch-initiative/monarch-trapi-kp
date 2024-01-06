@@ -22,12 +22,12 @@ from fastapi import (
 #     PredicatesResponse
 # )
 # from mta.services.util.bl_helper import BLHelper
-from mta.services.util.graph_adapter import GraphInterface
+from mta.services.util.monarch_adapter import MonarchInterface
 from mta.services.util.metadata import GraphMetadata
 # from mta.services.util.overlay import Overlay
 # from mta.services.util.question import Question
 from mta.services.util.api_utils import (
-    get_graph_interface,
+    get_monarch_interface,
     # get_bl_helper,
     construct_open_api_schema,
     # get_example,
@@ -47,7 +47,7 @@ APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs'
 #             ...,
 #             example={"query": "MATCH (n) RETURN count(n)"},
 #         ),
-#         graph_interface: GraphInterface = Depends(get_graph_interface),
+#         graph_interface: GraphInterface = Depends(get_monarch_interface),
 # ) -> CypherResponse:
 #     """Handle cypher."""
 #     request = request.dict()
@@ -79,7 +79,7 @@ APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs'
 #             ...,
 #             example={"message": get_example("overlay")},
 #         ),
-#         graph_interface: GraphInterface = Depends(get_graph_interface),
+#         graph_interface: GraphInterface = Depends(get_monarch_interface),
 # ) -> Message:
 #     """Handle TRAPI request."""
 #     overlay_class = Overlay(graph_interface)
@@ -122,10 +122,10 @@ async def one_hop(
         source_type: str,
         target_type: str,
         curie: str,
-        graph_interface: GraphInterface = Depends(get_graph_interface),
+        monarch_interface: MonarchInterface = Depends(get_monarch_interface),
 ) -> Response:
     """Handle one-hop."""
-    result = await graph_interface.get_single_hops(
+    result = await monarch_interface.get_single_hops(
         source_type,
         target_type,
         curie,
@@ -153,10 +153,10 @@ APP_COMMON.add_api_route(
 async def node(
         node_type: str,
         curie: str,
-        graph_interface: GraphInterface = Depends(get_graph_interface),
+        monarch_interface: MonarchInterface = Depends(get_monarch_interface)
 ) -> Response:
     """Handle node lookup."""
-    result = await graph_interface.get_node(
+    result = await monarch_interface.get_node(
         node_type,
         curie,
     )
@@ -179,7 +179,7 @@ APP_COMMON.add_api_route(
 # async def simple_spec(
 #         source: str = None,
 #         target: str = None,
-#         graph_interface: GraphInterface = Depends(get_graph_interface),
+#         monarch_interface: MonarchInterface = Depends(get_monarch_interface),
 #         bl_helper: BLHelper = Depends(get_bl_helper),
 # ) -> Response:
 #     """Handle simple spec."""
@@ -237,6 +237,5 @@ APP_COMMON.add_api_route(
 #         "return all possible hops for all types."
 #     ),
 # )
-
 
 APP_COMMON.openapi_schema = construct_open_api_schema(app=APP_COMMON, trapi_version="N/A")

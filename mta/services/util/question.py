@@ -3,13 +3,14 @@ import time
 import copy
 import json
 
-from mta.services.util.graph_adapter import GraphInterface
 import reasoner_transpiler as reasoner
 from reasoner_transpiler.cypher import get_query  # , RESERVED_NODE_PROPS, cypher_expression
 from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
-from mta.services.util.constraints import check_attributes
+
 from mta.services.config import config
+from mta.services.util.monarch_adapter import MonarchInterface
+from mta.services.util.constraints import check_attributes
 from mta.services.util.attribute_mapping import (
     map_data,
     skip_list,
@@ -160,7 +161,7 @@ class Question:
 
         return kg_items
 
-    def transform_attributes(self, trapi_message, graph_interface: GraphInterface):
+    def transform_attributes(self, trapi_message, monarch_interface: MonarchInterface):
         self.format_attribute_trapi(trapi_message.get('knowledge_graph', {}).get('nodes', {}), node=True)
         self.format_attribute_trapi(trapi_message.get('knowledge_graph', {}).get('edges', {}))
         for r in trapi_message.get("results", []):
@@ -169,25 +170,20 @@ class Question:
                 analyses["resource_id"] = self.provenance
         return trapi_message
 
-    async def answer(self, graph_interface: GraphInterface):
+    async def answer(self, monarch_interface: MonarchInterface):
         """
         Updates the query graph with answers from the Monarch backend
-        :param graph_interface: interface for Monarch
+        :param monarch_interface: interface for Monarch
         :return: None
         """
-        # cypher = self.compile_cypher(
-        #    **{"use_hints": True, "relationship_id": "internal", "primary_ks_required": True}
-        # )
         logger.info(f"answering query_graph: {json.dumps(self._question_json)}")
-        # logger.debug(f"cypher: {cypher}")
         s = time.time()
         # TODO: have to fix this 'run_query' call to properly process the question
-        # results = await graph_interface.run_cypher(cypher)
-        results = await graph_interface.run_query(self._question_json)
+        results = await monarch_interface.run_query(self._question_json)
         end = time.time()
         logger.info(f"getting answers took {end - s} seconds")
-        results_dict = graph_interface.convert_to_dict(results)
-        self._question_json.update(self.transform_attributes(results_dict[0], graph_interface))
+        results_dict = monarch_interface.convert_to_dict(results)
+        self._question_json.update(self.transform_attributes(results_dict[0], monarch_interface))
         self._question_json = Question.apply_attribute_constraints(self._question_json)
         return self._question_json
 

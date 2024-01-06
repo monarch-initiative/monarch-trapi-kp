@@ -9,12 +9,12 @@ from mta.models.models_trapi_1_4 import (
 )
 # from mta.models.shared import SRITestData
 
-from mta.services.util.graph_adapter import GraphInterface
+from mta.services.util.monarch_adapter import MonarchInterface
 from mta.services.util.metadata import GraphMetadata
 from mta.services.util.question import Question
 # from mta.services.util.overlay import Overlay
 from mta.services.util.api_utils import (
-    get_graph_interface,
+    get_monarch_interface,
     get_graph_metadata,
     construct_open_api_schema,
     get_example,
@@ -78,7 +78,7 @@ async def reasoner_api(
             # replaced by a mount, specific to backend dataset
             example=get_example("reasoner-trapi-1.4"),
         ),
-        graph_interface: GraphInterface = Depends(get_graph_interface),
+        graph_interface: MonarchInterface = Depends(get_monarch_interface)
 ) -> Response:
     """
     Handle TRAPI request.
