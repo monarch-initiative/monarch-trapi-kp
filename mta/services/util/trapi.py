@@ -59,6 +59,204 @@ def extract_trapi_parameters(
     return None
 
 
-def build_trapi_message(results: Dict) -> Dict:
-    # TODO: Implement me!
+def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
+    """
+    Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
+    Input result is of format somewhat like
+         { "MONDO:0008807": ["HP:0002104", "HP:0012378"] }
+    which represent S-P-O edges something like
+        ("HP:0002104": "biolink:PhenotypicFeature")--["biolink:associated_with"]->("MONDO:0008807": "biolink:Disease")
+
+    First MVP assumes a fixed TRAPI Request QGraph structure.
+    Future implementations may need to decide mappings more on the fly?
+
+    :param results: Dict[str, List[str]], subject - object (list) identifier mappings
+    :return: query result parts of TRAPI Response.Message body (suitable KnowledgeGraph and Results added)
+    """
+    # Statement results as noted above, from original QGraph assumed to be of form:
+    #
+    # "query_graph": {
+    #           "nodes": {
+    #             "n0": {
+    #               "categories": [
+    #                 "biolink:PhenotypicEntity"
+    #               ],
+    #               "ids": [
+    #                 "HP:0002104",
+    #                 "HP:0012378"
+    #               ],
+    #               "is_set": true
+    #             },
+    #             "n1": {
+    #               "categories": [
+    #                 "biolink:Disease"
+    #               ]
+    #             }
+    #           },
+    #           "edges": {
+    #             "e01": {
+    #               "subject": "n0",
+    #               "object": "n1",
+    #               "predicates": [
+    #                 "biolink:associated_with"
+    #               ]
+    #             }
+    #           }
+    #       }
+    #
+    # Add the following output parts:
+    #
+    # TODO: maybe we can add 'name' fields to node entries,
+    #       since the node names are annotated by SemSimian?
+    #
+    #     "knowledge_graph": {
+    #         "nodes": {
+    #             "HP:0002104": {"categories": ["biolink:PhenotypicEntity"]},
+    #             "HP:0012378": {"categories": ["biolink:PhenotypicEntity"]},
+    #             "MONDO:0005148": {"categories": ["biolink:Disease"]}
+    #         },
+    #         "edges": {
+    #             "e01": {
+    #                 "subject": "HP:000210",
+    #                 "object": "MONDO:0005148",
+    #                 "predicate": "biolink:associated_with",
+    #                 "attributes": [],
+    #                 "sources":[
+    #                     {
+    #                         "resource_id": "infores:monarchinitiative",
+    #                         "resource_role": "primary_knowledge_source"
+    #                     }
+    #                 ]
+    #             },
+    #             "e02": {
+    #                 "subject": "HP:0012378",
+    #                 "object": "MONDO:0005148",
+    #                 "predicate": "biolink:associated_with",
+    #                 "attributes": [],
+    #                 "sources":[
+    #                     {
+    #                         "resource_id": "infores:monarchinitiative",
+    #                         "resource_role": "primary_knowledge_source"
+    #                     }
+    #                 ]
+    #             }
+    #         }
+    #     },
+    #     "results": [
+    #         {
+    #             "node_bindings": {
+    #                 "n0": [
+    #                     {
+    #
+    #                         TODO: problem here is that the 'QNode' n0 is a set of nodes? How do we represent this?
+    #
+    #                         "id": "HP:000210,HP:0012378"
+    #                     }
+    #                 ],
+    #                 "n1": [
+    #                     {
+    #                         "id": "MONDO:0005148"
+    #                     }
+    #                 ]
+    #             },
+    #             "analyses": [
+    #                 {
+    #                     "resource_id": "infores:monarchinitiative",
+    #                     "edge_bindings": {
+    #                         "e01": [
+    #                             {
+    #                                 "id": "e01"
+    #                             },
+    #                             {
+    #                                 "id": "e02"
+    #                             },
+    #                         ],
+    #                     }
+    #                 }
+    #             ]
+    #         }
+    #     ]
+    # }
+    trapi_response: Dict = {
+        "knowledge_graph": {
+            "nodes": {},
+            "edges": {}
+        },
+        "results": []
+    }
+
+    def next_edge_id():
+        edge_idx = 0
+        while True:
+            edge_idx += 1
+            yield f"e{str(edge_idx)}"
+
+    for subject_id, object_terms in results.items():
+        # Add to the knowledge_graph
+
+        # 1. Add the "nodes" - if not already present
+        if subject_id not in trapi_response["knowledge_graph"]["nodes"]:
+            # TODO: hard coded category... probably need to generalize!
+            trapi_response["knowledge_graph"]["nodes"][subject_id] = {"categories": ["biolink:Disease"]}
+
+        # Construct overall "results" list entry for this similarity match
+        result_entry: Dict = {
+            "node_bindings": {
+                "n0": [
+                    {
+
+                        "id": ",".join(object_terms)
+                    }
+                ],
+                "n1": [
+                    {
+                        "id": subject_id
+                    }
+                ]
+            },
+            "analyses": [
+                {
+                    "resource_id": "infores:monarchinitiative",
+                    "edge_bindings": {
+                        "e01": []
+                    }
+                }
+            ]
+        }
+        for object_id in object_terms:
+            if object_id not in trapi_response["knowledge_graph"]["nodes"]:
+                # TODO: hard coded category... probably need to generalize!
+                trapi_response["knowledge_graph"]["nodes"][object_id] = {"categories": ["biolink:PhenotypicEntity"]}
+
+            # 2. Add the "edges"
+            #         "edges": {
+            #             "e01": {
+            #                 "subject": "HP:000210",
+            #                 "object": "MONDO:0005148",
+            #                 "predicate": "biolink:associated_with",
+            #                 "attributes": [],
+            #                 "sources": [
+            #                     {
+            #                         "resource_id": "infores:monarchinitiative",
+            #                         "resource_role": "primary_knowledge_source"
+            #                     }
+            #                 ]
+            #             }
+            # Add specific edge to the Knowledge Graph...
+            edge_id = next_edge_id()
+            trapi_response["knowledge_graph"]["edges"][edge_id] = {
+                "subject": subject_id,
+                "predicate": "biolink:associated_with",
+                "object": object_id,
+                "attributes": [],
+                "sources": [
+                    {
+                        "resource_id": "infores:monarchinitiative",
+                        "resource_role": "primary_knowledge_source"
+                    }
+                ]
+            }
+            # then track the new edge as a specific result entry for the QEdge
+            result_entry["analyses"]["edge_bindings"]["e01"].append({"id": edge_id})
+
     return results
