@@ -59,6 +59,15 @@ def extract_trapi_parameters(
     return None
 
 
+edge_idx = 0
+
+
+def next_edge_id() -> str:
+    global edge_idx
+    edge_idx += 1
+    return f"e{str(edge_idx)}"
+
+
 def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
@@ -148,7 +157,8 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
     #                 "n0": [
     #                     {
     #
-    #                         TODO: problem here is that the 'QNode' n0 is a set of nodes? How do we represent this?
+    #                         TODO: problem here is that the 'QNode' n0 is a set of nodes?
+    #                               How do we represent this?
     #
     #                         "id": "HP:000210,HP:0012378"
     #                     }
@@ -184,12 +194,6 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
         },
         "results": []
     }
-
-    def next_edge_id():
-        edge_idx = 0
-        while True:
-            edge_idx += 1
-            yield f"e{str(edge_idx)}"
 
     for subject_id, object_terms in results.items():
         # Add to the knowledge_graph
@@ -244,10 +248,11 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
             #             }
             # Add specific edge to the Knowledge Graph...
             edge_id = next_edge_id()
+            # Note here that n0 are the subject but come from the SemSemian object terms
             trapi_response["knowledge_graph"]["edges"][edge_id] = {
-                "subject": subject_id,
+                "subject": object_id,
                 "predicate": "biolink:associated_with",
-                "object": object_id,
+                "object": subject_id,
                 "attributes": [],
                 "sources": [
                     {
@@ -257,6 +262,8 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
                 ]
             }
             # then track the new edge as a specific result entry for the QEdge
-            result_entry["analyses"]["edge_bindings"]["e01"].append({"id": edge_id})
+            result_entry["analyses"][0]["edge_bindings"]["e01"].append({"id": edge_id})
 
-    return results
+        trapi_response["results"].append(result_entry)
+
+    return trapi_response
