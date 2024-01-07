@@ -180,9 +180,10 @@ class Question:
         if parameters:
             results: Dict[str, List[str]]
             start = time.time()
-            results = await monarch_interface.run_query(parameters)
+            results: Dict[str, List[str]] = await monarch_interface.run_query(parameters)
             end = time.time()
             logger.info(f"getting answers took {end - start} seconds")
+
             trapi_message = build_trapi_message(results)
 
         # May be unaltered if parameters were unavailable
