@@ -4,7 +4,7 @@
           "nodes": {
             "n0": {
               "categories": [
-                "biolink:PhenotypicEntity"
+                "biolink:PhenotypicFeature"
               ],
               "ids": [
                 "HP:0002104",

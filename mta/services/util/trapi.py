@@ -38,7 +38,7 @@ def extract_trapi_parameters(
             # ...
             #             "n0": {
             #               "categories": [
-            #                 "biolink:PhenotypicEntity"
+            #                 "biolink:PhenotypicFeature"
             #               ],
             #               "ids": [
             #                 "HP:0002104",
@@ -51,7 +51,7 @@ def extract_trapi_parameters(
             # ...
             if not("categories" in details and "ids" in details):
                 continue
-            if "biolink:PhenotypicEntity" in details["categories"]:
+            if "biolink:PhenotypicFeature" in details["categories"]:
                 return list(details["ids"])
 
         # elif or else... currently an unimplemented use case?
@@ -88,7 +88,7 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
     #           "nodes": {
     #             "n0": {
     #               "categories": [
-    #                 "biolink:PhenotypicEntity"
+    #                 "biolink:PhenotypicFeature"
     #               ],
     #               "ids": [
     #                 "HP:0002104",
@@ -120,8 +120,8 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
     #
     #     "knowledge_graph": {
     #         "nodes": {
-    #             "HP:0002104": {"categories": ["biolink:PhenotypicEntity"]},
-    #             "HP:0012378": {"categories": ["biolink:PhenotypicEntity"]},
+    #             "HP:0002104": {"categories": ["biolink:PhenotypicFeature"]},
+    #             "HP:0012378": {"categories": ["biolink:PhenotypicFeature"]},
     #             "MONDO:0005148": {"categories": ["biolink:Disease"]}
     #         },
     #         "edges": {
@@ -230,7 +230,7 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
         for object_id in object_terms:
             if object_id not in trapi_response["knowledge_graph"]["nodes"]:
                 # TODO: hard coded category... probably need to generalize!
-                trapi_response["knowledge_graph"]["nodes"][object_id] = {"categories": ["biolink:PhenotypicEntity"]}
+                trapi_response["knowledge_graph"]["nodes"][object_id] = {"categories": ["biolink:PhenotypicFeature"]}
 
             # 2. Add the "edges"
             #         "edges": {
