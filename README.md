@@ -8,16 +8,14 @@ The goal is to find a good, probably creative answer that satisfies as many of t
 
 ## Installation
 
-## Running the Web Server Directly (from a Command Line Interface)
-
-#### Install dependencies within a suitable virtual environment
+### Install dependencies within a suitable virtual environment
 
 The Python virtual environment and dependencies of MTA are managed using Poetry. Assuming that you have Poetry installed and a suitable version of Python (i.e. ">=3.9,<3.13") installed, then:
 
     poetry shell
     poetry install
  
-#### Configure MTA settings
+### Configure MTA settings
    
    Copy the `.env-template` file, saved as `.env` in repository root dir, then customize accordingly, for example:
    
@@ -30,21 +28,22 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
     BL_VERSION='4.1.0'
    ```
 
-#### Run the Script
+## Running the System
 
-Run the following script to start up the server:
+### Run the Server from the CLI
+
+Run the following script to start up the server from the command line terminal:
 
   ```bash
       ./main.sh
   ```
 
-## Running the Server within a Docker Container
+### Running the Server within a Docker Container
 
-   Or build an image and run it. 
+   Or build an image and run it. From the root directory, type:
   
   ```bash
-    cd mta
-    docker build --tag <image_tag> .
+    docker build --tag mta-test .
     cd ../
   ```
   
@@ -52,22 +51,11 @@ Run the following script to start up the server:
    docker run --env-file .env\
     --name mta\
     -p 8080:8080\
-    mta-tst
+    mta-test
 
   ```
+## Viewing the System
 
- ### Miscellaneous
- ###### `/about` Endpoint 
- The `/about` endpoint can be used to present meta-data about the current MTA instance. 
- This meta-data is served from `<repo-root>/mta/metadata/about.json` file. One can edit the contents of
- this file to suite needs. In containerized environment we recommend mounting this file as a volume.
- 
- Eg:
- ```bash
-docker run -p 0.0.0.0:8999:8080  \
-               --env WEB_HOST=0.0.0.0 \
-               -v <your-custom-about>:/<path-to-mta-repo-home>/mta/metadata/about.json \
-               --network=<docker_network_neo4j_is_running_at> \    
-                <image_tag>
-    
-``` 
+When run the system locally from the CLI or using Docker (but not within any named host), an OpenAPI web form exposing the TRAPI API is available at http://localhost:8080/1.4/docs.  Of course, TRAPI endpoints may also be directly accessed, as expected.
+
+An additional set of endpoints - so-called 'COMMON' API endpoints - is available at http://localhost:8080/common/docs.  Aside from accessing available release metadata about the system (via the /common/metadata path), this set of endpoints also provides a few non-TRAPI general purpose endpoints to retrieve specific data results more conveniently than TRAPI, such as retrieving a node record by CURIE.
