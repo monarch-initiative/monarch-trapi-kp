@@ -1,13 +1,19 @@
 """
 GraphAdapter to Monarch graph API
 """
-from typing import Optional, Any, List, Dict
+from typing import Optional, Union, Any, List, Dict
 from enum import Enum
 import requests
 
 # from bmt import Toolkit
 
 from mta.services.config import config
+from mta.services.util import (
+    TERM_DATA,
+    MATCH_LIST,
+    RESULT_ENTRY,
+    RESULT_MAP
+)
 from mta.services.util.logutil import LoggingUtil
 
 logger = LoggingUtil.init_logging(
@@ -162,37 +168,54 @@ class MonarchInterface:
             return response.json()
 
         @staticmethod
-        def parse_raw_semsim(full_result: List[Dict]) -> Dict[str, List[str]]:
+        def parse_raw_semsim(
+                full_result: List[Dict],
+                match_category: str
+        ) -> RESULT_MAP:
             """
-            Parse out the SemSimian matched objects associated with specified subject ids.
-            :param full_result: raw Semsimian result
-            :type full_result: List[SemsimSearchResult]
-            :return: Dict[str, List[str]], results indexed by matched subjects
-                     with similarity profiles matching query inputs
+            Parse out the SemSimian matched object terms associated with specified subject ids.
+            :param full_result: List[SemsimSearchResult], raw Semsimian result
+            :param match_category: str, Biolink Model concept category of matched terms (not provided by SemSimian?)
+            :return: RESULT_MAP, results indexed by matched subjects,
+                                 with similarity profiles matching query inputs
             """
-            result: Dict[str, List[str]] = dict()
+            result: RESULT_MAP = dict()
             for entry in full_result:
                 subject_id = tag_value(entry, "subject.id")
+                result[subject_id]: RESULT_ENTRY = dict()
+                subject_name = tag_value(entry, "subject.name")
+                result[subject_id]["name"] = subject_name
+                subject_category = tag_value(entry, "subject.category")
+                result[subject_id]["category"] = subject_category
                 object_termset: Dict = tag_value(entry, "similarity.object_termset")
+                result[subject_id]["matches"]: MATCH_LIST = list()
                 if object_termset:
-                    result[subject_id] = list(object_termset.keys())
+                    for object_term in object_termset.values():
+                        object_id = object_term["id"]
+                        object_name = object_term["label"]
+                        term_data: TERM_DATA = {
+                            "id": object_id,
+                            "name": object_name,
+                            "category": match_category
+                        }
+                        result[subject_id]["matches"].append(term_data)
             return result
 
-        async def phenotype_semsim_to_disease(self, phenotype_ids: List[str]) -> Dict[str, List[str]]:
+        async def phenotype_semsim_to_disease(self, phenotype_ids: List[str]) -> RESULT_MAP:
             """
             :param phenotype_ids: list of (HPO?) phenotype identifiers
             :type phenotype_ids: List[str]
-            :return: Dictionary indexed by (MONDO) disease CURIEs
-                     against lists of matching phenotype feature CURIEs
-            :rtype: Dict[str, List[str]]
+            :return: Dictionary indexed by (MONDO) disease CURIEs, containing the name and category of
+                     the MONDO term, plus lists of matching phenotype feature CURIEs with their name
+            :rtype: RESULT_MAP
             """
             full_result: List[Dict] = await self.semsim_search(
                 identifiers=phenotype_ids, group=SemsimSearchCategory.MONDO
             )
-            result: Dict[str, List[str]] = self.parse_raw_semsim(full_result)
+            result: RESULT_MAP = self.parse_raw_semsim(full_result, match_category="biolink:PhenotypicFeature")
             return result
 
-        async def run_query(self, identifiers: List[str]) -> Dict[str, List[str]]:
+        async def run_query(self, identifiers: List[str]) -> RESULT_MAP:
             """
             Initial MVP is a single highly specialized query MVP use case against Monarch.
                  Sends an input list of (HPO-indexed) phenotypic feature CURIEs to a
@@ -204,7 +227,7 @@ class MonarchInterface:
             :return: Dictionary of Monarch 'subject' identifier hits indexing Lists of matched input identifiers.
             :rtype: Dict[str, List[str]]
             """
-            result: Dict[str, List[str]] = await self.phenotype_semsim_to_disease(phenotype_ids=identifiers)
+            result: RESULT_MAP = await self.phenotype_semsim_to_disease(phenotype_ids=identifiers)
             return result
 
     instance = None

@@ -4,6 +4,12 @@ Unit Tests for the Monarch Adapter
 from typing import List, Dict
 import pytest
 
+from mta.services.util import (
+    TERM_DATA,
+    MATCH_LIST,
+    RESULT_ENTRY,
+    RESULT_MAP
+)
 from mta.services.util.monarch_adapter import tag_value, SemsimSearchCategory, MonarchInterface
 from mta.services.util.api_utils import get_monarch_interface
 
@@ -58,16 +64,23 @@ async def test_semsim_search():
     subject_id = tag_value(semsim_result[0], "subject.id")
     assert subject_id == "MONDO:0008807", "Expected Subject ID 'MONDO:0008807' not returned"
     object_termset: Dict = tag_value(semsim_result[0], "similarity.object_termset")
-    assert object_termset, "Similarity Object Termset is empty?"
+    assert object_termset, "Similarity Object term set is empty?"
     assert all([entry in object_termset.keys() for entry in object_termset])
-    result: Dict[str, List[str]] = monarch_interface.parse_raw_semsim(semsim_result)
+    result: RESULT_MAP = monarch_interface.parse_raw_semsim(
+        full_result=semsim_result, match_category="biolink:PhenotypicFeature"
+    )
     assert "MONDO:0008807" in result.keys()
-    assert all([hpid in ["HP:0002104", "HP:0012378"] for hpid in result["MONDO:0008807"]])
+    match_list: MATCH_LIST = result["MONDO:0008807"]["matches"]
+    term_data: TERM_DATA
+    assert all([term_data["id"] in ["HP:0002104", "HP:0012378"] for term_data in match_list])
 
 
 @pytest.mark.asyncio
-async def test_semsim_search():
+async def test_run_query():
     monarch_interface: MonarchInterface = get_monarch_interface()
-    result: Dict[str, List[str]] = await monarch_interface.run_query(identifiers=TEST_IDENTIFIERS)
+    result: RESULT_MAP = await monarch_interface.run_query(identifiers=TEST_IDENTIFIERS)
     assert "MONDO:0008807" in result.keys()
-    assert all([hpid in ["HP:0002104", "HP:0012378"] for hpid in result["MONDO:0008807"]])
+    result_entry: RESULT_ENTRY = result["MONDO:0008807"]
+    match_list: MATCH_LIST = result_entry["matches"]
+    term_data: TERM_DATA
+    assert all([term_data["id"] in ["HP:0002104", "HP:0012378"] for term_data in match_list])

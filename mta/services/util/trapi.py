@@ -5,6 +5,12 @@ extract parameters and build TRAPI Responses from results
 """
 from typing import Optional, List, Dict
 from enum import Enum
+from mta.services.util import (
+    TERM_DATA,
+    MATCH_LIST,
+    RESULT_ENTRY,
+    RESULT_MAP
+)
 
 
 class TargetQueryType(Enum):
@@ -68,7 +74,7 @@ def next_edge_id() -> str:
     return f"e{str(edge_idx)}"
 
 
-def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
+def build_trapi_message(results: RESULT_MAP) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
     Input result is of format somewhat like
@@ -79,7 +85,7 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
     First MVP assumes a fixed TRAPI Request QGraph structure.
     Future implementations may need to decide mappings more on the fly?
 
-    :param results: Dict[str, List[str]], subject - object (list) identifier mappings
+    :param results: RESULT_MAP, SemSimian subject - object identifier mappings
     :return: query result parts of TRAPI Response.Message body (suitable KnowledgeGraph and Results added)
     """
     # Statement results as noted above, from original QGraph assumed to be of form:
@@ -194,22 +200,28 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
         },
         "results": []
     }
-
-    for subject_id, object_terms in results.items():
+    subject_id: str
+    result: RESULT_ENTRY
+    for subject_id, result in results.items():
         # Add to the knowledge_graph
-
         # 1. Add the "nodes" - if not already present
         if subject_id not in trapi_response["knowledge_graph"]["nodes"]:
-            # TODO: hard coded category... probably need to generalize!
-            trapi_response["knowledge_graph"]["nodes"][subject_id] = {"categories": ["biolink:Disease"]}
+            subject_name = result["name"]
+            subject_category = result["category"]
+            trapi_response["knowledge_graph"]["nodes"][subject_id] = {
+                "name": subject_name,
+                "categories": [subject_category]
+            }
 
         # Construct overall "results" list entry for this similarity match
+        matched_terms: MATCH_LIST = result["matches"]
+        term_data: TERM_DATA
         result_entry: Dict = {
             "node_bindings": {
                 "n0": [
                     {
 
-                        "id": ",".join(object_terms)
+                        "id": ",".join([term_data["id"] for term_data in matched_terms])
                     }
                 ],
                 "n1": [
@@ -227,10 +239,13 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
                 }
             ]
         }
-        for object_id in object_terms:
-            if object_id not in trapi_response["knowledge_graph"]["nodes"]:
-                # TODO: hard coded category... probably need to generalize!
-                trapi_response["knowledge_graph"]["nodes"][object_id] = {"categories": ["biolink:PhenotypicFeature"]}
+        for term_data in matched_terms:
+            if term_data["id"] not in trapi_response["knowledge_graph"]["nodes"]:
+                trapi_response["knowledge_graph"]["nodes"][term_data["id"]] = {
+                    "name": term_data["name"],
+                    # TODO: do we also need to infer and add the 'parent' Biolink categories here?
+                    "categories": [term_data["category"]]
+                }
 
             # 2. Add the "edges"
             #         "edges": {
@@ -250,7 +265,7 @@ def build_trapi_message(results: Dict[str, List[str]]) -> Dict:
             edge_id = next_edge_id()
             # Note here that n0 are the subject but come from the SemSemian object terms
             trapi_response["knowledge_graph"]["edges"][edge_id] = {
-                "subject": object_id,
+                "subject": term_data["id"],
                 "predicate": "biolink:associated_with",
                 "object": subject_id,
                 "attributes": [],

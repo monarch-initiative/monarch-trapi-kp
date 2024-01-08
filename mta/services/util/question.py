@@ -9,6 +9,12 @@ from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
 from mta.services.config import config
+from mta.services.util import (
+    TERM_DATA,
+    MATCH_LIST,
+    RESULT_ENTRY,
+    RESULT_MAP
+)
 from mta.services.util.constraints import check_attributes
 from mta.services.util.attribute_mapping import (
     map_data,
@@ -180,7 +186,7 @@ class Question:
         if parameters:
             results: Dict[str, List[str]]
             start = time.time()
-            results: Dict[str, List[str]] = await monarch_interface.run_query(parameters)
+            results: RESULT_MAP = await monarch_interface.run_query(parameters)
             end = time.time()
             logger.info(f"getting answers took {end - start} seconds")
 
