@@ -85,8 +85,9 @@ async def reasoner_api(
     request_json = request.dict(by_alias=True)
 
     # default workflow
+    # TODO: do we need to fix the default workflow object to avoid warnings
     workflow = request_json.get('workflow') or [{"id": "lookup"}]
-    workflows = {wkfl['id']: wkfl for wkfl in workflow}
+    workflows = {wkfl['id']: { key: value for key, value in wkfl.items() if value is not None} for wkfl in workflow}
     # TODO: do we need a new 'workflow' code to explicitly signal the 'multi-curie' use case?
     if 'lookup' in workflows:
         question = Question(request_json["message"])

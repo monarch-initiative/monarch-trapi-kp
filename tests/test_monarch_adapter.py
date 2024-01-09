@@ -8,7 +8,8 @@ from mta.services.util import (
     TERM_DATA,
     MATCH_LIST,
     RESULT_ENTRY,
-    RESULT_MAP
+    RESULTS_MAP,
+    RESULT
 )
 from mta.services.util.monarch_adapter import tag_value, SemsimSearchCategory, MonarchInterface
 from mta.services.util.api_utils import get_monarch_interface
@@ -66,7 +67,7 @@ async def test_semsim_search():
     object_termset: Dict = tag_value(semsim_result[0], "similarity.object_termset")
     assert object_termset, "Similarity Object term set is empty?"
     assert all([entry in object_termset.keys() for entry in object_termset])
-    result: RESULT_MAP = monarch_interface.parse_raw_semsim(
+    result: RESULTS_MAP = monarch_interface.parse_raw_semsim(
         full_result=semsim_result, match_category="biolink:PhenotypicFeature"
     )
     assert "MONDO:0008807" in result.keys()
@@ -78,9 +79,13 @@ async def test_semsim_search():
 @pytest.mark.asyncio
 async def test_run_query():
     monarch_interface: MonarchInterface = get_monarch_interface()
-    result: RESULT_MAP = await monarch_interface.run_query(identifiers=TEST_IDENTIFIERS)
-    assert "MONDO:0008807" in result.keys()
-    result_entry: RESULT_ENTRY = result["MONDO:0008807"]
+    result: RESULT = await monarch_interface.run_query(identifiers=TEST_IDENTIFIERS)
+    assert result
+    assert "primary_knowledge_source" in result and result["primary_knowledge_source"] == "infores:hpo-annotations"
+    assert "result_map" in result and result["result_map"]
+    results_map: RESULTS_MAP = result["result_map"]
+    assert "MONDO:0008807" in results_map.keys()
+    result_entry: RESULT_ENTRY = results_map["MONDO:0008807"]
     match_list: MATCH_LIST = result_entry["matches"]
     term_data: TERM_DATA
     assert all([term_data["id"] in ["HP:0002104", "HP:0012378"] for term_data in match_list])

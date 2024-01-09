@@ -8,8 +8,8 @@ from enum import Enum
 from mta.services.util import (
     TERM_DATA,
     MATCH_LIST,
-    RESULT_ENTRY,
-    RESULT_MAP
+    RESULTS_MAP,
+    RESULT
 )
 
 
@@ -74,7 +74,7 @@ def next_edge_id() -> str:
     return f"e{str(edge_idx)}"
 
 
-def build_trapi_message(results: RESULT_MAP) -> Dict:
+def build_trapi_message(result: RESULT) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
     Input result is of format somewhat like
@@ -85,7 +85,7 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
     First MVP assumes a fixed TRAPI Request QGraph structure.
     Future implementations may need to decide mappings more on the fly?
 
-    :param results: RESULT_MAP, SemSimian subject - object identifier mappings
+    :param result: RESULT, SemSimian subject - object identifier mapping dataset with some metadata annotation
     :return: query result parts of TRAPI Response.Message body (suitable KnowledgeGraph and Results added)
     """
     # Statement results as noted above, from original QGraph assumed to be of form:
@@ -121,9 +121,6 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
     #
     # Add the following output parts:
     #
-    # TODO: maybe we can add 'name' fields to node entries,
-    #       since the node names are annotated by SemSimian?
-    #
     #     "knowledge_graph": {
     #         "nodes": {
     #             "HP:0002104": {"categories": ["biolink:PhenotypicFeature"]},
@@ -138,8 +135,8 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
     #                 "attributes": [],
     #                 "sources":[
     #                     {
-    #                         "resource_id": "infores:monarchinitiative",
-    #                         "resource_role": "primary_knowledge_source"
+    #                         "resource_id": "infores:hpo-annotations",
+    #                         "resource_role": "biolink:primary_knowledge_source"
     #                     }
     #                 ]
     #             },
@@ -150,8 +147,8 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
     #                 "attributes": [],
     #                 "sources":[
     #                     {
-    #                         "resource_id": "infores:monarchinitiative",
-    #                         "resource_role": "primary_knowledge_source"
+    #                         "resource_id": "infores:hpo-annotations",
+    #                         "resource_role": "biolink:primary_knowledge_source"
     #                     }
     #                 ]
     #             }
@@ -200,9 +197,10 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
         },
         "results": []
     }
+    primary_knowledge_source: str = result["primary_knowledge_source"]
     subject_id: str
-    result: RESULT_ENTRY
-    for subject_id, result in results.items():
+    result_map: RESULTS_MAP = result["result_map"]
+    for subject_id, result in result_map.items():
         # Add to the knowledge_graph
         # 1. Add the "nodes" - if not already present
         if subject_id not in trapi_response["knowledge_graph"]["nodes"]:
@@ -256,14 +254,14 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
             #                 "attributes": [],
             #                 "sources": [
             #                     {
-            #                         "resource_id": "infores:monarchinitiative",
-            #                         "resource_role": "primary_knowledge_source"
+            #                         "resource_id": "infores:hpo-annotations",
+            #                         "resource_role": "biolink:primary_knowledge_source"
             #                     }
             #                 ]
             #             }
             # Add specific edge to the Knowledge Graph...
             edge_id = next_edge_id()
-            # Note here that n0 are the subject but come from the SemSemian object terms
+            # Note here that n0 are the subject but come from the SemSimian object terms
             trapi_response["knowledge_graph"]["edges"][edge_id] = {
                 "subject": term_data["id"],
                 "predicate": "biolink:associated_with",
@@ -271,8 +269,8 @@ def build_trapi_message(results: RESULT_MAP) -> Dict:
                 "attributes": [],
                 "sources": [
                     {
-                        "resource_id": "infores:monarchinitiative",
-                        "resource_role": "primary_knowledge_source"
+                        "resource_id": primary_knowledge_source,
+                        "resource_role": "biolink:primary_knowledge_source"
                     }
                 ]
             }

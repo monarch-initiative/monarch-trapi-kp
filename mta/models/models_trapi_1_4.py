@@ -1,7 +1,7 @@
 """
 Pydantic models.
 """
-from typing import Optional, Dict, List
+from typing import Dict, List
 from pydantic import BaseModel, constr, validator, root_validator
 from reasoner_pydantic import (
     Query as ReasonerRequestBaseClass,

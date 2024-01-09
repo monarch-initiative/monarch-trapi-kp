@@ -9,12 +9,7 @@ from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
 from mta.services.config import config
-from mta.services.util import (
-    TERM_DATA,
-    MATCH_LIST,
-    RESULT_ENTRY,
-    RESULT_MAP
-)
+from mta.services.util import RESULT
 from mta.services.util.constraints import check_attributes
 from mta.services.util.attribute_mapping import (
     map_data,
@@ -63,15 +58,15 @@ class Question:
         self._question_json = copy.deepcopy(question_json)
 
         # self.toolkit = toolkit
-        self.provenance = config.get('PROVENANCE_TAG', 'infores:monarchinitiative')
+        self.provenance = config.get("PROVENANCE_TAG", "infores:monarchinitiative")
 
     def _construct_sources_tree(self, sources):
         # if primary source and aggregator source are specified in the graph,
         # upstream_resource_ids of all aggregator_ks be that source
 
-        # if aggregator ks are coming from db, plater would add itself as aggregator and use other aggregator ids
+        # if aggregator ks are coming from db, mta would add itself as aggregator and use other aggregator ids
         # as upstream resources, if no aggregators are found and only primary ks is provided that would be added
-        # as upstream for the plater entry
+        # as upstream for the mta entry
         formatted_sources = []
         # filter out source entries that actually have values
         temp = {}
@@ -94,16 +89,16 @@ class Question:
                 {
                     "resource_id": resource_id,
                     "resource_role": resource_role.lstrip('biolink:'),
-                    "upstream_resource_ids": upstreams
+                    "upstream_resource_ids": list(upstreams) if upstreams else None
                 }
                 for resource_id in temp[resource_role]
             ]
-        upstreams_for_plater_entry = \
+        upstreams_for_mta_entry = \
             temp.get("biolink:aggregator_knowledge_source") or temp.get("biolink:primary_knowledge_source")
         formatted_sources.append({
             "resource_id": self.provenance,
             "resource_role": "aggregator_knowledge_source",
-            "upstream_resource_ids": upstreams_for_plater_entry
+            "upstream_resource_ids": list(upstreams_for_mta_entry) if upstreams else None
         })
         return formatted_sources
 
@@ -186,11 +181,11 @@ class Question:
         if parameters:
             results: Dict[str, List[str]]
             start = time.time()
-            results: RESULT_MAP = await monarch_interface.run_query(parameters)
+            result: RESULT = await monarch_interface.run_query(parameters)
             end = time.time()
             logger.info(f"getting answers took {end - start} seconds")
 
-            trapi_message = build_trapi_message(results)
+            trapi_message = build_trapi_message(result=result)
 
         # May be unaltered if parameters were unavailable
         self._question_json.update(self.transform_attributes(trapi_message))
