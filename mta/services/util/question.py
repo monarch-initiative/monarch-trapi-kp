@@ -98,7 +98,7 @@ class Question:
         formatted_sources.append({
             "resource_id": self.provenance,
             "resource_role": "aggregator_knowledge_source",
-            "upstream_resource_ids": list(upstreams_for_mta_entry) if upstreams else None
+            "upstream_resource_ids": list(upstreams_for_mta_entry) if upstreams_for_mta_entry else None
         })
         return formatted_sources
 
