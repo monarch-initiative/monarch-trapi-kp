@@ -5,12 +5,14 @@ extract parameters and build TRAPI Responses from results
 """
 from typing import Optional, List, Dict
 from enum import Enum
+from functools import lru_cache
 from mta.services.util import (
     TERM_DATA,
     MATCH_LIST,
     RESULTS_MAP,
     RESULT
 )
+from bmt import Toolkit
 
 
 class TargetQueryType(Enum):
@@ -77,6 +79,33 @@ def next_edge_id() -> str:
     global edge_idx
     edge_idx += 1
     return f"e{str(edge_idx)}"
+
+
+CATEGORY_MAP: Dict[str, List[str]] = {
+    "biolink:PhenotypicFeature": [],
+    "biolink:Disease": [],
+}
+
+_toolkit: Optional[Toolkit] = None
+
+
+def get_toolkit() -> Toolkit:
+    global _toolkit
+    if not _toolkit:
+        _toolkit = Toolkit()
+    return _toolkit
+
+
+@lru_cache()
+def get_categories(category: str) -> List[str]:
+    """
+    Returns the full parent list of Biolink node categories for a most specific category.
+    BMT can be used but for now, we hard code a look-up table?
+    :param category: str, most specific category whose full categories list is to be retrieved
+    :return: List[str], of the most specific category plus Biolink categories ancestral related to it
+    """
+    categories: List[str] = get_toolkit().get_ancestors(name=category, formatted=True, mixin=False)
+    return categories
 
 
 def build_trapi_message(result: RESULT) -> Dict:
@@ -165,8 +194,9 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "n0": [
     #                     {
     #
-    #                         TODO: problem here is that the 'QNode' n0 is a set of nodes?
-    #                               How do we represent this?
+    #                         TODO: problem here is that the 'QNode'
+    #                               n0 is a set of nodes?
+    #                               How do we best represent this?
     #
     #                         "id": "HP:000210,HP:0012378"
     #                     }
@@ -214,7 +244,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             subject_category = result["category"]
             trapi_response["knowledge_graph"]["nodes"][subject_id] = {
                 "name": subject_name,
-                "categories": [subject_category]
+                "categories": get_categories(category=subject_category)
             }
 
         # Construct overall "results" list entry for this similarity match
@@ -247,8 +277,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             if term_data["id"] not in trapi_response["knowledge_graph"]["nodes"]:
                 trapi_response["knowledge_graph"]["nodes"][term_data["id"]] = {
                     "name": term_data["name"],
-                    # TODO: do we also need to infer and add the 'parent' Biolink categories here?
-                    "categories": [term_data["category"]]
+                    "categories": get_categories(category=term_data["category"])
                 }
 
             # 2. Add the "edges"
