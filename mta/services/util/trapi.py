@@ -68,6 +68,11 @@ def extract_trapi_parameters(
 edge_idx = 0
 
 
+def reset_edge_idx():
+    global edge_idx
+    edge_idx = 0
+
+
 def next_edge_id() -> str:
     global edge_idx
     edge_idx += 1
@@ -136,7 +141,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "sources":[
     #                     {
     #                         "resource_id": "infores:hpo-annotations",
-    #                         "resource_role": "biolink:primary_knowledge_source"
+    #                         "resource_role": "primary_knowledge_source"
     #                     }
     #                 ]
     #             },
@@ -148,7 +153,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "sources":[
     #                     {
     #                         "resource_id": "infores:hpo-annotations",
-    #                         "resource_role": "biolink:primary_knowledge_source"
+    #                         "resource_role": "primary_knowledge_source"
     #                     }
     #                 ]
     #             }
@@ -200,6 +205,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     primary_knowledge_source: str = result["primary_knowledge_source"]
     subject_id: str
     result_map: RESULTS_MAP = result["result_map"]
+    reset_edge_idx()
     for subject_id, result in result_map.items():
         # Add to the knowledge_graph
         # 1. Add the "nodes" - if not already present
@@ -255,7 +261,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             #                 "sources": [
             #                     {
             #                         "resource_id": "infores:hpo-annotations",
-            #                         "resource_role": "biolink:primary_knowledge_source"
+            #                         "resource_role": "primary_knowledge_source"
             #                     }
             #                 ]
             #             }
@@ -270,7 +276,7 @@ def build_trapi_message(result: RESULT) -> Dict:
                 "sources": [
                     {
                         "resource_id": primary_knowledge_source,
-                        "resource_role": "biolink:primary_knowledge_source"
+                        "resource_role": "primary_knowledge_source"
                     }
                 ]
             }

@@ -82,19 +82,19 @@ class Question:
 
         for resource_role in temp:
             upstreams = None
-            if resource_role == "biolink:aggregator_knowledge_source":
-                upstreams = temp.get("biolink:primary_knowledge_source", None)
+            if resource_role == "aggregator_knowledge_source":
+                upstreams = temp.get("primary_knowledge_source", None)
 
             formatted_sources += [
                 {
                     "resource_id": resource_id,
-                    "resource_role": resource_role.lstrip('biolink:'),
+                    "resource_role": resource_role,
                     "upstream_resource_ids": list(upstreams) if upstreams else None
                 }
                 for resource_id in temp[resource_role]
             ]
         upstreams_for_mta_entry = \
-            temp.get("biolink:aggregator_knowledge_source") or temp.get("biolink:primary_knowledge_source")
+            temp.get("aggregator_knowledge_source") or temp.get("primary_knowledge_source")
         formatted_sources.append({
             "resource_id": self.provenance,
             "resource_role": "aggregator_knowledge_source",
