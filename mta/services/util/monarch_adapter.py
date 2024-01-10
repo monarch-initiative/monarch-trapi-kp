@@ -87,7 +87,6 @@ class MonarchInterface:
             # self.toolkit = Toolkit()
             self.bl_version = bl_version
 
-        # TODO: add useful _GraphInterface methods here!
         async def get_node(
                 self,
                 node_type: str,

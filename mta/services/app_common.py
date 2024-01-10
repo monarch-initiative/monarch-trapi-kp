@@ -40,38 +40,6 @@ APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs'
 
 
 #
-# TODO: Deprecated code: Not directly using Neo4j cypher in the Monarch ARA
-#
-# async def cypher(
-#         request: CypherRequest = Body(
-#             ...,
-#             example={"query": "MATCH (n) RETURN count(n)"},
-#         ),
-#         graph_interface: GraphInterface = Depends(get_monarch_interface),
-# ) -> CypherResponse:
-#     """Handle cypher."""
-#     request = request.dict()
-#     results = await graph_interface.run_cypher(
-#         request["query"],
-#         return_errors=True,
-#     )
-#     return results
-#
-#
-# APP_COMMON.add_api_route(
-#     "/cypher",
-#     cypher,
-#     methods=["POST"],
-#     response_model=CypherResponse,
-#     summary="Run cypher query",
-#     description=(
-#         "Runs cypher query against the Neo4j instance, and returns an "
-#         "equivalent response expected from a Neo4j HTTP endpoint "
-#         "(https://neo4j.com/docs/rest-docs/current/)."
-#     ),
-# )
-
-#
 # TODO: excluding this overlay() code in a first iteration of the Monarch ARA
 #
 # async def overlay(

@@ -50,7 +50,7 @@ class GraphMetadata:
                             attribute_info['attribute_type_id'] = 'biolink:Attribute'
 
         #
-        # TODO: SRI Testing data is deprecated?
+        # SRI Testing data is deprecated?
         #
         # async def get_sri_testing_data(self):
         #     if not self.sri_testing_data:

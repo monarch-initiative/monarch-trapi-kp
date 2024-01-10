@@ -22,28 +22,6 @@ from mta.services.util.api_utils import (
 APP_TRAPI_1_4 = FastAPI(openapi_url="/openapi.json", docs_url="/docs", root_path='/1.4')
 
 
-#
-# TODO: SRI Testing data is deprecated?
-#
-# async def get_sri_testing_data(
-#         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
-# ) -> SRITestData:
-#     """Handle /sri_testing_data."""
-#     sri_test_data = await graph_metadata.get_sri_testing_data()
-#     return sri_test_data
-#
-# APP_TRAPI_1_4.add_api_route(
-#     "/sri_testing_data",
-#     get_sri_testing_data,
-#     methods=["GET"],
-#     response_model=SRITestData,
-#     response_model_exclude_none=True,
-#     summary="Test data for usage by the SRI Testing Harness.",
-#     description="Returns a list of edges that are representative examples of the knowledge graph.",
-#     tags=["trapi"]
-# )
-
-
 async def get_meta_knowledge_graph(
         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
 ) -> Response:
