@@ -36,7 +36,9 @@ class GraphMetadata:
             return self.meta_kg
 
         def retrieve_meta_kg(self):
-            with open(os.path.join(os.path.dirname(__file__), '..', '..', 'metadata', 'meta_knowledge_graph.json')) as f:
+            with open(
+                    os.path.join(os.path.dirname(__file__), '..', '..', 'metadata', 'meta_knowledge_graph.json')
+            ) as f:
                 self.meta_kg = json.load(f)
 
             # this avoids errors when attribute_type_id is none/null,

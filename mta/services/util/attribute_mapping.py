@@ -32,8 +32,8 @@ def get_attribute_bl_info(attribute_name):
     attr_found = None
     if attribute_name in map_data["attribute_type_map"] or f'`{attribute_name}`' in map_data["attribute_type_map"]:
         attr_found = True
-        new_attr_meta_data["attribute_type_id"] = map_data["attribute_type_map"].get(attribute_name) \
-                                                  or map_data["attribute_type_map"].get(f"`{attribute_name}`")
+        new_attr_meta_data["attribute_type_id"] = map_data["attribute_type_map"].get(attribute_name) or \
+                                                  map_data["attribute_type_map"].get(f"`{attribute_name}`")
     if attribute_name in map_data["value_type_map"]:
         new_attr_meta_data["value_type_id"] = map_data["value_type_map"][attribute_name]
     if attr_found:

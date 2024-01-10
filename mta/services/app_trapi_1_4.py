@@ -1,7 +1,6 @@
 """FastAPI app."""
 
 from fastapi import Body, Depends, FastAPI, Response, status
-from reasoner_transpiler.exceptions import InvalidPredicateError
 from reasoner_pydantic import MetaKnowledgeGraph
 from mta.models.models_trapi_1_4 import ReasonerRequest
 
@@ -72,9 +71,9 @@ async def reasoner_api(
         try:
             response_message = await question.answer(monarch_interface)
             request_json.update({'message': response_message, 'workflow': workflow})
-        except InvalidPredicateError as e:
+        except RuntimeError as rte:
             response.status_code = status.HTTP_400_BAD_REQUEST
-            request_json["description"] = str(e)
+            request_json["description"] = str(rte)
 
     #
     # TODO: don't have overlays in this first iteration?

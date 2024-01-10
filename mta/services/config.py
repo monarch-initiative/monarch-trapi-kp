@@ -28,7 +28,7 @@ class Config(dict):
         if isinstance(config, str):
             config_path = Config.get_resource_path(config)
             with open(config_path, 'r') as f:
-                self.conf = yaml.safe_load (f)
+                self.conf = yaml.safe_load(f)
         elif isinstance(config, dict):
             self.conf = config
         else:
@@ -39,7 +39,7 @@ class Config(dict):
         result = {}
         try:
             result = self['translator']['services'][service]
-        except:
+        except KeyError:
             traceback.print_exc()
         return result
 

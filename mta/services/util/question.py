@@ -3,8 +3,6 @@ import time
 import copy
 import json
 
-import reasoner_transpiler as reasoner
-from reasoner_transpiler.cypher import get_query
 from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
@@ -23,9 +21,6 @@ from mta.services.util.trapi import (
     build_trapi_message
 )
 from mta.services.util.monarch_adapter import MonarchInterface
-
-# set the transpiler attribute mappings
-reasoner.cypher.ATTRIBUTE_TYPES = map_data['attribute_type_map']
 
 # set the value type mappings
 VALUE_TYPES = map_data['value_type_map']

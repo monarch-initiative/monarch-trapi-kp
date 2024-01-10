@@ -28,9 +28,9 @@ class Operator:
         :param b: any value
         :return: bool indicating if the data types match
         """
-        return type(a) == type(b) \
-               or (self.is_number(a) and self.is_number(b)) \
-               or (self.is_iterable(a) and self.is_iterable(b))
+        return type(a) == type(b) or \
+            (self.is_number(a) and self.is_number(b)) or \
+            (self.is_iterable(a) and self.is_iterable(b))
 
     def __call__(self, a, b):
         pass
