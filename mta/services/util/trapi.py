@@ -114,7 +114,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     Input result is of format somewhat like
          { "MONDO:0008807": ["HP:0002104", "HP:0012378"] }
     which represent S-P-O edges something like
-        ("HP:0002104": "biolink:PhenotypicFeature")--["biolink:associated_with"]->("MONDO:0008807": "biolink:Disease")
+        ("HP:0002104": "biolink:PhenotypicFeature")--["biolink:similar_to"]->("MONDO:0008807": "biolink:Disease")
 
     First MVP assumes a fixed TRAPI Request QGraph structure.
     Future implementations may need to decide mappings more on the fly?
@@ -147,7 +147,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #               "subject": "n0",
     #               "object": "n1",
     #               "predicates": [
-    #                 "biolink:associated_with"
+    #                 "biolink:similar_to"
     #               ]
     #             }
     #           }
@@ -165,7 +165,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #             "e01": {
     #                 "subject": "HP:000210",
     #                 "object": "MONDO:0005148",
-    #                 "predicate": "biolink:associated_with",
+    #                 "predicate": "biolink:similar_to",
     #                 "attributes": [],
     #                 "sources":[
     #                     {
@@ -177,7 +177,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #             "e02": {
     #                 "subject": "HP:0012378",
     #                 "object": "MONDO:0005148",
-    #                 "predicate": "biolink:associated_with",
+    #                 "predicate": "biolink:similar_to",
     #                 "attributes": [],
     #                 "sources":[
     #                     {
@@ -285,7 +285,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             #             "e01": {
             #                 "subject": "HP:000210",
             #                 "object": "MONDO:0005148",
-            #                 "predicate": "biolink:associated_with",
+            #                 "predicate": "biolink:similar_to",
             #                 "attributes": [],
             #                 "sources": [
             #                     {
@@ -299,7 +299,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             # Note here that n0 are the subject but come from the SemSimian object terms
             trapi_response["knowledge_graph"]["edges"][edge_id] = {
                 "subject": term_data["id"],
-                "predicate": "biolink:associated_with",
+                "predicate": "biolink:similar_to",
                 "object": subject_id,
                 "attributes": [],
                 "sources": [

@@ -10,7 +10,7 @@
   "edges": [
     {
       "subject": "biolink:PhenotypicFeature",
-      "predicate": "biolink:associated_with",
+      "predicate": "biolink:similar_to",
       "object": "biolink:Disease",
       "association": "biolink:PhenotypicFeatureToDiseaseAssociation"
     }

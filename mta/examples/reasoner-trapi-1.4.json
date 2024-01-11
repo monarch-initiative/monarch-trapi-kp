@@ -23,7 +23,7 @@
               "subject": "n0",
               "object": "n1",
               "predicates": [
-                "biolink:associated_with"
+                "biolink:similar_to"
               ]
             }
           }
