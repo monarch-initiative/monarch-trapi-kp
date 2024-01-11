@@ -178,7 +178,7 @@ class MonarchInterface:
                 match_category="biolink:PhenotypicFeature"
             )
             result: RESULT = dict()
-            result["primary_knowledge_source"] = "infores:hpo-annotations"
+            result["primary_knowledge_source"] = "infores:semsimian"
             result["result_map"] = result_map
             return result
 

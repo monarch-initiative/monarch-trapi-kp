@@ -157,7 +157,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "attributes": [],
     #                 "sources":[
     #                     {
-    #                         "resource_id": "infores:hpo-annotations",
+    #                         "resource_id": "infores:semsimian",
     #                         "resource_role": "primary_knowledge_source"
     #                     }
     #                 ]
@@ -169,7 +169,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "attributes": [],
     #                 "sources":[
     #                     {
-    #                         "resource_id": "infores:hpo-annotations",
+    #                         "resource_id": "infores:semsimian",
     #                         "resource_role": "primary_knowledge_source"
     #                     }
     #                 ]
@@ -280,7 +280,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             #                 "attributes": [],
             #                 "sources": [
             #                     {
-            #                         "resource_id": "infores:hpo-annotations",
+            #                         "resource_id": "infores:semsimian",
             #                         "resource_role": "primary_knowledge_source"
             #                     }
             #                 ]
