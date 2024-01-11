@@ -1,11 +1,9 @@
 """
 GraphAdapter to Monarch graph API
 """
-from typing import Optional, Any, List, Dict
+from typing import List, Dict
 from enum import Enum
 import requests
-
-# from bmt import Toolkit
 
 from mta.services.config import config
 from mta.services.util import (
@@ -13,7 +11,8 @@ from mta.services.util import (
     MATCH_LIST,
     RESULT_ENTRY,
     RESULTS_MAP,
-    RESULT
+    RESULT,
+    tag_value
 )
 from mta.services.util.logutil import LoggingUtil
 
@@ -34,44 +33,6 @@ class SemsimSearchCategory(Enum):
     ZFIN = "Zebrafish Genes"
     WB = "C. Elegans Genes"
     MONDO = "Human Diseases"
-
-
-def get_nested_tag_value(data: Dict, path: List[str], pos: int) -> Optional[Any]:
-    """
-    Navigate dot delimited tag 'path' into a multi-level dictionary, to return its associated value.
-
-    :param data: Dict, multi-level data dictionary
-    :param path: str, dotted JSON tag path
-    :param pos: int, zero-based current position in tag path
-    :return: string value of the multi-level tag, if available; 'None' otherwise if no tag value found in the path
-    """
-    tag = path[pos]
-    part_tag_path = ".".join(path[:pos+1])
-    if tag not in data:
-        logger.debug(f"\tMissing tag path '{part_tag_path}'?")
-        return None
-
-    pos += 1
-    if pos == len(path):
-        return data[tag]
-    else:
-        return get_nested_tag_value(data[tag], path, pos)
-
-
-def tag_value(json_data, tag_path) -> Optional[Any]:
-    """
-    Retrieve value of leaf in multi-level dictionary at
-    the end of a specified dot delimited sequence of keys.
-    :param json_data:
-    :param tag_path:
-    :return:
-    """
-    if not tag_path:
-        logger.debug(f"\tEmpty 'tag_path' argument?")
-        return None
-
-    parts = tag_path.split(".")
-    return get_nested_tag_value(json_data, parts, 0)
 
 
 class MonarchInterface:

@@ -9,9 +9,10 @@ from mta.services.util import (
     MATCH_LIST,
     RESULT_ENTRY,
     RESULTS_MAP,
-    RESULT
+    RESULT,
+    tag_value
 )
-from mta.services.util.monarch_adapter import tag_value, SemsimSearchCategory, MonarchInterface
+from mta.services.util.monarch_adapter import SemsimSearchCategory, MonarchInterface
 from mta.services.util.api_utils import get_monarch_interface
 
 # def tag_value(json_data, tag_path) -> Optional[str]:
