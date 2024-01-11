@@ -15,11 +15,7 @@ from mta.services.util.attribute_mapping import (
     get_attribute_bl_info
 )
 from mta.services.util.logutil import LoggingUtil
-from mta.services.util.trapi import (
-    TargetQueryType,
-    extract_trapi_parameters,
-    build_trapi_message
-)
+from mta.services.util.trapi import (extract_query_identifiers, build_trapi_message)
 from mta.services.util.monarch_adapter import MonarchInterface
 
 # set the value type mappings
@@ -166,17 +162,12 @@ class Question:
         :return: Dict, TRAPI JSON Response object
         """
         logger.info(f"answering query_graph: {json.dumps(self._question_json)}")
-        parameters: Optional[List[str]] = extract_trapi_parameters(
-            trapi_json=self._question_json,
-            # TODO: the 'target_query_input' argument feels hacky -
-            #       'answer' should be more agnostic about the query.
-            target_query_input=TargetQueryType.HP_IDS
-        )
+        identifiers: Optional[List[str]] = extract_query_identifiers(trapi_json=self._question_json)
         trapi_message: Dict = dict()
-        if parameters:
+        if identifiers:
             results: Dict[str, List[str]]
             start = time.time()
-            result: RESULT = await monarch_interface.run_query(parameters)
+            result: RESULT = await monarch_interface.run_query(identifiers)
             end = time.time()
             logger.info(f"getting answers took {end - start} seconds")
 

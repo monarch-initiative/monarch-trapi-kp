@@ -4,7 +4,6 @@ This module knows about the TRAPI syntax such that it can
 extract parameters and build TRAPI Responses from results
 """
 from typing import Optional, List, Dict
-from enum import Enum
 from functools import lru_cache
 from mta.services.util import (
     TERM_DATA,
@@ -15,54 +14,43 @@ from mta.services.util import (
 from bmt import Toolkit
 
 
-class TargetQueryType(Enum):
-    HP_IDS = "HP Ontology Term CURIEs"
-
-
-def extract_trapi_parameters(
-        trapi_json: Dict,
-        target_query_input: TargetQueryType
-) -> Optional[List[str]]:
+def extract_query_identifiers(trapi_json: Dict) -> Optional[List[str]]:
     """
     Interprets the TRAPI JSON content to figure out what specific
     parameters are needed for the execution of the Monarch query.
     :param trapi_json: Dict, TRAPI Query JSON object
-    :param target_query_input: TargetQueryInput, signal of type of input parameters to be extracted
-    :return: Dict, TRAPI parameters required for a specified back end (Monarch) query
+    :return: Optional[List[str]], List of query identifiers identified as a set.
     """
-    # First iteration will simply return the list of ids, assumed to be
-    # HP ontology terms that are targets for the Monarch search
-    # "message": {
-    #       "query_graph": {
-    #           "nodes": {
-    # ...
     assert "query_graph" in trapi_json
     assert "nodes" in trapi_json["query_graph"]
     nodes: Dict = trapi_json["query_graph"]["nodes"]
     for node_id, details in nodes.items():
-        # Simplistic first implementation: return
-        # the ids presumed to be HP ontology term CURIEs
-        if target_query_input == TargetQueryType.HP_IDS:
-            # ...
-            #             "n0": {
-            #               "categories": [
-            #                 "biolink:PhenotypicFeature"
-            #               ],
-            #               "ids": [
-            #                 "HP:0002104",
-            #                 "HP:0012378",
-            #                 "HP:0012378",
-            #                 "HP:0012378"
-            #               ],
-            #               "is_set": true
-            #             }
-            # ...
-            if not("categories" in details and "ids" in details):
-                continue
-            if "biolink:PhenotypicFeature" in details["categories"]:
-                return list(details["ids"])
+        # Example message with query identifier set:
+        #
+        # "message": {
+        #       "query_graph": {
+        #           "nodes": {
+        #             "n0": {
+        #               "categories": [
+        #                 "biolink:PhenotypicFeature"
+        #               ],
+        #               "ids": [
+        #                 "HP:0002104",
+        #                 "HP:0012378",
+        #                 "HP:0012378",
+        #                 "HP:0012378"
+        #               ],
+        #               "is_set": true
+        #             }
+        # ...
+        if not("ids" in details):
+            continue
 
-        # elif or else... currently an unimplemented use case?
+        # We generalize the capture of multi-CURIEs here.
+        # This has the same outcome of the previous explicit
+        # check for the required categories, but is more generic.
+        if "is_set" in details and details["is_set"]:
+            return list(details["ids"])
 
     return None
 
@@ -230,6 +218,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             "nodes": {},
             "edges": {}
         },
+        "auxiliary_graphs": {},
         "results": []
     }
     primary_knowledge_source: str = result["primary_knowledge_source"]
@@ -237,8 +226,8 @@ def build_trapi_message(result: RESULT) -> Dict:
     result_map: RESULTS_MAP = result["result_map"]
     reset_edge_idx()
     for subject_id, result in result_map.items():
-        # Add to the knowledge_graph
-        # 1. Add the "nodes" - if not already present
+
+        # 1. Add the "nodes" to the "knowledge_graph" - if not already present
         if subject_id not in trapi_response["knowledge_graph"]["nodes"]:
             subject_name = result["name"]
             subject_category = result["category"]
@@ -247,7 +236,9 @@ def build_trapi_message(result: RESULT) -> Dict:
                 "categories": get_categories(category=subject_category)
             }
 
-        # Construct overall "results" list entry for this similarity match
+        # 2. Need to create the overall "results" list entry
+        #    for this similarity match, so that it can be
+        #    populated concurrently with the knowledge_graph edges
         matched_terms: MATCH_LIST = result["matches"]
         term_data: TERM_DATA
         result_entry: Dict = {
@@ -280,7 +271,7 @@ def build_trapi_message(result: RESULT) -> Dict:
                     "categories": get_categories(category=term_data["category"])
                 }
 
-            # 2. Add the "edges"
+            # 3. Add the "edges" to the "knowledge_graph"...
             #         "edges": {
             #             "e01": {
             #                 "subject": "HP:000210",
@@ -294,7 +285,6 @@ def build_trapi_message(result: RESULT) -> Dict:
             #                     }
             #                 ]
             #             }
-            # Add specific edge to the Knowledge Graph...
             edge_id = next_edge_id()
             # Note here that n0 are the subject but come from the SemSimian object terms
             trapi_response["knowledge_graph"]["edges"][edge_id] = {
@@ -309,7 +299,29 @@ def build_trapi_message(result: RESULT) -> Dict:
                     }
                 ]
             }
-            # then track the new edge as a specific result entry for the QEdge
+
+            # 4. TODO: Capture the contents of the "auxiliary_graph" here?
+            #
+            #     "auxiliary_graphs": {
+            #         "a0": {
+            #             "edges": [
+            #                 "e02",
+            #                 "e12"
+            #             ]
+            #         },
+            #         "a1": {
+            #             "edges": [
+            #                 "extra_edge0"
+            #             ]
+            #         },
+            #         "a2": {
+            #             "edges" [
+            #                 "extra_edge1"
+            #             ]
+            #         }
+            #     },
+
+            # 5. ...then track the new edge as a specific "result" entry for the QEdge
             result_entry["analyses"][0]["edge_bindings"]["e01"].append({"id": edge_id})
 
         trapi_response["results"].append(result_entry)
