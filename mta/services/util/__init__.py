@@ -15,7 +15,7 @@ logger = LoggingUtil.init_logging(
 
 TERM_DATA = Dict[str, str]
 MATCH_LIST = List[TERM_DATA]
-RESULT_ENTRY = Union[str, Dict[str, Union[str, MATCH_LIST]]]
+RESULT_ENTRY = Union[str, Dict[str, Union[str, List[Union[str, TERM_DATA]]]]]
 RESULTS_MAP = Dict[str, RESULT_ENTRY]
 
 # The top level RESULT wrapper data type returns both

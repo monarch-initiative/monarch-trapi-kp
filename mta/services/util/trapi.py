@@ -147,6 +147,10 @@ def build_trapi_message(result: RESULT) -> Dict:
     #         "nodes": {
     #             "HP:0002104": {"categories": ["biolink:PhenotypicFeature"]},
     #             "HP:0012378": {"categories": ["biolink:PhenotypicFeature"]},
+    #             "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": {
+    #                 "name": ["HP:0002104","HP:0012378"],
+    #                 "categories": ["biolink:PhenotypicFeature"]
+    #             },
     #             "MONDO:0005148": {"categories": ["biolink:Disease"]}
     #         },
     #         "edges": {
@@ -274,10 +278,19 @@ def build_trapi_message(result: RESULT) -> Dict:
             # 3. Add the "edges" to the "knowledge_graph"...
             #         "edges": {
             #             "e01": {
-            #                 "subject": "HP:000210",
-            #                 "object": "MONDO:0005148",
+            #                 "subject": "HP:0002104",
             #                 "predicate": "biolink:similar_to",
-            #                 "attributes": [],
+            #                 "object": "MONDO:0008807",
+            #                 "attributes": [
+            #                         {
+            #                             "attribute_type_id": "biolink:supporting_data_source",
+            #                             "value": ["infores:hpo-annotation", "infores:phenio"]
+            #                         },
+            #                         {
+            #                             "attribute_type_id": "biolink:similarity_score",
+            #                             "value": 14.887188876843995
+            #                         }
+            #                 ],
             #                 "sources": [
             #                     {
             #                         "resource_id": "infores:semsimian",
@@ -291,7 +304,9 @@ def build_trapi_message(result: RESULT) -> Dict:
                 "subject": term_data["id"],
                 "predicate": "biolink:similar_to",
                 "object": subject_id,
-                "attributes": [],
+                "attributes": [
+
+                ],
                 "sources": [
                     {
                         "resource_id": primary_knowledge_source,
