@@ -10,7 +10,8 @@
                 "HP:0002104",
                 "HP:0012378"
               ],
-              "is_set": true
+              "is_set": true,
+              "set_interpretation": "OR+"
             },
             "n1": {
               "categories": [

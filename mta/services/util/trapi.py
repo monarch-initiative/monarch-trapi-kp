@@ -3,8 +3,9 @@ TRAPI JSON accessing data utilities.
 This module knows about the TRAPI syntax such that it can
 extract parameters and build TRAPI Responses from results
 """
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Set
 from functools import lru_cache
+from uuid import UUID, uuid4
 from mta.services.util import (
     TERM_DATA,
     MATCH_LIST,
@@ -99,10 +100,33 @@ def get_categories(category: str) -> List[str]:
 def build_trapi_message(result: RESULT) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
-    Input result is of format somewhat like
-         { "MONDO:0008807": ["HP:0002104", "HP:0012378"] }
+    Input result is a dictionary of format somewhat like:
+         {
+            "MONDO:0008807": {
+                "name": "obsolete apnea, central sleep",
+                "category": "biolink:Disease",
+                "supporting_data_sources": ["infores:hpo-annotation", "infores:upheno"],
+                "score": 13.074943444390097,
+                "matches": [
+                    {
+                        "id": "HP:0002104",
+                        "name": "Fatigue (HPO)",
+                        "category": "biolink:PhenotypicFeature"
+                    },
+                    {
+                        "id": "HP:0012378",
+                        "name": "Apnea (HPO)",
+                        "category": "biolink:PhenotypicFeature"
+                    }
+                ]
+            }
+         }
     which represent S-P-O edges something like
-        ("HP:0002104": "biolink:PhenotypicFeature")--["biolink:similar_to"]->("MONDO:0008807": "biolink:Disease")
+        ("UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": "biolink:PhenotypicFeature")
+            --["biolink:similar_to"]->("MONDO:0008807": "biolink:Disease")
+
+    where the UUID represents the set of input phenotype terms
+    referred to in aggregate in the knowledge graph.
 
     First MVP assumes a fixed TRAPI Request QGraph structure.
     Future implementations may need to decide mappings more on the fly?
@@ -145,13 +169,24 @@ def build_trapi_message(result: RESULT) -> Dict:
     #
     #     "knowledge_graph": {
     #         "nodes": {
-    #             "HP:0002104": {"categories": ["biolink:PhenotypicFeature"]},
-    #             "HP:0012378": {"categories": ["biolink:PhenotypicFeature"]},
-    #             "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": {
-    #                 "name": ["HP:0002104","HP:0012378"],
+    #             "HP:0002104": {
+    #                 "name": "Apnea (HPO)",
     #                 "categories": ["biolink:PhenotypicFeature"]
     #             },
-    #             "MONDO:0005148": {"categories": ["biolink:Disease"]}
+    #             "HP:0012378": {
+    #                 "name": "Fatigue (HPO)",
+    #                 "categories": ["biolink:PhenotypicFeature"]
+    #             },
+    #             "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": {
+    #                 "members": ["HP:0002104","HP:0012378"],
+    #                 "categories": ["biolink:PhenotypicFeature"],
+    #                 "is_set": true
+    #             },
+    #             "MONDO:0008807": {
+    #                 "name": "obsolete apnea,
+    #                 central sleep",
+    #                 "categories": ["biolink:Disease"]
+    #             }
     #         },
     #         "edges": {
     #             "e01": {
@@ -269,6 +304,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             ]
         }
         for term_data in matched_terms:
+
             if term_data["id"] not in trapi_response["knowledge_graph"]["nodes"]:
                 trapi_response["knowledge_graph"]["nodes"][term_data["id"]] = {
                     "name": term_data["name"],
@@ -338,6 +374,20 @@ def build_trapi_message(result: RESULT) -> Dict:
 
             # 5. ...then track the new edge as a specific "result" entry for the QEdge
             result_entry["analyses"][0]["edge_bindings"]["e01"].append({"id": edge_id})
+
+        # Create UUID aggregate set node for the TRAPI response
+        # TODO: the matched_terms set may be replicated for all subject_id matches...
+        #       It seems redundant to generate a fresh UUID every time?
+        input_set_uuid = f"UUID:{str(uuid4())}"
+        category_set: Set[str] = set()
+        for term_data in matched_terms:
+            for category in term_data["category"]:
+                category_set.update(get_categories(category=category))
+        trapi_response["knowledge_graph"]["nodes"][input_set_uuid] = {
+            "members": [term_data["id"] for term_data in matched_terms],
+            "categories": list(category_set),
+            "is_set": True
+        }
 
         trapi_response["results"].append(result_entry)
 

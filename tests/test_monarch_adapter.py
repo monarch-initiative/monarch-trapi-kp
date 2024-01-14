@@ -69,7 +69,9 @@ async def test_semsim_search():
     assert object_termset, "Similarity Object term set is empty?"
     assert all([entry in object_termset.keys() for entry in object_termset])
     result: RESULTS_MAP = monarch_interface.parse_raw_semsim(
-        full_result=semsim_result, match_category="biolink:PhenotypicFeature"
+        full_result=semsim_result,
+        match_category="biolink:PhenotypicFeature",
+        ingest_knowledge_source="infores:hpo-annotation"
     )
     assert "MONDO:0008807" in result.keys()
     match_list: MATCH_LIST = result["MONDO:0008807"]["matches"]

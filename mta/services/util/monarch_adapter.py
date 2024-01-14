@@ -36,7 +36,7 @@ class SemsimSearchCategory(Enum):
 
 
 _map_source: Dict = {
-    "phenio_nodes": "infores:phenio"
+    "phenio_nodes": "infores:upheno"
 }
 
 
@@ -158,9 +158,10 @@ class MonarchInterface:
                 result[subject_id]["supporting_data_sources"] = list()
                 if ingest_knowledge_source is not None:
                     result[subject_id]["supporting_data_sources"].append(ingest_knowledge_source)
-                if "provided_by" in entry and entry["provided_by"]:
+                provided_by = tag_value(entry, "subject.provided_by")
+                if provided_by:
                     result[subject_id]["supporting_data_sources"].append(
-                        _map_source.setdefault(entry["provided_by"], f"infores:{entry['provided_by']}")
+                        _map_source.setdefault(provided_by, f"infores:{provided_by}")
                     )
                 result[subject_id]["score"] = entry["score"]
                 object_termset: Dict = tag_value(entry, "similarity.object_termset")
