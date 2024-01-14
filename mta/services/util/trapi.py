@@ -522,8 +522,7 @@ def build_trapi_message(result: RESULT) -> Dict:
         input_set_uuid = f"UUID:{str(uuid4())}"
         category_set: Set[str] = set()
         for term_data in matched_terms:
-            for category in term_data["category"]:
-                category_set.update(get_categories(category=category))
+            category_set.update(get_categories(category=term_data["category"]))
         trapi_response["knowledge_graph"]["nodes"][input_set_uuid] = {
             "members": [term_data["id"] for term_data in matched_terms],
             "categories": list(category_set),
