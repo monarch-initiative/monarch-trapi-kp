@@ -176,6 +176,7 @@ class MonarchInterface:
                             "category": match_category
                         }
                         result[subject_id]["matches"].append(term_data)
+
             return result
 
         async def phenotype_semsim_to_disease(self, phenotype_ids: List[str]) -> RESULT:
@@ -195,7 +196,7 @@ class MonarchInterface:
                 ingest_knowledge_source="infores:hpo-annotation"
             )
             result: RESULT = dict()
-            result["primary_knowledge_source"] = "infores:semsimian"
+            result["primary_knowledge_source"] = "infores:semsimian-kp"
             result["result_map"] = result_map
             return result
 

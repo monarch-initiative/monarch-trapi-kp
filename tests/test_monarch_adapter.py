@@ -84,7 +84,7 @@ async def test_run_query():
     monarch_interface: MonarchInterface = get_monarch_interface()
     result: RESULT = await monarch_interface.run_query(identifiers=TEST_IDENTIFIERS)
     assert result
-    assert "primary_knowledge_source" in result and result["primary_knowledge_source"] == "infores:semsimian"
+    assert "primary_knowledge_source" in result and result["primary_knowledge_source"] == "infores:semsimian-kp"
     assert "result_map" in result and result["result_map"]
     results_map: RESULTS_MAP = result["result_map"]
     assert "MONDO:0008807" in results_map.keys()

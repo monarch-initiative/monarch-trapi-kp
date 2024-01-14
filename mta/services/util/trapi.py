@@ -196,7 +196,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "attributes": [],
     #                 "sources":[
     #                     {
-    #                         "resource_id": "infores:semsimian",
+    #                         "resource_id": "infores:semsimian-kp",
     #                         "resource_role": "primary_knowledge_source"
     #                     }
     #                 ]
@@ -208,7 +208,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "attributes": [],
     #                 "sources":[
     #                     {
-    #                         "resource_id": "infores:semsimian",
+    #                         "resource_id": "infores:semsimian-kp",
     #                         "resource_role": "primary_knowledge_source"
     #                     }
     #                 ]
@@ -317,20 +317,38 @@ def build_trapi_message(result: RESULT) -> Dict:
             #                 "subject": "HP:0002104",
             #                 "predicate": "biolink:similar_to",
             #                 "object": "MONDO:0008807",
-            #                 "attributes": [
-            #                         {
-            #                             "attribute_type_id": "biolink:supporting_data_source",
-            #                             "value": ["infores:hpo-annotation", "infores:phenio"]
-            #                         },
-            #                         {
-            #                             "attribute_type_id": "biolink:similarity_score",
-            #                             "value": 14.887188876843995
-            #                         }
-            #                 ],
             #                 "sources": [
             #                     {
-            #                         "resource_id": "infores:semsimian",
-            #                         "resource_role": "primary_knowledge_source"
+            #                         "resource_id": "infores:semsimian-kp-kp",
+            #                         "resource_role": "primary_knowledge_source",
+            #                         "source_record_urls": null,
+            #                         "upstream_resource_ids": ["infores:hpoa", "infores:upheno"]
+            #                     },
+            #                     {
+            #                         "resource_id": "infores:hpoa",
+            #                         "resource_role": "supporting_data_source",
+            #                         "source_record_urls": null,
+            #                         "upstream_resource_ids": []
+            #                     },
+            #                     {
+            #                         "resource_id": "infores:upheno",
+            #                         "resource_role": "supporting_data_source",
+            #                         "source_record_urls": null,
+            #                         "upstream_resource_ids": []
+            #                     }
+            #                 ],
+            #                 "attributes": [
+            #                     {
+            #                         "attribute_type_id": "biolink:score",
+            #                         "value": 9.959829749061718,
+            #                         "value_type_id": "linkml:Float",
+            #                         "attribute_source": "infores:semsimian-kp"
+            #                     },
+            #                     {
+            #                         "attribute_type_id": "biolink:support_graphs",
+            #                         "value": ["auxgraph001"],
+            #                         "value_type_id": "linkml:String",
+            #                         "attribute_source": "infores:semsimian-kp"
             #                     }
             #                 ]
             #             }
