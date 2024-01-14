@@ -147,31 +147,41 @@ class MonarchInterface:
             """
             result: RESULTS_MAP = dict()
             for entry in full_result:
-                subject_id = tag_value(entry, "subject.id")
-                result[subject_id]: RESULT_ENTRY = dict()
+                # Subtle reversion of assertion: SemSimian
+                # 'subject' becomes the 'object' of interest
+                object_id = tag_value(entry, "subject.id")
+                result[object_id]: RESULT_ENTRY = dict()
                 subject_name = tag_value(entry, "subject.name")
-                result[subject_id]["name"] = subject_name
+                result[object_id]["name"] = subject_name
                 subject_category = tag_value(entry, "subject.category")
-                result[subject_id]["category"] = subject_category
-                result[subject_id]["supporting_data_sources"] = list()
+                result[object_id]["category"] = subject_category
+                result[object_id]["score"] = entry["score"]
+
+                result[object_id]["supporting_data_sources"] = list()
                 provided_by = tag_value(entry, "subject.provided_by")
                 if provided_by:
-                    result[subject_id]["provided_by"] = \
+                    result[object_id]["provided_by"] = \
                         _map_source.setdefault(provided_by, f"infores:{provided_by}")
 
-                result[subject_id]["score"] = entry["score"]
-                object_termset: Dict = tag_value(entry, "similarity.object_termset")
-                result[subject_id]["matches"]: MATCH_LIST = list()
-                if object_termset:
-                    for object_term in object_termset.values():
-                        object_id = object_term["id"]
-                        object_name = object_term["label"]
+                # TODO: don't know if we also need here to look at the "similarity.subject_best_matches"
+                #       ...review 13 Jan 2024 Slack feedback from Sierra and Matt
+                object_best_matches: Dict = tag_value(entry, "similarity.'object_best_matches'")
+                result[object_id]["matches"]: MATCH_LIST = list()
+                if object_best_matches:
+                    for object_match in object_best_matches.values():
+                        similarity: Dict = object_match["similarity"]
+                        matched_term: str = similarity["ancestor_id"] \
+                            if similarity["ancestor_id"] else object_match["match_target"]
                         term_data: TERM_DATA = {
-                            "id": object_id,
-                            "name": object_name,
-                            "category": match_category
+                            "subject_id": object_match["match_source"],
+                            "subject_name": object_match["match_source_label"],
+                            "category": match_category,
+                            "object_id": object_match["match_target"],
+                            "object_name": object_match["match_target_label"],
+                            "score": object_match["score"],
+                            "matched_term": matched_term
                         }
-                        result[subject_id]["matches"].append(term_data)
+                        result[object_id]["matches"].append(term_data)
 
             return result
 
