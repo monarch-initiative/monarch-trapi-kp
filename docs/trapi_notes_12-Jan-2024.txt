@@ -1,5 +1,5 @@
 Richard B - Question 1:
- The Subject "provided_by": "phenio_nodes" is found at the top level of the raw SemSimian response data. This suggests that infores:phenio is a kind of knowledge source. As it happens, though, the original knowledge source may be infores:hpo-annotation. Of course, the SemSimian algorithm somehow crops up as a generative KP in the middle (infores:semsimian-kp)
+ The Subject "provided_by": "phenio_nodes" is found at the top level of the raw SemSimian response data. This suggests that infores:phenio is a kind of knowledge source. As it happens, though, the original knowledge source may be infores:hpo-annotations. Of course, the SemSimian algorithm somehow crops up as a generative KP in the middle (infores:semsimian-kp)
 
  Kevin Schaper
 That's not edge provenance though, that's my somewhat awkward need to use "provided_by" in new monarch infrastructure the same way it was used in old monarch infrastructure, even though translator doesn't want it to be part of the biolink model (probably I should push for something like "processed_by" or something)
@@ -14,10 +14,10 @@ For the other knowledge source attributions in edges, a typical 'sources' attrib
         "resource_id": "infores:semsimian-kp",
        	"resource_role": "primary_knowledge_source",
        	"source_record_urls": null,
-       	"upstream_resource_ids": ["infores:hpo-annotation", "infores:upheno"]
+       	"upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
        },
       {
-        "resource_id": "infores:hpo-annotation",
+        "resource_id": "infores:hpo-annotations",
        	"resource_role": "supporting_data_source",
        	"source_record_urls": null,
        	"upstream_resource_ids": []
@@ -71,10 +71,10 @@ I think the top level score is depicted in line 99
             "resource_id": "infores:semsimian-kp",
             "resource_role": "primary_knowledge_source",
             "source_record_urls": null,
-            "upstream_resource_ids": ["infores:hpo-annotation", "infores:upheno"]
+            "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
       },
       {
-            "resource_id": "infores:hpo-annotation",
+            "resource_id": "infores:hpo-annotations",
             "resource_role": "supporting_data_source",
             "source_record_urls": null,
             "upstream_resource_ids": []
@@ -117,10 +117,10 @@ I think the top level score is depicted in line 99
             "resource_id": "infores:semsimian-kp",
             "resource_role": "primary_knowledge_source",
             "source_record_urls": null,
-            "upstream_resource_ids": ["infores:hpo-annotation", "infores:upheno"]
+            "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
        },
        {
-            "resource_id": "infores:hpo-annotation",
+            "resource_id": "infores:hpo-annotations",
             "resource_role": "supporting_data_source",
             "source_record_urls": null,
             "upstream_resource_ids": []
@@ -159,7 +159,7 @@ I think the top level score is depicted in line 99
     "object": "HP:0000961",                     # Cyanosis (Phenotype)
     "sources": [
         {
-            "resource_id": "infores:hpo-annotation",
+            "resource_id": "infores:hpo-annotations",
             "resource_role": "primary_knowledge_source",
             "source_record_urls": null,
             "upstream_resource_ids": []
@@ -168,7 +168,7 @@ I think the top level score is depicted in line 99
             "resource_id": "infores:monarch-initiative",
             "resource_role": "aggregator_knowledge_source",
             "source_record_urls": null,
-            "upstream_resource_ids": ["infores:hpo-annotation"]
+            "upstream_resource_ids": ["infores:hpo-annotations"]
         }
     ],
     "attributes": [
@@ -176,13 +176,13 @@ I think the top level score is depicted in line 99
             "attribute_type_id": "biolink:has_evidence",
             "value": "ECO:0000304", # ECO code for 'author statement supported by traceable reference used in manual assertion'
             "value_type_id": "linkml:Uriorcurie",
-            "attribute_source": "infores:hpo-annotation"
+            "attribute_source": "infores:hpo-annotations"
        	},
        	{
             "attribute_type_id": "biolink:publications",
             "value": ["orphanet:137935"]  # a supporting publication referenced by HPOA/Monarch
             "value_type_id": "linkml:Uriorcurie",
-            "attribute_source": "infores:hpo-annotation"
+            "attribute_source": "infores:hpo-annotations"
        	}
     ]
 }
@@ -214,10 +214,10 @@ I think the top level score is depicted in line 99
         "resource_id": "infores:semsimian-kp",
        	"resource_role": "primary_knowledge_source",
        	"source_record_urls": null,
-       	"upstream_resource_ids": ["infores:hpo-annotation", "infores:upheno"]
+       	"upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
       },
       {
-        "resource_id": "infores:hpo-annotation",
+        "resource_id": "infores:hpo-annotations",
        	"resource_role": "supporting_data_source",
        	"source_record_urls": null,
        	"upstream_resource_ids": []
@@ -254,7 +254,7 @@ I think the top level score is depicted in line 99
     "object": "HP:0002104",                     # Apnea (Phenotype)
     "sources": [                           
         {
-            "resource_id": "infores:hpo-annotation",
+            "resource_id": "infores:hpo-annotations",
             "resource_role": "primary_knowledge_source",
             "source_record_urls": null,
             "upstream_resource_ids": []
@@ -263,7 +263,7 @@ I think the top level score is depicted in line 99
         "resource_id": "infores:monarch-initiative",
        	"resource_role": "aggregator_knowledge_source",
        	"source_record_urls": null,
-       	"upstream_resource_ids": ["infores:hpo-annotation"]
+       	"upstream_resource_ids": ["infores:hpo-annotations"]
        }
     ],
     "attributes": [
@@ -271,13 +271,13 @@ I think the top level score is depicted in line 99
             "attribute_type_id": "biolink:has_evidence",   
             "value": "ECO:0000304",                         # ECO code for 'author statement supported by traceable reference used in manual assertion'
             "value_type_id": "linkml:Uriorcurie",
-            "attribute_source": "infores:hpo-annotation"
+            "attribute_source": "infores:hpo-annotations"
        	},
        	{
             "attribute_type_id": "biolink:publications",   
             "value": ["orphanet:137935"]                    # a supporting publication referenced by HPOA/Monarch
             "value_type_id": "linkml:Uriorcurie",
-            "attribute_source": "infores:hpo-annotation"
+            "attribute_source": "infores:hpo-annotations"
        	}
     ]
 }

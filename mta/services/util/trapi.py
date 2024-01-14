@@ -105,7 +105,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             "MONDO:0008807": {
                 "name": "obsolete apnea, central sleep",
                 "category": "biolink:Disease",
-                "supporting_data_sources": ["infores:hpo-annotation", "infores:upheno"],
+                "supporting_data_sources": ["infores:hpo-annotations", "infores:upheno"],
                 "score": 13.074943444390097,
                 "matches": [
                     {
@@ -121,15 +121,19 @@ def build_trapi_message(result: RESULT) -> Dict:
                 ]
             }
          }
-    which represent S-P-O edges something like
+    which represent S-P-O edges something like:
+
         ("UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": "biolink:PhenotypicFeature")
             --["biolink:similar_to"]->("MONDO:0008807": "biolink:Disease")
 
-    where the UUID represents the set of input phenotype terms
+    where the UUID represents the aggregate set of input phenotype terms
     referred to in aggregate in the knowledge graph.
 
+    Numerous additional supporting 'similarity' edges are returned
+    and enumerated in the auxiliary graph of the result.
+
     First MVP assumes a fixed TRAPI Request QGraph structure.
-    Future implementations may need to decide mappings more on the fly?
+    Future implementations may need to decide some data mappings more on the fly?
 
     :param result: RESULT, SemSimian subject - object identifier mapping dataset with some metadata annotation
     :return: query result parts of TRAPI Response.Message body (suitable KnowledgeGraph and Results added)
@@ -146,7 +150,8 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "HP:0002104",
     #                 "HP:0012378"
     #               ],
-    #               "is_set": true
+    #               "is_set": true,
+    #               "set_interpretation": "OR+"
     #             },
     #             "n1": {
     #               "categories": [
@@ -165,7 +170,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #           }
     #       }
     #
-    # Add the following output parts:
+    # Add the following output parts (for one MONDO disease mapping):
     #
     #     "knowledge_graph": {
     #         "nodes": {
@@ -190,31 +195,132 @@ def build_trapi_message(result: RESULT) -> Dict:
     #         },
     #         "edges": {
     #             "e01": {
-    #                 "subject": "HP:000210",
-    #                 "object": "MONDO:0005148",
+    #                 "subject": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f",
     #                 "predicate": "biolink:similar_to",
+    #                 "object": "MONDO:0008807",
     #                 "attributes": [],
-    #                 "sources":[
-    #                     {
-    #                         "resource_id": "infores:semsimian-kp",
-    #                         "resource_role": "primary_knowledge_source"
-    #                     }
+    #                 "sources": [
+    #                   {
+    #                     "resource_id": "infores:semsimian-kp",
+    #                     "resource_role": "primary_knowledge_source",
+    #                     "source_record_urls": null,
+    #                     "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
+    #                    },
+    #                   {
+    #                     "resource_id": "infores:hpo-annotations",
+    #                     "resource_role": "supporting_data_source",
+    #                     "source_record_urls": null,
+    #                     "upstream_resource_ids": []
+    #                    },
+    #                   {
+    #                     "resource_id": "infores:upheno",
+    #                     "resource_role": "supporting_data_source",
+    #                     "source_record_urls": null,
+    #                     "upstream_resource_ids": []
+    #                    }
     #                 ]
     #             },
+    #
+    # The additional edges below all relate to the FIRST pairwise match between
+    # an input phenotype and a phenotype associated with the returned Disease,
+    # derived from the following raw SemSimian 'similarity' output record:
+    #
+    # "object_best_matches": {
+    #    "HP:0002104": {
+    #       'match_source': 'HP:0002104',
+    #       'match_source_label': 'Apnea (HPO)',
+    #       'match_target': 'HP:0010535',
+    #       'match_target_label': 'Sleep apnea (HPO)',
+    #       'score': 14.887188876843995,
+    #       'match_subsumer': None,
+    #       'match_subsumer_label': None,
+    #       'similarity': {
+    #           'subject_id': 'HP:0002104',
+    #           'subject_label': None,
+    #           'subject_source': None,
+    #           'object_id': 'HP:0010535',
+    #           'object_label': None,
+    #           'object_source': None,
+    #           'ancestor_id': 'HP:0002104',
+    #           'ancestor_label': 'Apnea (HPO)',
+    #           'ancestor_source': None,
+    #           'object_information_content': None,
+    #           'subject_information_content': None,
+    #           'ancestor_information_content': 14.887188876843995,
+    #           'jaccard_similarity': 0.6470588235294118,
+    #           'cosine_similarity': None,
+    #           'dice_similarity': None,
+    #           'phenodigm_score': 3.103689243515017
+    #       }
+    #    },
+    # ... more matching edges...
+    # }
+    #
+    # Giving the following sets of edges:
+    #
+    # e02: A support graph edge reporting one of many pairwise similarity assertions
+    # between an input phenotype and a phenotype associated with the returned Disease
+    #
     #             "e02": {
-    #                 "subject": "HP:0012378",
-    #                 "object": "MONDO:0005148",
+    #                 "subject": "HP:0002104",        # 'match_source' == 'Apnea (HPO)'
     #                 "predicate": "biolink:similar_to",
-    #                 "attributes": [],
-    #                 "sources":[
+    #                 "object": "HP:0010535",         # 'match_target' == 'Sleep apnea (HPO)'
+    #                 "sources": [
+    #                   {
+    #                     "resource_id": "infores:semsimian-kp",
+    #                     "resource_role": "primary_knowledge_source",
+    #                     "source_record_urls": null,
+    #                     "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
+    #                    },
+    #                   {
+    #                     "resource_id": "infores:hpo-annotations",
+    #                     "resource_role": "supporting_data_source",
+    #                     "source_record_urls": null,
+    #                     "upstream_resource_ids": []
+    #                    },
+    #                   {
+    #                     "resource_id": "infores:upheno",
+    #                     "resource_role": "supporting_data_source",
+    #                     "source_record_urls": null,
+    #                     "upstream_resource_ids": []
+    #                    }
+    #                  ],
+    #                  "attributes": [
     #                     {
-    #                         "resource_id": "infores:semsimian-kp",
-    #                         "resource_role": "primary_knowledge_source"
+    #                     "attribute_type_id": "biolink:score",
+    #                     "value": 7.591547473476909,
+    #                     "value_type_id": "linkml:Float",
+    #                     "attribute_source": "infores:semsimian-kp"
+    #                     },
+    #                  "attributes": [
+    #                     {
+    #                     "attribute_type_id": "biolink:match",      # Would be a new edge property, to capture the common subsumer
+    #                     "value": "HP:0000961"                      # Cyanosis
+    #                     "value_type_id": "linkml:Uriorcurie",
+    #                     "attribute_source": "infores:semsimian-kp"
     #                     }
     #                 ]
     #             }
+    #
+    # The aggregate (UUID 'meta') edge is the core result, but other edges serve
+    # as supporting edges (evidence) recorded in the auxiliary graph, as follows:
+    #
+    #
+    #     "auxiliary_graphs": {
+    #         "auxgraph001": {
+    #             "edges": [
+    #                 "ex:Edge02",
+    #                 "ex:Edge03",
+    #                 "ex:Edge04",
+    #                 "ex:Edge05",
+    #                 "ex:Edge06",
+    #                 "ex:Edge07"
+    #             ]
     #         }
-    #     },
+    #     }
+    #
+    # Corresponding with result
+    #
     #     "results": [
     #         {
     #             "node_bindings": {

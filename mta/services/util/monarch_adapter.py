@@ -193,7 +193,7 @@ class MonarchInterface:
             result_map: RESULTS_MAP = self.parse_raw_semsim(
                 full_result=full_result,
                 match_category="biolink:PhenotypicFeature",
-                ingest_knowledge_source="infores:hpo-annotation"
+                ingest_knowledge_source="infores:hpo-annotations"
             )
             result: RESULT = dict()
             result["primary_knowledge_source"] = "infores:semsimian-kp"

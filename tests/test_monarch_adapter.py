@@ -71,7 +71,7 @@ async def test_semsim_search():
     result: RESULTS_MAP = monarch_interface.parse_raw_semsim(
         full_result=semsim_result,
         match_category="biolink:PhenotypicFeature",
-        ingest_knowledge_source="infores:hpo-annotation"
+        ingest_knowledge_source="infores:hpo-annotations"
     )
     assert "MONDO:0008807" in result.keys()
     match_list: MATCH_LIST = result["MONDO:0008807"]["matches"]
