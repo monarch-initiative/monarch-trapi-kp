@@ -1,7 +1,7 @@
 """
 GraphAdapter to Monarch graph API
 """
-from typing import List, Dict, Optional
+from typing import List, Dict
 from enum import Enum
 import requests
 
@@ -136,14 +136,12 @@ class MonarchInterface:
         @staticmethod
         def parse_raw_semsim(
                 full_result: List[Dict],
-                match_category: str,
-                ingest_knowledge_source: Optional[str]
+                match_category: str
         ) -> RESULTS_MAP:
             """
             Parse out the SemSimian matched object terms associated with specified subject ids.
             :param full_result: List[SemsimSearchResult], raw Semsimian result
             :param match_category: str, Biolink Model concept category of matched terms (not provided by SemSimian?)
-            :param ingest_knowledge_source: Optional[str], original Monarch ingest knowledge source
             :return: RESULT_MAP, results indexed by matched subjects,
                                  with similarity profiles matching query inputs
             """
@@ -156,13 +154,11 @@ class MonarchInterface:
                 subject_category = tag_value(entry, "subject.category")
                 result[subject_id]["category"] = subject_category
                 result[subject_id]["supporting_data_sources"] = list()
-                if ingest_knowledge_source is not None:
-                    result[subject_id]["supporting_data_sources"].append(ingest_knowledge_source)
                 provided_by = tag_value(entry, "subject.provided_by")
                 if provided_by:
-                    result[subject_id]["supporting_data_sources"].append(
+                    result[subject_id]["provided_by"] = \
                         _map_source.setdefault(provided_by, f"infores:{provided_by}")
-                    )
+
                 result[subject_id]["score"] = entry["score"]
                 object_termset: Dict = tag_value(entry, "similarity.object_termset")
                 result[subject_id]["matches"]: MATCH_LIST = list()
@@ -192,11 +188,11 @@ class MonarchInterface:
             )
             result_map: RESULTS_MAP = self.parse_raw_semsim(
                 full_result=full_result,
-                match_category="biolink:PhenotypicFeature",
-                ingest_knowledge_source="infores:hpo-annotations"
+                match_category="biolink:PhenotypicFeature"
             )
             result: RESULT = dict()
             result["primary_knowledge_source"] = "infores:semsimian-kp"
+            result["ingest_knowledge_source"] = "infores:hpo-annotations"
             result["result_map"] = result_map
             return result
 

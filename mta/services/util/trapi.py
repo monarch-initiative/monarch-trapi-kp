@@ -5,7 +5,8 @@ extract parameters and build TRAPI Responses from results
 """
 from typing import Optional, List, Dict, Set
 from functools import lru_cache
-from uuid import UUID, uuid4
+from copy import deepcopy
+from uuid import uuid4
 from mta.services.util import (
     TERM_DATA,
     MATCH_LIST,
@@ -100,8 +101,11 @@ def get_categories(category: str) -> List[str]:
 def build_trapi_message(result: RESULT) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
-    Input result is a dictionary of format somewhat like:
-         {
+    Input result is a RESULT dictionary of format somewhat like:
+    {
+        "primary_knowledge_source": "infores:semsimian-kp",
+        "ingest_knowledge_source": "infores:hpo-annotations",
+        "result_map": {
             "MONDO:0008807": {
                 "name": "obsolete apnea, central sleep",
                 "category": "biolink:Disease",
@@ -119,24 +123,24 @@ def build_trapi_message(result: RESULT) -> Dict:
                         "category": "biolink:PhenotypicFeature"
                     }
                 ]
-            }
-         }
-    which represent S-P-O edges something like:
+            },
+            ... more MONDO indexed instances of RESULT_ENTRY
+        }
+    }
+
+    which represent a 'meta' S-P-O edge something like:
 
         ("UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": "biolink:PhenotypicFeature")
             --["biolink:similar_to"]->("MONDO:0008807": "biolink:Disease")
 
-    where the UUID represents the aggregate set of input phenotype terms
-    referred to in aggregate in the knowledge graph.
+    where "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f" designates a set
+    containing the aggregate set of input phenotype terms "HP:0002104" and "HP:0012378".
 
-    Numerous additional supporting 'similarity' edges are returned
-    and enumerated in the auxiliary graph of the result.
-
-    First MVP assumes a fixed TRAPI Request QGraph structure.
-    Future implementations may need to decide some data mappings more on the fly?
+    Details about SemSimian identified supporting 'similarity' edges are also returned
+    and enumerated in an auxiliary graph associated with the UUID 'meta' similarity edge result.
 
     :param result: RESULT, SemSimian subject - object identifier mapping dataset with some metadata annotation
-    :return: query result parts of TRAPI Response.Message body (suitable KnowledgeGraph and Results added)
+    :return: query result contents of the TRAPI Response.Message body (KnowledgeGraph, AuxGraph and Results added)
     """
     # Statement results as noted above, from original QGraph assumed to be of form:
     #
@@ -266,38 +270,37 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 "predicate": "biolink:similar_to",
     #                 "object": "HP:0010535",         # 'match_target' == 'Sleep apnea (HPO)'
     #                 "sources": [
-    #                   {
-    #                     "resource_id": "infores:semsimian-kp",
-    #                     "resource_role": "primary_knowledge_source",
-    #                     "source_record_urls": null,
-    #                     "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
+    #                    {
+    #                         "resource_id": "infores:semsimian-kp",
+    #                         "resource_role": "primary_knowledge_source",
+    #                         "source_record_urls": null,
+    #                         "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
     #                    },
-    #                   {
-    #                     "resource_id": "infores:hpo-annotations",
-    #                     "resource_role": "supporting_data_source",
-    #                     "source_record_urls": null,
-    #                     "upstream_resource_ids": []
+    #                    {
+    #                         "resource_id": "infores:hpo-annotations",
+    #                         "resource_role": "supporting_data_source",
+    #                         "source_record_urls": null,
+    #                         "upstream_resource_ids": []
     #                    },
-    #                   {
-    #                     "resource_id": "infores:upheno",
-    #                     "resource_role": "supporting_data_source",
-    #                     "source_record_urls": null,
-    #                     "upstream_resource_ids": []
+    #                    {
+    #                         "resource_id": "infores:upheno",
+    #                         "resource_role": "supporting_data_source",
+    #                         "source_record_urls": null,
+    #                         "upstream_resource_ids": []
     #                    }
     #                  ],
     #                  "attributes": [
     #                     {
-    #                     "attribute_type_id": "biolink:score",
-    #                     "value": 7.591547473476909,
-    #                     "value_type_id": "linkml:Float",
-    #                     "attribute_source": "infores:semsimian-kp"
+    #                         "attribute_type_id": "biolink:score",
+    #                         "value": 14.887188876843995,
+    #                         "value_type_id": "linkml:Float",
+    #                         "attribute_source": "infores:semsimian-kp"
     #                     },
-    #                  "attributes": [
     #                     {
-    #                     "attribute_type_id": "biolink:match",      # Would be a new edge property, to capture the common subsumer
-    #                     "value": "HP:0000961"                      # Cyanosis
-    #                     "value_type_id": "linkml:Uriorcurie",
-    #                     "attribute_source": "infores:semsimian-kp"
+    #                         "attribute_type_id": "biolink:match",
+    #                         "value": "HP:0010535"                 # 'ancestor_id' == 'Sleep apnea (HPO)'
+    #                         "value_type_id": "linkml:Uriorcurie",
+    #                         "attribute_source": "infores:semsimian-kp"
     #                     }
     #                 ]
     #             }
@@ -309,12 +312,12 @@ def build_trapi_message(result: RESULT) -> Dict:
     #     "auxiliary_graphs": {
     #         "auxgraph001": {
     #             "edges": [
-    #                 "ex:Edge02",
-    #                 "ex:Edge03",
-    #                 "ex:Edge04",
-    #                 "ex:Edge05",
-    #                 "ex:Edge06",
-    #                 "ex:Edge07"
+    #                 "e02",
+    #                 "e03",
+    #                 "e04",
+    #                 "e05",
+    #                 "e06",
+    #                 "e07"
     #             ]
     #         }
     #     }
@@ -367,26 +370,47 @@ def build_trapi_message(result: RESULT) -> Dict:
         "results": []
     }
     primary_knowledge_source: str = result["primary_knowledge_source"]
+    ingest_knowledge_source: str = result["ingest_knowledge_source"]
+    common_sources: List[Dict] = [
+        {
+            "resource_id": primary_knowledge_source,
+            "resource_role": "primary_knowledge_source"
+        },
+        {
+            "resource_id": ingest_knowledge_source,
+            "resource_role": "supporting_data_source"
+        }
+    ]
     subject_id: str
     result_map: RESULTS_MAP = result["result_map"]
     reset_edge_idx()
-    for subject_id, result in result_map.items():
+    for subject_id, result_entry in result_map.items():
 
         # 1. Add the "nodes" to the "knowledge_graph" - if not already present
         if subject_id not in trapi_response["knowledge_graph"]["nodes"]:
-            subject_name = result["name"]
-            subject_category = result["category"]
+            subject_name = result_entry["name"]
+            subject_category = result_entry["category"]
             trapi_response["knowledge_graph"]["nodes"][subject_id] = {
                 "name": subject_name,
                 "categories": get_categories(category=subject_category)
             }
 
+        # Build the shared 'sources' provenance block
+        sources: List[Dict] = deepcopy(common_sources)
+        if "provided_by" in result_entry:
+            sources.append(
+                {
+                    "resource_id": result_entry["provided_by"],
+                    "resource_role": "supporting_data_source"
+                }
+            )
+
         # 2. Need to create the overall "results" list entry
         #    for this similarity match, so that it can be
         #    populated concurrently with the knowledge_graph edges
-        matched_terms: MATCH_LIST = result["matches"]
+        matched_terms: MATCH_LIST = result_entry["matches"]
         term_data: TERM_DATA
-        result_entry: Dict = {
+        trapi_results_entry: Dict = {
             "node_bindings": {
                 "n0": [
                     {
@@ -431,12 +455,16 @@ def build_trapi_message(result: RESULT) -> Dict:
             #                         "upstream_resource_ids": ["infores:hpoa", "infores:upheno"]
             #                     },
             #                     {
-            #                         "resource_id": "infores:hpoa",
+            #                         # Ingest Knowledge Source (Monarch curator hardcode-specified)
+            #
+            #                         "resource_id": "infores:hpo-annotations",
             #                         "resource_role": "supporting_data_source",
             #                         "source_record_urls": null,
             #                         "upstream_resource_ids": []
             #                     },
             #                     {
+            #                         # SemSimian entry 'provided_by' specified Knowledge Source
+            #
             #                         "resource_id": "infores:upheno",
             #                         "resource_role": "supporting_data_source",
             #                         "source_record_urls": null,
@@ -452,7 +480,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             #                     },
             #                     {
             #                         "attribute_type_id": "biolink:support_graphs",
-            #                         "value": ["auxgraph001"],
+            #                         "value": ["ag-e01"],
             #                         "value_type_id": "linkml:String",
             #                         "attribute_source": "infores:semsimian-kp"
             #                     }
@@ -467,37 +495,26 @@ def build_trapi_message(result: RESULT) -> Dict:
                 "attributes": [
 
                 ],
-                "sources": [
-                    {
-                        "resource_id": primary_knowledge_source,
-                        "resource_role": "primary_knowledge_source"
-                    }
-                ]
+                "sources": deepcopy(sources)
             }
 
             # 4. TODO: Capture the contents of the "auxiliary_graph" here?
             #
             #     "auxiliary_graphs": {
-            #         "a0": {
+            #         "ag-e01": {
             #             "edges": [
             #                 "e02",
-            #                 "e12"
-            #             ]
-            #         },
-            #         "a1": {
-            #             "edges": [
-            #                 "extra_edge0"
-            #             ]
-            #         },
-            #         "a2": {
-            #             "edges" [
-            #                 "extra_edge1"
+            #                 "e03",
+            #                 "e04",
+            #                 "e05",
+            #                 "e06",
+            #                 "e07"
             #             ]
             #         }
             #     },
 
             # 5. ...then track the new edge as a specific "result" entry for the QEdge
-            result_entry["analyses"][0]["edge_bindings"]["e01"].append({"id": edge_id})
+            trapi_results_entry["analyses"][0]["edge_bindings"]["e01"].append({"id": edge_id})
 
         # Create UUID aggregate set node for the TRAPI response
         # TODO: the matched_terms set may be replicated for all subject_id matches...
@@ -513,6 +530,6 @@ def build_trapi_message(result: RESULT) -> Dict:
             "is_set": True
         }
 
-        trapi_response["results"].append(result_entry)
+        trapi_response["results"].append(trapi_results_entry)
 
     return trapi_response

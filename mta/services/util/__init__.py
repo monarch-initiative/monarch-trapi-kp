@@ -16,10 +16,12 @@ logger = LoggingUtil.init_logging(
 TERM_DATA = Dict[str, str]
 MATCH_LIST = List[TERM_DATA]
 RESULT_ENTRY = Union[str, Dict[str, Union[str, List[Union[str, TERM_DATA]]]]]
+
+# A RESULTS_MAP are RESULT_ENTRY matches indexed by SemSimian 'subject_id' hits
 RESULTS_MAP = Dict[str, RESULT_ENTRY]
 
-# The top level RESULT wrapper data type returns both
-# its dataset plus some metadata annotation
+# The top level RESULT wrapper data type returns both its dataset
+# plus some global metadata annotation, like global provenance
 RESULT = Dict[str, Union[str, RESULTS_MAP]]
 
 
