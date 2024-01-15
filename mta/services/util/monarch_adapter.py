@@ -1,7 +1,7 @@
 """
 GraphAdapter to Monarch graph API
 """
-from typing import List, Dict
+from typing import Optional, List, Dict
 from enum import Enum
 import requests
 
@@ -157,7 +157,6 @@ class MonarchInterface:
                 result[object_id]["category"] = subject_category
                 result[object_id]["score"] = entry["score"]
 
-                result[object_id]["supporting_data_sources"] = list()
                 provided_by = tag_value(entry, "subject.provided_by")
                 if provided_by:
                     result[object_id]["provided_by"] = \
@@ -165,7 +164,7 @@ class MonarchInterface:
 
                 # TODO: don't know if we also need here to look at the "similarity.subject_best_matches"
                 #       ...review 13 Jan 2024 Slack feedback from Sierra and Matt
-                object_best_matches: Dict = tag_value(entry, "similarity.'object_best_matches'")
+                object_best_matches: Dict = tag_value(entry, "similarity.object_best_matches")
                 result[object_id]["matches"]: MATCH_LIST = list()
                 if object_best_matches:
                     for object_match in object_best_matches.values():
@@ -185,41 +184,69 @@ class MonarchInterface:
 
             return result
 
-        async def phenotype_semsim_to_disease(self, phenotype_ids: List[str]) -> RESULT:
+        async def phenotype_semsim_to_disease(self, trapi_message: Dict) -> RESULT:
             """
-            :param phenotype_ids: list of (HPO?) phenotype identifiers
-            :type phenotype_ids: List[str]
-            :return: Dictionary indexed by (MONDO) disease CURIEs, containing the name and category of
-                     the MONDO term, plus lists of matching phenotype feature CURIEs with their name
-            :rtype: RESULT_MAP
+            Initial MVP is a single somewhat hardcoded MVP query against Monarch,
+            sending an input list of (HPO-indexed) phenotypic feature CURIEs
+            to a Monarch SemSimian search to match (MONDO-indexed) Diseases.
+
+            TODO: this query can probably be generalized at this level since likely both
+                  the semsim_search 'group' and result 'ingest_knowledge_source' can be
+                  parameterized given proper interpretation of the input TRAPI message.
+
+            :param trapi_message: Dict, TRAPI Request.Message.QueryGraph query data.
+            :return: RESULT dictionary of metadata and a RESULT_MAP, indexed by target curies,
+                    containing the target annotation, plus lists of annotated RESULT_ENTRY
+                    instances of similarity matching phenotypic feature terms.
+            :rtype: RESULT
             """
-            full_result: List[Dict] = await self.semsim_search(
-                identifiers=phenotype_ids, group=SemsimSearchCategory.MONDO
-            )
-            result_map: RESULTS_MAP = self.parse_raw_semsim(
-                full_result=full_result,
-                match_category="biolink:PhenotypicFeature"
-            )
+            nodes: Dict = trapi_message["query_graph"]["nodes"]
+            qnode_id: str
+            details: Dict
+            identifiers: Optional[List[str]] = None
+            category: Optional[str] = None
+            for qnode_id, details in nodes.items():
+                # Gatekeeper signal "is_set" and "set_interpretation" with "ids" - these are the input terms?
+                if "is_set" in details and details["is_set"] and \
+                        "set_interpretation" in details and details["set_interpretation"] == "OR+" and \
+                        "ids" in details:
+                    identifiers = details["ids"]
+
+                    # blind assumption: associated terms 'category' is properly set here in this query
+                    category = details["categories"][0] \
+                        if "categories" in details and details["categories"] else "biolink:NamedThing"
+
             result: RESULT = dict()
-            result["primary_knowledge_source"] = "infores:semsimian-kp"
-            result["ingest_knowledge_source"] = "infores:hpo-annotations"
-            result["result_map"] = result_map
+
+            if identifiers is not None:
+                full_result: List[Dict] = await self.semsim_search(
+                    identifiers=identifiers,
+                    group=SemsimSearchCategory.MONDO
+                )
+                result_map: RESULTS_MAP = self.parse_raw_semsim(
+                    full_result=full_result,
+                    match_category=category
+                )
+
+                result["primary_knowledge_source"] = "infores:semsimian-kp"
+                result["ingest_knowledge_source"] = "infores:hpo-annotations"
+                result["result_map"] = result_map
+
+            # may be None if there were no identifiers
             return result
 
-        async def run_query(self, identifiers: List[str]) -> RESULT:
+        async def run_query(self, trapi_message: Dict) -> RESULT:
             """
-            Initial MVP is a single highly specialized query MVP use case against Monarch.
-                 Sends an input list of (HPO-indexed) phenotypic feature CURIEs to a
-                 Monarch Semantic Similarity search to match (MONDO-indexed) Diseases.
-                 No scoring metrics or supporting evidence (yet) returned in this iteration.
+            Running a SemSim query against Monarch.
+            This MVP only supports one (hard-coded) use case. Future versions of this
+            method should check the trapi_message for information about the query nature.
 
-            :param identifiers: Python dictionary version of query parameters
-            :type identifiers: Dict
-            :return: Dictionary of Monarch 'subject' identifier hits indexing Lists of matched input identifiers.
-            :rtype: Dict[str, List[str]]
+            :param trapi_message: Dict, Python dictionary version of query parameters
+            :return: Dictionary of Monarch 'subject' identifier hits indexing
+                     Lists of matched input identifiers.
+            :rtype: RESULT
             """
-            result: RESULT = await self.phenotype_semsim_to_disease(phenotype_ids=identifiers)
-            return result
+            return await self.phenotype_semsim_to_disease(trapi_message=trapi_message)
 
     instance = None
 

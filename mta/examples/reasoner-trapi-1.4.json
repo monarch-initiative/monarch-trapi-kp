@@ -2,7 +2,7 @@
    "message": {
       "query_graph": {
           "nodes": {
-            "n0": {
+            "phenotypes": {
               "categories": [
                 "biolink:PhenotypicFeature"
               ],
@@ -13,7 +13,7 @@
               "is_set": true,
               "set_interpretation": "OR+"
             },
-            "n1": {
+            "diseases": {
               "categories": [
                 "biolink:Disease"
               ]
@@ -21,8 +21,8 @@
           },
           "edges": {
             "e01": {
-              "subject": "n0",
-              "object": "n1",
+              "subject": "phenotypes",
+              "object": "diseases",
               "predicates": [
                 "biolink:similar_to"
               ]

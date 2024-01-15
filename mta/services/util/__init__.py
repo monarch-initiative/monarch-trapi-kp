@@ -12,7 +12,6 @@ logger = LoggingUtil.init_logging(
     config.get('logging_format'),
 )
 
-
 TERM_DATA = Dict[str, str]
 MATCH_LIST = List[TERM_DATA]
 RESULT_ENTRY = Union[str, Dict[str, Union[str, List[Union[str, TERM_DATA]]]]]

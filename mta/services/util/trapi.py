@@ -3,7 +3,7 @@ TRAPI JSON accessing data utilities.
 This module knows about the TRAPI syntax such that it can
 extract parameters and build TRAPI Responses from results
 """
-from typing import Optional, Tuple, List, Dict, Set
+from typing import Optional, List, Dict, Set
 from functools import lru_cache
 from copy import deepcopy
 from uuid import uuid4
@@ -14,48 +14,6 @@ from mta.services.util import (
     RESULT
 )
 from bmt import Toolkit
-
-
-def extract_query_identifiers(trapi_json: Dict) -> Optional[List[str]]:
-    """
-    Interprets the TRAPI JSON content to figure out what specific
-    parameters are needed for the execution of the Monarch query.
-    :param trapi_json: Dict, TRAPI Query JSON object
-    :return: Optional[List[str]], List of query identifiers identified as a set.
-    """
-    assert "query_graph" in trapi_json
-    assert "nodes" in trapi_json["query_graph"]
-    nodes: Dict = trapi_json["query_graph"]["nodes"]
-    for node_id, details in nodes.items():
-        # Example message with query identifier set:
-        #
-        # "message": {
-        #       "query_graph": {
-        #           "nodes": {
-        #             "n0": {
-        #               "categories": [
-        #                 "biolink:PhenotypicFeature"
-        #               ],
-        #               "ids": [
-        #                 "HP:0002104",
-        #                 "HP:0012378",
-        #                 "HP:0012378",
-        #                 "HP:0012378"
-        #               ],
-        #               "is_set": true
-        #             }
-        # ...
-        if not("ids" in details):
-            continue
-
-        # We generalize the capture of multi-CURIEs here.
-        # This has the same outcome of the previous explicit
-        # check for the required categories, but is more generic.
-        if "is_set" in details and details["is_set"]:
-            return list(details["ids"])
-
-    return None
-
 
 edge_idx = 0
 
@@ -70,11 +28,6 @@ def next_edge_id() -> str:
     edge_idx += 1
     return f"e{str(edge_idx)}"
 
-
-CATEGORY_MAP: Dict[str, List[str]] = {
-    "biolink:PhenotypicFeature": [],
-    "biolink:Disease": [],
-}
 
 _toolkit: Optional[Toolkit] = None
 
@@ -98,7 +51,16 @@ def get_categories(category: str) -> List[str]:
     return categories
 
 
-def build_trapi_message(result: RESULT) -> Dict:
+def is_subject_qnode(node_data: Dict) -> bool:
+    return True if "is_set" in node_data and node_data["is_set"] and \
+            "set_interpretation" in node_data and node_data["set_interpretation"] == "OR+" and \
+            "ids" in node_data else False
+
+
+def build_trapi_message(
+        trapi_message: Dict,
+        result: RESULT
+) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
     Input result is a RESULT dictionary of format somewhat like:
@@ -139,41 +101,55 @@ def build_trapi_message(result: RESULT) -> Dict:
     Details about SemSimian identified supporting 'similarity' edges are also returned
     and enumerated in an auxiliary graph associated with the UUID 'meta' similarity edge result.
 
+    :param trapi_message: Dict, input TRAPI Message (Query Graph)
     :param result: RESULT, SemSimian subject - object identifier mapping dataset with some metadata annotation
     :return: query result contents of the TRAPI Response.Message body (KnowledgeGraph, AuxGraph and Results added)
     """
     # Statement results as noted above, from the original QGraph, assumed to be somewhat of form:
     #
     # "query_graph": {
-    #           "nodes": {
-    #             "n0": {
-    #               "categories": [
-    #                 "biolink:PhenotypicFeature"
-    #               ],
-    #               "ids": [
-    #                 "HP:0002104",
-    #                 "HP:0012378"
-    #               ],
-    #               "is_set": true,
-    #               "set_interpretation": "OR+"
-    #             },
-    #             "n1": {
-    #               "categories": [
-    #                 "biolink:Disease"
-    #               ]
-    #             }
-    #           },
-    #           "edges": {
-    #             "e01": {
+    #       "nodes": {
+    #         "phenotypes": {
+    #           "categories": [
+    #             "biolink:PhenotypicFeature"
+    #           ],
+    #           "ids": [
+    #             "HP:0002104",
+    #             "HP:0012378"
+    #           ],
+    #           "is_set": true,
+    #           "set_interpretation": "OR+"
+    #         },
+    #         "diseases": {
+    #           "categories": [
+    #             "biolink:Disease"
+    #           ]
+    #         }
+    #       },
+    #       "edges": {
+    #         "e01": {
     #               "subject": "n0",
     #               "object": "n1",
     #               "predicates": [
-    #                 "biolink:similar_to"
+    #                     "biolink:similar_to"
     #               ]
-    #             }
-    #           }
+    #         }
     #       }
+    #   }
     #
+    # Code to extract (meta-)data from the TRAPI message
+
+    nodes: Dict = trapi_message["query_graph"]["nodes"]
+    qnode_id: str
+    details: Dict
+    qnode_subject_key: str = "n0"
+    qnode_object_key: str = "n1"
+
+    for qnode_id, node_data in nodes.items():
+        if is_subject_qnode(node_data):
+            qnode_subject_key = qnode_id
+        else:
+            qnode_object_key = qnode_id
 
     # First, initialize a stub template for the TRAPI Response
     trapi_response: Dict = {
@@ -209,32 +185,46 @@ def build_trapi_message(result: RESULT) -> Dict:
     #             }
     #         },
     #         "edges": {
-    #             "e01": {
-    #                 "subject": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f",
-    #                 "predicate": "biolink:similar_to",
-    #                 "object": "MONDO:0008807",
-    #                 "attributes": [],
-    #                 "sources": [
-    #                   {
-    #                     "resource_id": "infores:semsimian-kp",
-    #                     "resource_role": "primary_knowledge_source",
-    #                     "source_record_urls": null,
-    #                     "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
-    #                    },
-    #                   {
-    #                     "resource_id": "infores:hpo-annotations",
-    #                     "resource_role": "supporting_data_source",
-    #                     "source_record_urls": null,
-    #                     "upstream_resource_ids": []
-    #                    },
-    #                   {
-    #                     "resource_id": "infores:upheno",
-    #                     "resource_role": "supporting_data_source",
-    #                     "source_record_urls": null,
-    #                     "upstream_resource_ids": []
-    #                    }
-    #                 ]
-    #             },
+    #             "e1": {
+    #                     "subject": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f",
+    #                     "predicate": "biolink:similar_to",
+    #                     "object": "MONDO:0015317",
+    #                     "sources": [
+    #                       {
+    #                        "resource_id": "infores:semsimian-kp",
+    #                        "resource_role": "primary_knowledge_source",
+    #                        "source_record_urls": null,
+    #                        "upstream_resource_ids": ["infores:hpoa", "infores:upheno"]
+    #                       },
+    #                       {
+    #                        "resource_id": "infores:hpo-annotations",
+    #                        "resource_role": "supporting_data_source",
+    #                        "source_record_urls": null,
+    #                        "upstream_resource_ids": []
+    #                       },
+    #                      {
+    #                       "resource_id": "infores:upheno",
+    #                       "resource_role": "supporting_data_source",
+    #                       "source_record_urls": null,
+    #                       "upstream_resource_ids": []
+    #                      }
+    #                    ],
+    #                     "attributes": [
+    #                       {
+    #                           "attribute_type_id": "biolink:score",
+    #                           "value": 13.074943444390097,  # RESULT_MAPS-level 'score'
+    #                           "value_type_id": "linkml:Float",
+    #                           "attribute_source": "infores:semsimian-kp"
+    #                       },
+    #                       {
+    #                           # auxiliary_graph associated with this 'answer' edge 'e1'
+    #                           "attribute_type_id": "biolink:support_graphs",
+    #                           "value": ["ag-e1"],
+    #                           "value_type_id": "linkml:String",
+    #                           "attribute_source": "infores:semsimian-kp"
+    #                       },
+    #                     ]
+    #                   }
     #            ...etc... see the additional edges below
     #
     # The additional edges below all relate to the pairwise match between
@@ -322,7 +312,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #
     #
     #     "auxiliary_graphs": {
-    #         "auxgraph001": {
+    #         "ag-e1": {
     #             "edges": [
     #                 "e02",
     #                 "e03",
@@ -339,17 +329,12 @@ def build_trapi_message(result: RESULT) -> Dict:
     #     "results": [
     #         {
     #             "node_bindings": {
-    #                 "n0": [
+    #                 "phenotypes": [
     #                     {
-    #
-    #                         TODO: problem here is that the 'QNode'
-    #                               n0 is a set of nodes?
-    #                               How do we best represent this?
-    #
-    #                         "id": "HP:000210,HP:0012378"
+    #                         "id": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f"
     #                     }
     #                 ],
-    #                 "n1": [
+    #                 "diseases": [
     #                     {
     #                         "id": "MONDO:0005148"
     #                     }
@@ -359,14 +344,7 @@ def build_trapi_message(result: RESULT) -> Dict:
     #                 {
     #                     "resource_id": "infores:monarchinitiative",
     #                     "edge_bindings": {
-    #                         "e01": [
-    #                             {
-    #                                 "id": "e01"
-    #                             },
-    #                             {
-    #                                 "id": "e02"
-    #                             },
-    #                         ],
+    #                         "e01": [{"id": "e01"}]
     #                     }
     #                 }
     #             ]
@@ -417,24 +395,30 @@ def build_trapi_message(result: RESULT) -> Dict:
         # Extract the various terms matched from the query
         matches: MATCH_LIST = result_entry["matches"]
         term_data: TERM_DATA
-        matched_terms: List[str] = [term_data["subject_id"] for term_data in matches]
 
         # sanity check to ensure that all lists with
-        # identical terms, give an identical matched_terms_key
+        # identical terms, give an identical "matched_terms_key"
+        matched_terms: List[str] = [term_data["subject_id"] for term_data in matches]
         matched_terms.sort()
         matched_terms_key = ",".join(matched_terms)
 
         # Create UUID aggregate set node for the TRAPI response.
-        # Assume that one unique UUID is created for each sequence of
+        # Assume that one unique UUID is created for each
+        # strict subset of input terms that are matched.
         query_set_uuid: str
         if matched_terms_key not in node_map:
+
             query_set_uuid = f"UUID:{str(uuid4())}"
+
+            members: Set[str] = set()
             category_set: Set[str] = set()
-            for term_data in matched_terms:
+            for term_data in matches:
+                members.add(term_data["subject_id"])
                 category_set.update(get_categories(category=term_data["category"]))
+
             node_map[matched_terms_key] = {
                 "id": query_set_uuid,  # this will be the real node identifier later
-                "members": [term_data["id"] for term_data in matched_terms],
+                "members": list(members),
                 "categories": list(category_set),
                 "is_set": True
             }
@@ -510,22 +494,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             ]
         }
 
-        # "results" list entry for each "object_id" similarity match
-        # TODO: review if there are multiple entries here, one per UUID - object_id mapping?
-        trapi_results_entry: Dict = {
-            "node_bindings": {
-                "n0": [{"id": query_set_uuid}],
-                "n1": [{"id": object_id}]
-            },
-            "analyses": [
-                {
-                    "resource_id": "infores:monarchinitiative",
-                    "edge_bindings": {"e01": [{"id": edge_id}]}
-                }
-            ]
-        }
-
-        for term_data in matched_terms:
+        for term_data in matches:
             term_subject_id: str = term_data["subject_id"]
             # add matched term uniquely to nodes set
             if term_subject_id not in node_map:
@@ -584,7 +553,7 @@ def build_trapi_message(result: RESULT) -> Dict:
             term_edge_id = next_edge_id()
             # Note here that n0 are the subject but come from the SemSimian object terms
             trapi_response["knowledge_graph"]["edges"][term_edge_id] = {
-                "subject": term_data["id"],
+                "subject": term_data["subject_id"],
                 "predicate": "biolink:similar_to",
                 "object": object_id,
                 "attributes": [
@@ -609,12 +578,25 @@ def build_trapi_message(result: RESULT) -> Dict:
             #     },
             trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(term_edge_id)
 
-        # Load the knowledge map nodes dictionary
-        node_details: Dict
-        for key, node_details in node_map:
-            node_id: str = node_details.pop("id")
-            trapi_response["knowledge_graph"]["nodes"][node_id] = node_details
-
+        # "results" list entry for the current "object_id" similarity match
+        trapi_results_entry: Dict = {
+            "node_bindings": {
+                qnode_subject_key: [{"id": query_set_uuid}],
+                qnode_object_key: [{"id": object_id}]
+            },
+            "analyses": [
+                {
+                    "resource_id": "infores:monarchinitiative",
+                    "edge_bindings": {"e01": [{"id": edge_id}]}
+                }
+            ]
+        }
         trapi_response["results"].append(trapi_results_entry)
+
+    # Deferred loading of the knowledge map nodes dictionary
+    node_details: Dict
+    for key, node_details in node_map.items():
+        qnode_id: str = node_details.pop("id")
+        trapi_response["knowledge_graph"]["nodes"][qnode_id] = node_details
 
     return trapi_response

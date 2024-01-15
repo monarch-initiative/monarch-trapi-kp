@@ -1,4 +1,4 @@
-from typing import Optional, List, Dict
+from typing import List, Dict
 import time
 import copy
 import json
@@ -15,7 +15,7 @@ from mta.services.util.attribute_mapping import (
     get_attribute_bl_info
 )
 from mta.services.util.logutil import LoggingUtil
-from mta.services.util.trapi import (extract_query_identifiers, build_trapi_message)
+from mta.services.util.trapi import build_trapi_message
 from mta.services.util.monarch_adapter import MonarchInterface
 
 # set the value type mappings
@@ -46,6 +46,45 @@ class Question:
     CURIE_KEY = 'curie'
 
     def __init__(self, question_json):
+        # Example Query Graph for the Monarch SemSimian KP
+        # {
+        #   "message": {
+        #     "query_graph": {
+        #       "nodes": {
+        #         "n0": {
+        #           "ids": [
+        #             "HP:0002104",
+        #             "HP:0012378"
+        #           ],
+        #           "categories": [
+        #             "biolink:PhenotypicFeature"
+        #           ],
+        #           "is_set": true,
+        #           "constraints": [],
+        #           "set_interpretation": "OR+"
+        #         },
+        #         "n1": {
+        #           "ids": null,
+        #           "categories": [
+        #             "biolink:Disease"
+        #           ],
+        #           "is_set": false,
+        #           "constraints": []
+        #         }
+        #       },
+        #       "edges": {
+        #         "e01": {
+        #           "subject": "n0",
+        #           "object": "n1",
+        #           "knowledge_type": null,
+        #           "predicates": [
+        #             "biolink:similar_to"
+        #           ],
+        #           "attribute_constraints": [],
+        #           "qualifier_constraints": []
+        #         }
+        #       }
+        #     }
         self._question_json = copy.deepcopy(question_json)
 
         # self.toolkit = toolkit
@@ -161,21 +200,20 @@ class Question:
         :param monarch_interface: interface for Monarch
         :return: Dict, TRAPI JSON Response object
         """
-        logger.info(f"answering query_graph: {json.dumps(self._question_json)}")
-        identifiers: Optional[List[str]] = extract_query_identifiers(trapi_json=self._question_json)
-        trapi_message: Dict = dict()
-        if identifiers:
-            results: Dict[str, List[str]]
-            start = time.time()
-            result: RESULT = await monarch_interface.run_query(identifiers)
-            end = time.time()
-            logger.info(f"getting answers took {end - start} seconds")
+        logger.info(f"TRAPI query answering query_graph: {json.dumps(self._question_json)}")
 
-            trapi_message = build_trapi_message(result=result)
+        results: Dict[str, List[str]]
+        start = time.time()
+        result: RESULT = await monarch_interface.run_query(trapi_message=self._question_json)
+        end = time.time()
+        logger.info(f"SemSimian query took {end - start} seconds")
+
+        trapi_message: Dict = build_trapi_message(trapi_message=self._question_json, result=result)
 
         # May be unaltered if parameters were unavailable
         self._question_json.update(self.transform_attributes(trapi_message))
         self._question_json = Question.apply_attribute_constraints(self._question_json)
+
         return self._question_json
 
     @staticmethod
