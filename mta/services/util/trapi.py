@@ -294,13 +294,15 @@ def build_trapi_message(
     #                  "attributes": [
     #                     {
     #                         "attribute_type_id": "biolink:score",
+    #                         "original_attribute_name": "semsimian:object_best_matches.score",
     #                         "value": 14.887188876843995,
     #                         "value_type_id": "linkml:Float",
     #                         "attribute_source": "infores:semsimian-kp"
     #                     },
     #                     {
     #                         "attribute_type_id": "biolink:match",
-    #                         "value": "HP:0010535"                 # 'ancestor_id' == 'Sleep apnea (HPO)'
+    #                         "original_attribute_name": "semsimian:object_best_matches.similarity.ancestor_id",
+    #                         "value": "HP:0010535"                 # 'ancestor_label' == 'Sleep apnea (HPO)'
     #                         "value_type_id": "linkml:Uriorcurie",
     #                         "attribute_source": "infores:semsimian-kp"
     #                     }
@@ -455,6 +457,7 @@ def build_trapi_message(
         #         "attributes": [
         #           {
         #               "attribute_type_id": "biolink:score",
+        #                "original_attribute_name": "semsimian:score",
         #               "value": 13.074943444390097,  # RESULT_MAPS-level 'score'
         #               "value_type_id": "linkml:Float",
         #               "attribute_source": "infores:semsimian-kp"
@@ -481,6 +484,7 @@ def build_trapi_message(
             "attributes": [
                 {
                   "attribute_type_id": "biolink:score",
+                  "original_attribute_name": "semsimian:score",
                   "value": answer_score,
                   "value_type_id": "linkml:Float",
                   "attribute_source": "infores:semsimian-kp"
@@ -504,13 +508,12 @@ def build_trapi_message(
                     "categories": get_categories(category=term_data["category"])
                 }
 
-            # Add the "edges" to the "knowledge_graph"...
-
+            # Add the "edges" to the "knowledge_graph"...something like this:
+            #
             #         "edges": {
-            #             "e01": {
+            #             "e02": {
             #                 "subject": "HP:0002104",
-            #                 "predicate": "biolink:similar_to",
-            #                 "object": "MONDO:0008807",
+            #                 "predicate": "biolink:phenotype_of",
             #                 "sources": [
             #                     {
             #                         "resource_id": "infores:semsimian-kp-kp",
@@ -535,18 +538,21 @@ def build_trapi_message(
             #                         "upstream_resource_ids": []
             #                     }
             #                 ],
-            #                 "attributes": [
+            #                 "attributes": [ xxxx wrong set of attributes - see ex:Edge003 instead
             #                     {
-            #                         "attribute_type_id": "biolink:score",
-            #                         "value": 9.959829749061718,
-            #                         "value_type_id": "linkml:Float",
-            #                         "attribute_source": "infores:semsimian-kp"
+            #                         "attribute_type_id": "biolink:has_evidence",
+            #                         "value": "ECO:0000304",
+            #                         # ECO code for 'author statement supported by
+            #                         # traceable reference used in manual assertion'
+            #                         "value_type_id": "linkml:Uriorcurie",
+            #                         "attribute_source": "infores:hpoa"
             #                     },
             #                     {
-            #                         "attribute_type_id": "biolink:support_graphs",
-            #                         "value": ["ag-e01"],
-            #                         "value_type_id": "linkml:String",
-            #                         "attribute_source": "infores:semsimian-kp"
+            #                         "attribute_type_id": "biolink:publications",
+            #                         # a supporting publication referenced by HPOA/Monarch(?)
+            #                         "value": ["orphanet:137935"],
+            #                         "value_type_id": "linkml:Uriorcurie",
+            #                         "attribute_source": "infores:hpoa"
             #                     }
             #                 ]
             #             }
@@ -554,12 +560,27 @@ def build_trapi_message(
             # Note here that n0 are the subject but come from the SemSimian object terms
             trapi_response["knowledge_graph"]["edges"][term_edge_id] = {
                 "subject": term_data["subject_id"],
-                "predicate": "biolink:similar_to",
+                "predicate": "biolink:phenotype_of",
                 "object": object_id,
+                "sources": deepcopy(sources),
                 "attributes": [
-
+                    {
+                        "attribute_type_id": "biolink:has_evidence",
+                        "value": "ECO:0000304",
+                        # ECO code for 'author statement supported by
+                        # traceable reference used in manual assertion'
+                        "value_type_id": "linkml:Uriorcurie",
+                        "attribute_source": "infores:hpo-annotations"
+                    },
+                    # {
+                    #     "attribute_type_id": "biolink:publications",
+                    #     # a supporting publication referenced by HPOA/Monarch(?)
+                    #     "value": ["orphanet:137935"],
+                    #     "value_type_id": "linkml:Uriorcurie",
+                    #     "attribute_source": "infores:hpoa"
+                    # }
                 ],
-                "sources": deepcopy(sources)
+
             }
 
             # 4. TODO: Capture the contents of the "auxiliary_graph" here?
