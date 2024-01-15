@@ -3,7 +3,9 @@ Unit Tests for the Monarch Adapter
 """
 from typing import List, Dict
 import pytest
+from deepdiff.diff import DeepDiff
 
+from mta.services.config import config
 from mta.services.util import (
     TERM_DATA,
     MATCH_LIST,
@@ -14,6 +16,7 @@ from mta.services.util import (
 )
 from mta.services.util.monarch_adapter import SemsimSearchCategory, MonarchInterface
 from mta.services.util.api_utils import get_monarch_interface
+from mta.services.util.question import Question
 
 # def tag_value(json_data, tag_path) -> Optional[str]:
 
@@ -92,3 +95,160 @@ async def test_run_query():
     match_list: MATCH_LIST = result_entry["matches"]
     term_data: TERM_DATA
     assert all([term_data["id"] in ["HP:0002104", "HP:0012378"] for term_data in match_list])
+
+
+@pytest.mark.parametrize(
+    "sources,output",
+    [
+        (   # Query 0 - Empty sources, return instance of top level system source
+            [],
+            [
+                {
+                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": None
+                }
+            ]
+        ),
+        (   # Query 1 - Add primary knowledge source
+            [
+                {
+                    "resource_id": "infores:semsimian-kp",
+                    "resource_role": "primary_knowledge_source"
+                }
+            ],
+            [
+                {
+                    "resource_id": "infores:semsimian-kp",
+                    "resource_role": "primary_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": None
+                },
+                {
+                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids":  ["infores:semsimian-kp"]
+                }
+            ]
+        ),
+        (   # Query 2 - Add a supporting data source, below the primary knowledge source
+            [
+                {
+                    "resource_id": "infores:semsimian-kp",
+                    "resource_role": "primary_knowledge_source"
+                },
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source"
+                }
+            ],
+            [
+                {
+                    "resource_id": "infores:semsimian-kp",
+                    "resource_role": "primary_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": ["infores:hpo-annotations"]
+                },
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": None
+                },
+                {
+                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids":  ["infores:semsimian-kp"]
+                }
+            ]
+        ),
+        (   # Query 3 - Add a supporting data source, below the main application
+            #           aggregator (lacking primary knowledge source)
+            [
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source"
+                }
+            ],
+            [
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": None
+                },
+                {
+                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids":  ["infores:hpo-annotations"]
+                }
+            ]
+        ),
+        (   # Query 4 - Same query as 3 above except adding some
+            #           source_record_urls for the supporting data source
+            [
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source",
+                    "source_record_urls": ["https://hpo.jax.org/app/"]
+                }
+            ],
+            [
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source",
+                    "source_record_urls": ["https://hpo.jax.org/app/"],
+                    "upstream_resource_ids": None
+                },
+                {
+                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids":  ["infores:hpo-annotations"]
+                }
+            ]
+        ),
+        (   # Query 5 - Same query as 3 above except adding a second "supporting_data_source"
+            [
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source"
+                },
+                {
+                    "resource_id": "infores:upheno",
+                    "resource_role": "supporting_data_source"
+                }
+            ],
+            [
+                {
+                    "resource_id": "infores:hpo-annotations",
+                    "resource_role": "supporting_data_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": None
+                },
+                {
+                    "resource_id": "infores:upheno",
+                    "resource_role": "supporting_data_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids": None
+                },
+                {
+                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids":  ["infores:hpo-annotations","infores:upheno"]
+                }
+            ]
+        )
+    ]
+)
+def test_source_construct_sources_tree(sources: List[Dict], output: List[Dict]):
+    # dummy Question - don't care about input question JSON for this test...
+    question: Question = Question(question_json={})
+    # ... 'cuz comparing sources tree directly
+    formatted_sources = question._construct_sources_tree(sources)
+    assert not DeepDiff(output, formatted_sources, ignore_order=True, report_repetition=True)

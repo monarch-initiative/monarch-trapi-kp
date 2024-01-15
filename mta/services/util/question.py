@@ -90,7 +90,25 @@ class Question:
         # self.toolkit = toolkit
         self.provenance = config.get("PROVENANCE_TAG", "infores:monarchinitiative")
 
-    def _construct_sources_tree(self, sources):
+    def _construct_sources_tree(self, sources: List[Dict]) -> List[Dict]:
+        """
+        Method to fill out the full annotation for edge "sources"
+        entries including "upstream_resource_ids" tree.
+        :param sources: List[Dict], edge 'sources' property entries
+        :return: enhanced "sources" including top-level "Monarch TRAPI" source entry.
+        """
+        if not sources:
+            # empty sources.. pretty strange, but then just send back
+            # an instance of the top-level "Monarch TRAPI" source entry
+            return [
+                {
+                    "resource_id": self.provenance,
+                    "resource_role": "aggregator_knowledge_source",
+                    "source_record_urls": None,
+                    "upstream_resource_ids":  None
+                }
+            ]
+
         # if primary source and aggregator source are specified in the graph,
         # upstream_resource_ids of all aggregator_ks be that source
 
@@ -99,37 +117,56 @@ class Question:
         # as upstream for the mta entry
         formatted_sources = []
         # filter out source entries that actually have values
-        temp = {}
+        resource_ids_with_resource_role = {}
+        source_record_urls_to_resource_id = {}
         for source in sources:
+
             if not source['resource_id']:
                 continue
-            temp[source['resource_role']] = temp.get(source['resource_role'], set())
+
+            resource_ids_with_resource_role[source['resource_role']] = \
+                resource_ids_with_resource_role.get(source['resource_role'], set())
+
+            source_record_urls_to_resource_id[source['resource_id']] = \
+                source['source_record_urls'] if 'source_record_urls' in source else None
+
             if isinstance(source["resource_id"], str):
-                temp[source["resource_role"]].add(source["resource_id"])
+                resource_ids_with_resource_role[source["resource_role"]].add(source["resource_id"])
             elif isinstance(source["resource_id"], list):
                 for resource_id in source["resource_id"]:
-                    temp[source["resource_role"]].add(resource_id)
+                    resource_ids_with_resource_role[source["resource_role"]].add(resource_id)
 
-        for resource_role in temp:
+        for resource_role in resource_ids_with_resource_role:
+
             upstreams = None
+
             if resource_role == "aggregator_knowledge_source":
-                upstreams = temp.get("primary_knowledge_source", None)
+                upstreams = resource_ids_with_resource_role.get("primary_knowledge_source", None)
+            elif resource_role == "primary_knowledge_source":
+                upstreams = resource_ids_with_resource_role.get("supporting_data_source", None)
 
             formatted_sources += [
                 {
                     "resource_id": resource_id,
                     "resource_role": resource_role,
+                    "source_record_urls": source_record_urls_to_resource_id[resource_id],
                     "upstream_resource_ids": list(upstreams) if upstreams else None
                 }
-                for resource_id in temp[resource_role]
+                for resource_id in resource_ids_with_resource_role[resource_role]
             ]
+
         upstreams_for_mta_entry = \
-            temp.get("aggregator_knowledge_source") or temp.get("primary_knowledge_source")
+            resource_ids_with_resource_role.get("aggregator_knowledge_source") or \
+            resource_ids_with_resource_role.get("primary_knowledge_source") or \
+            resource_ids_with_resource_role.get("supporting_data_source")
+
         formatted_sources.append({
             "resource_id": self.provenance,
             "resource_role": "aggregator_knowledge_source",
+            "source_record_urls": None,
             "upstream_resource_ids": list(upstreams_for_mta_entry) if upstreams_for_mta_entry else None
         })
+
         return formatted_sources
 
     def format_attribute_trapi(self, kg_items, node=False):
@@ -184,7 +221,7 @@ class Question:
                     if attribute_data:
                         attr.update(attribute_data)
 
-            # update edge provenance with automat infores,
+            # update edge provenance with infores,
             # filter empty ones, expand list type resource ids
             if not node:
                 kg_items[identifier]["sources"] = \
