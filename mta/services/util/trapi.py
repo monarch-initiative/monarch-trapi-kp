@@ -185,7 +185,7 @@ def build_trapi_message(
     #             }
     #         },
     #         "edges": {
-    #             "e1": {
+    #             "e001": {
     #                     "subject": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f",
     #                     "predicate": "biolink:similar_to",
     #                     "object": "MONDO:0015317",
@@ -217,9 +217,10 @@ def build_trapi_message(
     #                           "attribute_source": "infores:semsimian-kp"
     #                       },
     #                       {
-    #                           # auxiliary_graph associated with this 'answer' edge 'e1'
+    #                           # auxiliary_graph 'Support Graph' ('sg')
+    #                           # associated with this 'answer' edge 'e001'
     #                           "attribute_type_id": "biolink:support_graphs",
-    #                           "value": ["ag-e1"],
+    #                           "value": ["sg-e001"],
     #                           "value_type_id": "linkml:String",
     #                           "attribute_source": "infores:semsimian-kp"
     #                       },
@@ -262,66 +263,134 @@ def build_trapi_message(
     # ... more matching edges...
     # }
     #
-    # Giving the following sets of edges:
+    # Giving the following sets of additional supporting edges:
     #
-    # e02: A support graph edge reporting one of many pairwise similarity assertions
+    # e002: A support graph edge reporting one of many pairwise similarity assertions
     # between an input phenotype and a phenotype associated with the returned Disease
     #
-    #             "e02": {
-    #                 "subject": "HP:0002104",        # 'match_source' == 'Apnea (HPO)'
-    #                 "predicate": "biolink:similar_to",
-    #                 "object": "HP:0010535",         # 'match_target' == 'Sleep apnea (HPO)'
-    #                 "sources": [
-    #                    {
-    #                         "resource_id": "infores:semsimian-kp",
-    #                         "resource_role": "primary_knowledge_source",
-    #                         "source_record_urls": null,
-    #                         "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
-    #                    },
-    #                    {
-    #                         "resource_id": "infores:hpo-annotations",
-    #                         "resource_role": "supporting_data_source",
-    #                         "source_record_urls": null,
-    #                         "upstream_resource_ids": []
-    #                    },
-    #                    {
-    #                         "resource_id": "infores:upheno",
-    #                         "resource_role": "supporting_data_source",
-    #                         "source_record_urls": null,
-    #                         "upstream_resource_ids": []
-    #                    }
-    #                  ],
-    #                  "attributes": [
-    #                     {
-    #                         "attribute_type_id": "biolink:score",
-    #                         "original_attribute_name": "semsimian:object_best_matches.score",
-    #                         "value": 14.887188876843995,
-    #                         "value_type_id": "linkml:Float",
-    #                         "attribute_source": "infores:semsimian-kp"
-    #                     },
-    #                     {
-    #                         "attribute_type_id": "biolink:match",
-    #                         "original_attribute_name": "semsimian:object_best_matches.similarity.ancestor_id",
-    #                         "value": "HP:0010535"                 # 'ancestor_label' == 'Sleep apnea (HPO)'
-    #                         "value_type_id": "linkml:Uriorcurie",
-    #                         "attribute_source": "infores:semsimian-kp"
-    #                     }
-    #                 ]
-    #             }
+    # "e002": {
+    #     "subject": "HP:0012378",        # 'match_source' == 'Fatigue (HPO)'
+    #     "predicate": "biolink:similar_to",
+    #     "object": "HP:0001699",         # 'match_target' == 'Sudden death (HPO)'
+    #     "sources": [
+    #        {
+    #             "resource_id": "infores:semsimian-kp",
+    #             "resource_role": "primary_knowledge_source",
+    #             "source_record_urls": null,
+    #             "upstream_resource_ids": ["infores:hpo-annotations", "infores:upheno"]
+    #        },
+    #        {
+    #             "resource_id": "infores:hpo-annotations",
+    #             "resource_role": "supporting_data_source",
+    #             "source_record_urls": null,
+    #             "upstream_resource_ids": []
+    #        },
+    #        {
+    #             "resource_id": "infores:upheno",
+    #             "resource_role": "supporting_data_source",
+    #             "source_record_urls": null,
+    #             "upstream_resource_ids": []
+    #        }
+    #      ],
+    #      "attributes": [
+    #         {
+    #             "attribute_type_id": "biolink:score",
+    #             "original_attribute_name": "semsimian:object_best_matches.*.score",
+    #             "value": 11.262698011936202,
+    #             "value_type_id": "linkml:Float",
+    #             "attribute_source": "infores:semsimian-kp"
+    #         },
+    #         {
+    #             "attribute_type_id": "biolink:match",
+    #             "original_attribute_name": "semsimian:object_best_matches.*.similarity.ancestor_id",
+
+    #             # Note: sometimes the 'ancestor_label' == 'Constitutional symptom', is missing?
+
+    #             # TODO: Likely have to look this term up on HPO and
+    #             #       add it to the node catalog (is this necessary?)
+    #             "value": "HP:0025142"  # this is the common subsumer a.k.a. 'ancestor_id'
+    #             "value_type_id": "linkml:Uriorcurie",
+    #             "attribute_source": "infores:semsimian-kp"
+    #         }
+    #     ]
+    # }
+    #
+    #  e003: A support graph edge reporting the matched phenotype
+    #  in the pairwise similarity edge above to be associated
+    #  with the Disease result.
+    #
+    #  "e003": {
+    #     "object": "HP:0001699",               # 'match_target' == 'Sudden death (HPO)'
+    #     "predicate": "biolink:phenotype_of",
+    #     "subject": "MONDO:0008807",           # 'subject.name' == 'obsolete apnea, central sleep' (Disease)
+    #     "sources": [
+    #           {
+    #             "resource_id": "infores:hpo-annotations",
+    #             "resource_role": "primary_knowledge_source",
+    #             "source_record_urls": None,
+    #             "upstream_resource_ids": []
+    #            },
+    #           {
+    #             "resource_id": "infores:monarch-initiative",
+    #             "resource_role": "aggregator_knowledge_source",
+    #             "source_record_urls": None,
+    #             "upstream_resource_ids": ["infores:hpo-annotations"]
+    #            },
+    #      "attributes": [
+    #        	{
+    #             "attribute_type_id": "biolink:has_evidence",
+    #               # ECO code for 'author statement supported by
+    #               # traceable reference used in manual assertion'
+    #             "value": "ECO:0000304",
+    #             "value_type_id": "linkml:Uriorcurie",
+    #             "attribute_source": "infores:hpo-annotations"
+    #        	},
+    #        	{
+    #             "attribute_type_id": "biolink:publications",
+    #             # TODO: this would be a supporting HPOA publication
+    #             #       referenced by (and retrieved from?) Monarch,
+    #             #       linking the phenotype with its disease.
+    #             "value": ["orphanet:137935"]    # this is an illustrative by mismatched publication for this edge
+    #             "value_type_id": "linkml:Uriorcurie",
+    #             "attribute_source": "infores:hpo-annotations"
+    #        	}
+    #     ]
+    # }
+    #
+    # e004: The following support graph edge reporting the input phenotype in
+    # the pairwise similarity edge above to be a member of the input phenotype set.
+    # This is obvious/trivial, so we may not need to report it.  But it makes the
+    # visualized support graph more complete/intuitive
+    #
+    #   "e004": {
+    #     "subject": "HP:0012378",        # 'match_source' == 'Fatigue (HPO)'
+    #     "predicate": "biolink:member_of",
+    #
+    #     # The generated UUID for the input phenotype set
+    #     "object": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f,
+    #
+    #     "sources": [
+    #       {
+    #           "resource_id": "infores:semsimian-kp",
+    #        	"resource_role": "primary_knowledge_source",
+    #        	"source_record_urls": null,
+    #        	"upstream_resource_ids": []
+    #        }
+    #     ]
+    #   }
     #
     # The aggregate (UUID 'meta') edge is the core result, but other edges serve
-    # as supporting edges (evidence) recorded in the auxiliary graph, as follows:
+    # as supporting edges (evidence) recorded, as follows:
     #
-    #
+    #     # auxiliary_graph 'Support Graph' ('sg')
+    #     # associated with the 'answer' edge 'e001'
     #     "auxiliary_graphs": {
-    #         "ag-e1": {
+    #         "sg-e001": {
     #             "edges": [
-    #                 "e02",
-    #                 "e03",
-    #                 "e04",
-    #                 "e05",
-    #                 "e06",
-    #                 "e07"
+    #                 "e002",
+    #                 "e003",
+    #                 "e004",
+    #               etc... (supporting edges for all phenotype matches...)
     #             ]
     #         }
     #     }
@@ -346,7 +415,7 @@ def build_trapi_message(
     #                 {
     #                     "resource_id": "infores:monarchinitiative",
     #                     "edge_bindings": {
-    #                         "e01": [{"id": "e01"}]
+    #                         "e01": [{"id": "e001"}]
     #                     }
     #                 }
     #             ]
@@ -366,9 +435,11 @@ def build_trapi_message(
             "resource_role": "supporting_data_source"
         }
     ]
+
     object_id: str
     node_map: Dict = dict()
     result_map: RESULTS_MAP = result["result_map"]
+
     reset_edge_idx()
 
     for object_id, result_entry in result_map.items():
@@ -463,16 +534,22 @@ def build_trapi_message(
         #               "attribute_source": "infores:semsimian-kp"
         #           },
         #           {
-        #               # auxiliary_graph associated with this 'answer' edge 'e1'
+        #               # auxiliary_graph 'Support Graph' ('sg')
+        #               # associated with this 'answer' edge 'e001'
         #               "attribute_type_id": "biolink:support_graphs",
-        #               "value": ["ag-e1"],
+        #               "value": ["sg-e001"],
         #               "value_type_id": "linkml:String",
         #               "attribute_source": "infores:semsimian-kp"
         #           },
         #         ]
         #       }
+
+        # Identifier of the core similarity 'answer' edge mapping the
+        # (UUID-identified) multi-curie subset of query (HPO) input terms
+        # onto the term profile matched node (e.g. MONDO "disease")
         edge_id: str = next_edge_id()
-        aux_graph_id: str = f"ag-{edge_id}"
+        aux_graph_id: str = f"sg-{edge_id}"
+
         trapi_response["auxiliary_graphs"][aux_graph_id] = {"edges": []}
 
         # Note here that n0 are the subject but come from the SemSimian object terms
@@ -586,7 +663,7 @@ def build_trapi_message(
             # 4. TODO: Capture the contents of the "auxiliary_graph" here?
             #
             #     "auxiliary_graphs": {
-            #         "ag-e01": {
+            #         "sg-e001": {
             #             "edges": [
             #                 "e02",
             #                 "e03",
