@@ -116,13 +116,24 @@ class Question:
         # as upstream resources, if no aggregators are found and only primary ks is provided that would be added
         # as upstream for the mta entry
         formatted_sources = []
-        # filter out source entries that actually have values
         resource_ids_with_resource_role = {}
         source_record_urls_to_resource_id = {}
+
+        # filter out source entries that actually have values
         for source in sources:
 
-            if not source['resource_id']:
+            if not (
+                    'resource_id' in source and
+                    source['resource_id'] and
+                    'resource_role' in source and
+                    source['resource_role']
+            ):
+                # silently pruning TRAPI non-compliant source records
+                logger.warning(f"Invalid edge 'source' entry: '{str(source)}'? Skipped!")
                 continue
+
+            # 'resource_role' values are now ResourceRoleEnum without a biolink: CURIE prefix
+            source['resource_role'] = source['resource_role'].lstrip("biolink:")
 
             resource_ids_with_resource_role[source['resource_role']] = \
                 resource_ids_with_resource_role.get(source['resource_role'], set())
@@ -155,7 +166,7 @@ class Question:
                 for resource_id in resource_ids_with_resource_role[resource_role]
             ]
 
-        upstreams_for_mta_entry = \
+        upstreams_for_top_level_entry = \
             resource_ids_with_resource_role.get("aggregator_knowledge_source") or \
             resource_ids_with_resource_role.get("primary_knowledge_source") or \
             resource_ids_with_resource_role.get("supporting_data_source")
@@ -164,7 +175,7 @@ class Question:
             "resource_id": self.provenance,
             "resource_role": "aggregator_knowledge_source",
             "source_record_urls": None,
-            "upstream_resource_ids": list(upstreams_for_mta_entry) if upstreams_for_mta_entry else None
+            "upstream_resource_ids": list(upstreams_for_top_level_entry) if upstreams_for_top_level_entry else None
         })
 
         return formatted_sources
