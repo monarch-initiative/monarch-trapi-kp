@@ -26,7 +26,7 @@ def reset_edge_idx():
 def next_edge_id() -> str:
     global edge_idx
     edge_idx += 1
-    return f"e{str(edge_idx)}"
+    return f"e{edge_idx:0>3}"
 
 
 _toolkit: Optional[Toolkit] = None
