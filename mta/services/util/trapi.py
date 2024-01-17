@@ -324,7 +324,7 @@ def build_trapi_message(
     #        pairwise similarity edge above to be associated with the Disease result.
     #
     #  "e003": {
-    #     "object": "HP:0001699",               # 'match_target' == 'Sudden death (HPO)'
+    #     "object": "HP:0001699",               # 'match_target_label' == 'Sudden death (HPO)'
     #     "predicate": "biolink:phenotype_of",
     #     "subject": "MONDO:0008807",           # 'subject.name' == 'obsolete apnea, central sleep' (Disease)
     #     "sources": [
@@ -477,14 +477,12 @@ def build_trapi_message(
         matched_terms.sort()
         matched_terms_key = ",".join(matched_terms)
 
-        # Create UUID aggregate set node for the TRAPI response.
+        # Create UUID identifier for input query terms.
         # Assume that one unique UUID is created for each
         # strict subset of input terms that are matched.
         query_set_uuid: str
         if matched_terms_key not in node_map:
-
             query_set_uuid = f"UUID:{str(uuid4())}"
-
             members: Set[str] = set()
             category_set: Set[str] = set()
             for term_data in matches:
@@ -536,12 +534,23 @@ def build_trapi_message(
         }
 
         for term_data in matches:
+
             term_subject_id: str = term_data["subject_id"]
-            # add matched term uniquely to nodes set
+            term_object_id: str = term_data["object_id"]
+
+            # Add subject and object terms uniquely to nodes catalog
+            # The identical Biolink node category is assumed for both nodes
             if term_subject_id not in node_map:
                 node_map[term_subject_id] = {
                     "id": term_subject_id,
                     "name": term_data["subject_name"],
+                    "categories": get_categories(category=term_data["category"])
+                }
+
+            if term_object_id not in node_map:
+                node_map[term_object_id] = {
+                    "id": term_object_id,
+                    "name": term_data["object_name"],
                     "categories": get_categories(category=term_data["category"])
                 }
 
@@ -553,9 +562,9 @@ def build_trapi_message(
             #
             e002_edge_id = next_edge_id()
             trapi_response["knowledge_graph"]["edges"][e002_edge_id] = {
-                "subject": term_data["subject_id"],
+                "subject": term_subject_id,
                 "predicate": "biolink:similar_to",
-                "object": term_data["object_id"],
+                "object": term_object_id,
                 "sources": deepcopy(sources),
                 "attributes": [
                     {
@@ -581,9 +590,9 @@ def build_trapi_message(
 
             e003_edge_id = next_edge_id()
             trapi_response["knowledge_graph"]["edges"][e003_edge_id] = {
-                "subject": term_data["subject_id"],
+                "subject": term_object_id,
                 "predicate": match_predicate,
-                "object": term_data["subject_id"],
+                "object": matched_term_id,
                 "sources": [
                     {
                         "resource_id": ingest_knowledge_source,
@@ -620,7 +629,7 @@ def build_trapi_message(
 
             e004_edge_id = next_edge_id()
             trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {
-                "subject": term_data["subject_id"],
+                "subject": term_subject_id,
                 "predicate": "biolink:member_of",
                 "object": query_set_uuid,
                 "sources":  [
