@@ -104,7 +104,7 @@ class MonarchInterface:
             #   -H 'accept: application/json' \
             #   -H 'Content-Type: application/json' \
             #   -d '{
-            #   "termset": ["HP:0002104", "HP:0012378", "HP:0012378", "HP:0012378"],
+            #   "termset": ["HP:0002104", "HP:0012378"],
             #   "group": "Human Diseases",
             #   "limit": 5
             # }'
@@ -162,9 +162,10 @@ class MonarchInterface:
                     result[object_id]["provided_by"] = \
                         _map_source.setdefault(provided_by, f"infores:{provided_by}")
 
-                # TODO: don't know if we also need here to look at the "similarity.subject_best_matches"
-                #       ...review 13 Jan 2024 Slack feedback from Sierra and Matt
-                object_best_matches: Dict = tag_value(entry, "similarity.object_best_matches")
+                # We only take the Similarity 'object_best_matches'
+                # for which the 'match_source' values correspond
+                # to the original input query terms
+                object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
                 result[object_id]["matches"]: MATCH_LIST = list()
                 if object_best_matches:
                     for object_match in object_best_matches.values():
@@ -203,14 +204,15 @@ class MonarchInterface:
             nodes: Dict = trapi_message["query_graph"]["nodes"]
             qnode_id: str
             details: Dict
-            identifiers: Optional[List[str]] = None
+            query_terms: Optional[List[str]] = None
             category: Optional[str] = None
             for qnode_id, details in nodes.items():
-                # Gatekeeper signal "is_set" and "set_interpretation" with "ids" - these are the input terms?
+                # Gatekeeper signal "is_set" and "set_interpretation"
+                # with "ids" - these are the input terms?
                 if "is_set" in details and details["is_set"] and \
                         "set_interpretation" in details and details["set_interpretation"] == "OR+" and \
                         "ids" in details:
-                    identifiers = details["ids"]
+                    query_terms = details["ids"]
 
                     # blind assumption: associated terms 'category' is properly set here in this query
                     category = details["categories"][0] \
@@ -218,9 +220,9 @@ class MonarchInterface:
 
             result: RESULT = dict()
 
-            if identifiers is not None:
+            if query_terms is not None:
                 full_result: List[Dict] = await self.semsim_search(
-                    identifiers=identifiers,
+                    identifiers=query_terms,
                     group=SemsimSearchCategory.MONDO
                 )
                 result_map: RESULTS_MAP = self.parse_raw_semsim(

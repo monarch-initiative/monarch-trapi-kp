@@ -63,6 +63,8 @@ TEST_IDENTIFIERS = [
 @pytest.mark.asyncio
 async def test_semsim_search():
     monarch_interface: MonarchInterface = get_monarch_interface()
+    # The success of this test depends a bit on the contents of
+    # Monarch and the SemSimian algorithm as of January 2024
     semsim_result: List[Dict] = await monarch_interface.semsim_search(
         identifiers=TEST_IDENTIFIERS, group=SemsimSearchCategory.MONDO
     )

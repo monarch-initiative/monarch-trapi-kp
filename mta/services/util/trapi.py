@@ -533,6 +533,8 @@ def build_trapi_message(
             ]
         }
 
+        # Note that the term_data entries here report
+        # SemSimian "similarity.object_best_matches"
         for term_data in matches:
 
             term_subject_id: str = term_data["subject_id"]
@@ -622,8 +624,8 @@ def build_trapi_message(
             }
             trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e003_edge_id)
 
-            # e004: The following support graph edge reporting the input phenotype in the
-            #       pairwise-similarity edge above, to be a member of the input phenotype set.
+            # e004: The following support graph edge reporting the input term in the
+            #       pairwise-similarity edge above, to be a member of the query terms set.
             #       This is obvious/trivial, so we may not need to report it.
             #       But it makes the visualized support graph more complete/intuitive.
 
