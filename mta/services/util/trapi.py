@@ -16,6 +16,11 @@ from mta.services.util import (
 )
 from bmt import Toolkit
 
+# Synthetic 'original_attribute_name' for SemSimian attributes
+AGGREGATE_SIMILARITY_SCORE = "semsimian:score"
+MATCH_TERM_SCORE = "semsimian:object_best_matches.*.score"
+MATCH_TERM = "semsimian:object_best_matches.*.similarity.ancestor_id"
+
 edge_idx = 0
 
 
@@ -217,6 +222,7 @@ def build_trapi_message(
     #                     "attributes": [
     #                       {
     #                           "attribute_type_id": "biolink:score",
+    #                           "original_attribute_name": "semsimian:score",
     #                           "value": 13.074943444390097,  # RESULT_MAPS-level 'score'
     #                           "value_type_id": "linkml:Float",
     #                           "attribute_source": "infores:semsimian-kp"
@@ -423,6 +429,7 @@ def build_trapi_message(
     #         }
     #     ]
     # }
+
     primary_knowledge_source: str = result["primary_knowledge_source"]
     ingest_knowledge_source: str = result["ingest_knowledge_source"]
     match_predicate: str = result["match_predicate"]
@@ -444,6 +451,8 @@ def build_trapi_message(
 
     reset_edge_idx()
 
+    query_term_membership_edges: Dict[str, str] = dict()
+    
     for matched_term_id, result_entry in result_map.items():
 
         # Capture the primary answer node object matched
@@ -477,24 +486,44 @@ def build_trapi_message(
         matched_terms.sort()
         matched_terms_key = ",".join(matched_terms)
 
-        # Create UUID identifier for input query terms.
-        # Assume that one unique UUID is created for each
-        # strict subset of input terms that are matched.
+        # Create UUID identifier for node representing the set of input query terms.
+        # Assume that one unique UUID is created for each strict subset of input terms that are matched.
         query_set_uuid: str
         if matched_terms_key not in node_map:
             query_set_uuid = f"UUID:{str(uuid4())}"
             members: Set[str] = set()
             category_set: Set[str] = set()
             for term_data in matches:
-                members.add(term_data["subject_id"])
+                query_term: str = term_data["subject_id"]
+                members.add(query_term)
                 category_set.update(get_categories(category=term_data["category"]))
 
+                # e004: The following support graph edges reporting the input terms in the
+                #       pairwise-similarity edge above, to be a member of the query terms set.
+                #       This is obvious/trivial, so we may not need to report it.
+                #       But it makes the visualized support graph more complete/intuitive.
+                if query_term not in query_term_membership_edges:
+                    e004_edge_id: str = next_edge_id()
+                    trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {
+                        "subject": query_term,
+                        "predicate": "biolink:member_of",
+                        "object": query_set_uuid,
+                        "sources": [
+                            {
+                                "resource_id": primary_knowledge_source,
+                                "resource_role": "primary_knowledge_source"
+                            }
+                        ]
+                    }
+                    query_term_membership_edges[query_term] = e004_edge_id
+                
             node_map[matched_terms_key] = {
                 "id": query_set_uuid,  # this will be the real node identifier later
                 "members": list(members),
                 "categories": list(category_set),
                 "is_set": True
             }
+
         else:
             query_set_uuid = node_map[matched_terms_key]["id"]
 
@@ -507,8 +536,8 @@ def build_trapi_message(
         # (UUID-identified) multi-curie subset of query (HPO) input terms,
         # onto the term profile matched node (e.g. MONDO "disease")
         e001_edge_id: str = next_edge_id()
-        aux_graph_id: str = f"sg-{e001_edge_id}"
-        trapi_response["auxiliary_graphs"][aux_graph_id] = {"edges": []}
+        support_graph_id: str = f"sg-{e001_edge_id}"
+        trapi_response["auxiliary_graphs"][support_graph_id] = {"edges": []}
 
         # Build the 'e001' core similarity 'answer' edge
         trapi_response["knowledge_graph"]["edges"][e001_edge_id] = {
@@ -519,14 +548,14 @@ def build_trapi_message(
             "attributes": [
                 {
                   "attribute_type_id": "biolink:score",
-                  "original_attribute_name": "semsimian:score",
+                  "original_attribute_name": AGGREGATE_SIMILARITY_SCORE,
                   "value": answer_score,
                   "value_type_id": "linkml:Float",
                   "attribute_source": primary_knowledge_source
                 },
                 {
                   "attribute_type_id": "biolink:support_graphs",
-                  "value": [aux_graph_id],
+                  "value": [support_graph_id],
                   "value_type_id": "linkml:String",
                   "attribute_source": primary_knowledge_source
                 }
@@ -562,7 +591,7 @@ def build_trapi_message(
             # e002: A support graph edge reporting one of many pairwise similarity assertions
             #       between an input query phenotype and a phenotype associated with a returned Disease.
             #
-            e002_edge_id = next_edge_id()
+            e002_edge_id: str = next_edge_id()
             trapi_response["knowledge_graph"]["edges"][e002_edge_id] = {
                 "subject": term_subject_id,
                 "predicate": "biolink:similar_to",
@@ -571,26 +600,26 @@ def build_trapi_message(
                 "attributes": [
                     {
                         "attribute_type_id": "biolink:score",
-                        "original_attribute_name": "semsimian:object_best_matches.*.score",
+                        "original_attribute_name": MATCH_TERM_SCORE,
                         "value": term_data["score"],
                         "value_type_id": "linkml:Float",
                         "attribute_source": primary_knowledge_source
                     },
                     {
                         "attribute_type_id": "biolink:match",
-                        "original_attribute_name": "semsimian:object_best_matches.*.similarity.ancestor_id",
+                        "original_attribute_name": MATCH_TERM,
                         "value": term_data["matched_term"],  # this is the common subsumer i.e. 'matched_term'
                         "value_type_id": "linkml:Uriorcurie",
                         "attribute_source": primary_knowledge_source
                     }
                 ]
             }
-            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e002_edge_id)
+            trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(e002_edge_id)
 
             #  e003: A support graph edge reporting the matched phenotype in the
             #        pairwise-similarity edge above to be associated with the Disease result.
 
-            e003_edge_id = next_edge_id()
+            e003_edge_id: str = next_edge_id()
             trapi_response["knowledge_graph"]["edges"][e003_edge_id] = {
                 "subject": term_object_id,
                 "predicate": match_predicate,
@@ -622,26 +651,11 @@ def build_trapi_message(
                     # }
                 ]
             }
-            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e003_edge_id)
+            trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(e003_edge_id)
 
-            # e004: The following support graph edge reporting the input term in the
-            #       pairwise-similarity edge above, to be a member of the query terms set.
-            #       This is obvious/trivial, so we may not need to report it.
-            #       But it makes the visualized support graph more complete/intuitive.
-
-            e004_edge_id = next_edge_id()
-            trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {
-                "subject": term_subject_id,
-                "predicate": "biolink:member_of",
-                "object": query_set_uuid,
-                "sources":  [
-                    {
-                        "resource_id": primary_knowledge_source,
-                        "resource_role": "primary_knowledge_source"
-                    }
-                ],
-            }
-            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e004_edge_id)
+        # All match results depend on the UUID set,
+        # so add those edges to the corresponding auxiliary graph
+        trapi_response["auxiliary_graphs"][support_graph_id]["edges"].extend(query_term_membership_edges.values())
 
         # "results" list entry for the current "object_id" similarity match
         trapi_results_entry: Dict = {
