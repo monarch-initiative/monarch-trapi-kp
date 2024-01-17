@@ -502,6 +502,11 @@ def build_trapi_message(
                 #       pairwise-similarity edge above, to be a member of the query terms set.
                 #       This is obvious/trivial, so we may not need to report it.
                 #       But it makes the visualized support graph more complete/intuitive.
+                # TODO: double check "query_term_membership_edges" for correctness:
+                #       does it deal properly with strict subsets of query_terms
+                #       for a given matched_term_id, for a given UUID (the match_terms_key
+                #       above ensures a unit UUID for each strict subset but maybe not for
+                #       the "query_term_membership_edges" linked to the given UUID)?
                 if query_term not in query_term_membership_edges:
                     e004_edge_id: str = next_edge_id()
                     trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {

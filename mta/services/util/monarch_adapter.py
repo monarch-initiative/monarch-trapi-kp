@@ -112,7 +112,7 @@ class MonarchInterface:
             query = {
               "termset": identifiers,
               "group": group.value,
-              "limit": 5
+              "limit": 50
             }
             headers = {
                 "accept": "application/json",
