@@ -7,6 +7,7 @@ from deepdiff.diff import DeepDiff
 
 from mta.services.config import config
 from mta.services.util import (
+    DEFAULT_PROVENANCE,
     TERM_DATA,
     MATCH_LIST,
     RESULT_ENTRY,
@@ -18,7 +19,7 @@ from mta.services.util.monarch_adapter import SemsimSearchCategory, MonarchInter
 from mta.services.util.api_utils import get_monarch_interface
 from mta.services.util.question import Question
 
-# def tag_value(json_data, tag_path) -> Optional[str]:
+test_resource_id: str = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
 
 _TEST_JSON_DATA = {
         "testing": {
@@ -104,7 +105,7 @@ async def test_run_query():
             [],
             [
                 {
-                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_id": test_resource_id,
                     "resource_role": "aggregator_knowledge_source",
                     "source_record_urls": None,
                     "upstream_resource_ids": None
@@ -126,7 +127,7 @@ async def test_run_query():
                     "upstream_resource_ids": None
                 },
                 {
-                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_id": test_resource_id,
                     "resource_role": "aggregator_knowledge_source",
                     "source_record_urls": None,
                     "upstream_resource_ids":  ["infores:semsimian-kp"]
@@ -158,7 +159,7 @@ async def test_run_query():
                     "upstream_resource_ids": None
                 },
                 {
-                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_id": test_resource_id,
                     "resource_role": "aggregator_knowledge_source",
                     "source_record_urls": None,
                     "upstream_resource_ids":  ["infores:semsimian-kp"]
@@ -181,7 +182,7 @@ async def test_run_query():
                     "upstream_resource_ids": None
                 },
                 {
-                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_id": test_resource_id,
                     "resource_role": "aggregator_knowledge_source",
                     "source_record_urls": None,
                     "upstream_resource_ids":  ["infores:hpo-annotations"]
@@ -205,7 +206,7 @@ async def test_run_query():
                     "upstream_resource_ids": None
                 },
                 {
-                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_id": test_resource_id,
                     "resource_role": "aggregator_knowledge_source",
                     "source_record_urls": None,
                     "upstream_resource_ids":  ["infores:hpo-annotations"]
@@ -237,7 +238,7 @@ async def test_run_query():
                     "upstream_resource_ids": None
                 },
                 {
-                    "resource_id": config.get("PROVENANCE_TAG", "infores:monarchinitiative"),
+                    "resource_id": test_resource_id,
                     "resource_role": "aggregator_knowledge_source",
                     "source_record_urls": None,
                     "upstream_resource_ids":  ["infores:hpo-annotations","infores:upheno"]

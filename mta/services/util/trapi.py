@@ -8,6 +8,7 @@ from functools import lru_cache
 from copy import deepcopy
 from uuid import uuid4
 from mta.services.util import (
+    DEFAULT_PROVENANCE,
     TERM_DATA,
     MATCH_LIST,
     RESULTS_MAP,
@@ -105,7 +106,9 @@ def build_trapi_message(
     :param result: RESULT, SemSimian subject - object identifier mapping dataset with some metadata annotation
     :return: query result contents of the TRAPI Response.Message body (KnowledgeGraph, AuxGraph and Results added)
     """
-    # Statement results as noted above, from the original QGraph, assumed to be somewhat of form:
+    # Statement results as noted above, from the original QGraph,
+    # for a phenotypes to disease similarity query,
+    # is assumed to be somewhat of the follow format:
     #
     # "query_graph": {
     #       "nodes": {
@@ -161,7 +164,9 @@ def build_trapi_message(
         "results": []
     }
 
-    # Then, add TRAPI Response parts somewhat like the following (spanning each similarity mapping):
+    # Then, add TRAPI Response parts somewhat like
+    # the following sample Phenotype-to-Disease mappings
+    # (spanning each similarity mapping):
     #
     #     "knowledge_graph": {
     #         "nodes": {
@@ -263,15 +268,15 @@ def build_trapi_message(
     # ... more matching edges...
     # }
     #
-    # Giving the following sets of additional supporting edges:
+    # Giving the following sets of additional "support graph" edges:
     #
     # e002: A support graph edge reporting one of many pairwise similarity assertions
-    # between an input phenotype and a phenotype associated with the returned Disease
+    #       between an input query phenotype and a phenotype associated with a returned Disease.
     #
     # "e002": {
-    #     "subject": "HP:0012378",        # 'match_source' == 'Fatigue (HPO)'
+    #     "subject": "HP:0012378",        # similarity 'match_source' == 'Fatigue (HPO)'
     #     "predicate": "biolink:similar_to",
-    #     "object": "HP:0001699",         # 'match_target' == 'Sudden death (HPO)'
+    #     "object": "HP:0001699",         # similarity 'match_target' == 'Sudden death (HPO)'
     #     "sources": [
     #        {
     #             "resource_id": "infores:semsimian-kp",
@@ -303,9 +308,9 @@ def build_trapi_message(
     #         {
     #             "attribute_type_id": "biolink:match",
     #             "original_attribute_name": "semsimian:object_best_matches.*.similarity.ancestor_id",
-
+    #
     #             # Note: sometimes the 'ancestor_label' == 'Constitutional symptom', is missing?
-
+    #
     #             # TODO: Likely have to look this term up on HPO and
     #             #       add it to the node catalog (is this necessary?)
     #             "value": "HP:0025142"  # this is the common subsumer a.k.a. 'ancestor_id'
@@ -315,9 +320,8 @@ def build_trapi_message(
     #     ]
     # }
     #
-    #  e003: A support graph edge reporting the matched phenotype
-    #  in the pairwise similarity edge above to be associated
-    #  with the Disease result.
+    #  e003: A support graph edge reporting the matched phenotype in the
+    #        pairwise similarity edge above to be associated with the Disease result.
     #
     #  "e003": {
     #     "object": "HP:0001699",               # 'match_target' == 'Sudden death (HPO)'
@@ -347,9 +351,6 @@ def build_trapi_message(
     #        	},
     #        	{
     #             "attribute_type_id": "biolink:publications",
-    #             # TODO: this would be a supporting HPOA publication
-    #             #       referenced by (and retrieved from?) Monarch,
-    #             #       linking the phenotype with its disease.
     #             "value": ["orphanet:137935"]    # this is an illustrative by mismatched publication for this edge
     #             "value_type_id": "linkml:Uriorcurie",
     #             "attribute_source": "infores:hpo-annotations"
@@ -357,10 +358,10 @@ def build_trapi_message(
     #     ]
     # }
     #
-    # e004: The following support graph edge reporting the input phenotype in
-    # the pairwise similarity edge above to be a member of the input phenotype set.
-    # This is obvious/trivial, so we may not need to report it.  But it makes the
-    # visualized support graph more complete/intuitive
+    # e004: The following support graph edge reporting the input phenotype in the
+    #       pairwise-similarity edge above, to be a member of the input phenotype set.
+    #       This is obvious/trivial, so we may not need to report it.
+    #       But it makes the visualized support graph more complete/intuitive.
     #
     #   "e004": {
     #     "subject": "HP:0012378",        # 'match_source' == 'Fatigue (HPO)'
@@ -413,7 +414,7 @@ def build_trapi_message(
     #             },
     #             "analyses": [
     #                 {
-    #                     "resource_id": "infores:monarchinitiative",
+    #                     "resource_id": DEFAULT_PROVENANCE,
     #                     "edge_bindings": {
     #                         "e01": [{"id": "e001"}]
     #                     }
@@ -424,6 +425,7 @@ def build_trapi_message(
     # }
     primary_knowledge_source: str = result["primary_knowledge_source"]
     ingest_knowledge_source: str = result["ingest_knowledge_source"]
+    match_predicate: str = result["match_predicate"]
 
     common_sources: List[Dict] = [
         {
@@ -436,18 +438,18 @@ def build_trapi_message(
         }
     ]
 
-    object_id: str
+    matched_term_id: str
     node_map: Dict = dict()
     result_map: RESULTS_MAP = result["result_map"]
 
     reset_edge_idx()
 
-    for object_id, result_entry in result_map.items():
+    for matched_term_id, result_entry in result_map.items():
 
         # Capture the primary answer node object matched
-        if object_id not in node_map:
-            node_map[object_id] = {
-                "id": object_id,
+        if matched_term_id not in node_map:
+            node_map[matched_term_id] = {
+                "id": matched_term_id,
                 "name": result_entry["name"],
                 "categories": get_categories(category=result_entry["category"])
             }
@@ -498,65 +500,23 @@ def build_trapi_message(
         else:
             query_set_uuid = node_map[matched_terms_key]["id"]
 
-        # Add the 'answer edge', directly reporting that the input term
-        # (UUID) set is similar (phenotypically) to a particular Disease
-        #
-        # "e1": {
-        #         "subject": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f",
-        #         "predicate": "biolink:similar_to",
-        #         "object": "MONDO:0015317",
-        #         "sources": [
-        #           {
-        #            "resource_id": "infores:semsimian-kp",
-        #            "resource_role": "primary_knowledge_source",
-        #            "source_record_urls": null,
-        #            "upstream_resource_ids": ["infores:hpoa", "infores:upheno"]
-        #           },
-        #           {
-        #            "resource_id": "infores:hpo-annotations",
-        #        	   "resource_role": "supporting_data_source",
-        #        	   "source_record_urls": null,
-        #        	   "upstream_resource_ids": []
-        #           },
-        #          {
-        #           "resource_id": "infores:upheno",
-        #           "resource_role": "supporting_data_source",
-        #        	  "source_record_urls": null,
-        #        	  "upstream_resource_ids": []
-        #          }
-        #        ],
-        #         "attributes": [
-        #           {
-        #               "attribute_type_id": "biolink:score",
-        #                "original_attribute_name": "semsimian:score",
-        #               "value": 13.074943444390097,  # RESULT_MAPS-level 'score'
-        #               "value_type_id": "linkml:Float",
-        #               "attribute_source": "infores:semsimian-kp"
-        #           },
-        #           {
-        #               # auxiliary_graph 'Support Graph' ('sg')
-        #               # associated with this 'answer' edge 'e001'
-        #               "attribute_type_id": "biolink:support_graphs",
-        #               "value": ["sg-e001"],
-        #               "value_type_id": "linkml:String",
-        #               "attribute_source": "infores:semsimian-kp"
-        #           },
-        #         ]
-        #       }
+        # Add the 'e001' 'answer edge', as described above,
+        # directly reporting that the (UUID-identified) input term
+        # subset is similar (phenotypically) to a particular Disease
 
-        # Identifier of the core similarity 'answer' edge mapping the
-        # (UUID-identified) multi-curie subset of query (HPO) input terms
+        # Generate the local TRAPI Response identifiers associated with
+        # the 'e001' core similarity 'answer' edge mapping the
+        # (UUID-identified) multi-curie subset of query (HPO) input terms,
         # onto the term profile matched node (e.g. MONDO "disease")
-        edge_id: str = next_edge_id()
-        aux_graph_id: str = f"sg-{edge_id}"
-
+        e001_edge_id: str = next_edge_id()
+        aux_graph_id: str = f"sg-{e001_edge_id}"
         trapi_response["auxiliary_graphs"][aux_graph_id] = {"edges": []}
 
-        # Note here that n0 are the subject but come from the SemSimian object terms
-        trapi_response["knowledge_graph"]["edges"][edge_id] = {
+        # Build the 'e001' core similarity 'answer' edge
+        trapi_response["knowledge_graph"]["edges"][e001_edge_id] = {
             "subject": query_set_uuid,
             "predicate": "biolink:similar_to",
-            "object": object_id,
+            "object": matched_term_id,
             "sources": deepcopy(sources),
             "attributes": [
                 {
@@ -564,13 +524,13 @@ def build_trapi_message(
                   "original_attribute_name": "semsimian:score",
                   "value": answer_score,
                   "value_type_id": "linkml:Float",
-                  "attribute_source": "infores:semsimian-kp"
+                  "attribute_source": primary_knowledge_source
                 },
                 {
                   "attribute_type_id": "biolink:support_graphs",
                   "value": [aux_graph_id],
                   "value_type_id": "linkml:String",
-                  "attribute_source": "infores:semsimian-kp"
+                  "attribute_source": primary_knowledge_source
                 }
             ]
         }
@@ -585,61 +545,51 @@ def build_trapi_message(
                     "categories": get_categories(category=term_data["category"])
                 }
 
-            # Add the "edges" to the "knowledge_graph"...something like this:
+            # Add "support graph" edges 'e002', 'e003' and 'e004',
+            # as noted above, to the "knowledge_graph"
+
+            # e002: A support graph edge reporting one of many pairwise similarity assertions
+            #       between an input query phenotype and a phenotype associated with a returned Disease.
             #
-            #         "edges": {
-            #             "e02": {
-            #                 "subject": "HP:0002104",
-            #                 "predicate": "biolink:phenotype_of",
-            #                 "sources": [
-            #                     {
-            #                         "resource_id": "infores:semsimian-kp-kp",
-            #                         "resource_role": "primary_knowledge_source",
-            #                         "source_record_urls": null,
-            #                         "upstream_resource_ids": ["infores:hpoa", "infores:upheno"]
-            #                     },
-            #                     {
-            #                         # Ingest Knowledge Source (Monarch curator hardcode-specified)
-            #
-            #                         "resource_id": "infores:hpo-annotations",
-            #                         "resource_role": "supporting_data_source",
-            #                         "source_record_urls": null,
-            #                         "upstream_resource_ids": []
-            #                     },
-            #                     {
-            #                         # SemSimian entry 'provided_by' specified Knowledge Source
-            #
-            #                         "resource_id": "infores:upheno",
-            #                         "resource_role": "supporting_data_source",
-            #                         "source_record_urls": null,
-            #                         "upstream_resource_ids": []
-            #                     }
-            #                 ],
-            #                 "attributes": [ xxxx wrong set of attributes - see ex:Edge003 instead
-            #                     {
-            #                         "attribute_type_id": "biolink:has_evidence",
-            #                         "value": "ECO:0000304",
-            #                         # ECO code for 'author statement supported by
-            #                         # traceable reference used in manual assertion'
-            #                         "value_type_id": "linkml:Uriorcurie",
-            #                         "attribute_source": "infores:hpoa"
-            #                     },
-            #                     {
-            #                         "attribute_type_id": "biolink:publications",
-            #                         # a supporting publication referenced by HPOA/Monarch(?)
-            #                         "value": ["orphanet:137935"],
-            #                         "value_type_id": "linkml:Uriorcurie",
-            #                         "attribute_source": "infores:hpoa"
-            #                     }
-            #                 ]
-            #             }
-            term_edge_id = next_edge_id()
-            # Note here that n0 are the subject but come from the SemSimian object terms
-            trapi_response["knowledge_graph"]["edges"][term_edge_id] = {
+            e002_edge_id = next_edge_id()
+            trapi_response["knowledge_graph"]["edges"][e002_edge_id] = {
                 "subject": term_data["subject_id"],
-                "predicate": "biolink:phenotype_of",
-                "object": object_id,
+                "predicate": "biolink:similar_to",
+                "object": term_data["object_id"],
                 "sources": deepcopy(sources),
+                "attributes": [
+                    {
+                        "attribute_type_id": "biolink:score",
+                        "original_attribute_name": "semsimian:object_best_matches.*.score",
+                        "value": term_data["score"],
+                        "value_type_id": "linkml:Float",
+                        "attribute_source": primary_knowledge_source
+                    },
+                    {
+                        "attribute_type_id": "biolink:match",
+                        "original_attribute_name": "semsimian:object_best_matches.*.similarity.ancestor_id",
+                        "value": term_data["matched_term"],  # this is the common subsumer i.e. 'matched_term'
+                        "value_type_id": "linkml:Uriorcurie",
+                        "attribute_source": primary_knowledge_source
+                    }
+                ]
+            }
+            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e002_edge_id)
+
+            #  e003: A support graph edge reporting the matched phenotype in the
+            #        pairwise-similarity edge above to be associated with the Disease result.
+
+            e003_edge_id = next_edge_id()
+            trapi_response["knowledge_graph"]["edges"][e003_edge_id] = {
+                "subject": term_data["subject_id"],
+                "predicate": match_predicate,
+                "object": term_data["subject_id"],
+                "sources": [
+                    {
+                        "resource_id": ingest_knowledge_source,
+                        "resource_role": "primary_knowledge_source"
+                    }
+                ],
                 "attributes": [
                     {
                         "attribute_type_id": "biolink:has_evidence",
@@ -647,45 +597,51 @@ def build_trapi_message(
                         # ECO code for 'author statement supported by
                         # traceable reference used in manual assertion'
                         "value_type_id": "linkml:Uriorcurie",
-                        "attribute_source": "infores:hpo-annotations"
+                        "attribute_source": ingest_knowledge_source
                     },
+                    # TODO: the following attribute needs to be the
+                    #       HPO Annotations publication, whose value
+                    #       is retrieved from the Monarch (HPOA ingest),
+                    #       linking the phenotype with its disease.
                     # {
                     #     "attribute_type_id": "biolink:publications",
-                    #     # a supporting publication referenced by HPOA/Monarch(?)
                     #     "value": ["orphanet:137935"],
                     #     "value_type_id": "linkml:Uriorcurie",
-                    #     "attribute_source": "infores:hpoa"
+                    #     "attribute_source": ingest_knowledge_source
                     # }
-                ],
-
+                ]
             }
+            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e003_edge_id)
 
-            # 4. TODO: Capture the contents of the "auxiliary_graph" here?
-            #
-            #     "auxiliary_graphs": {
-            #         "sg-e001": {
-            #             "edges": [
-            #                 "e02",
-            #                 "e03",
-            #                 "e04",
-            #                 "e05",
-            #                 "e06",
-            #                 "e07"
-            #             ]
-            #         }
-            #     },
-            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(term_edge_id)
+            # e004: The following support graph edge reporting the input phenotype in the
+            #       pairwise-similarity edge above, to be a member of the input phenotype set.
+            #       This is obvious/trivial, so we may not need to report it.
+            #       But it makes the visualized support graph more complete/intuitive.
+
+            e004_edge_id = next_edge_id()
+            trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {
+                "subject": term_data["subject_id"],
+                "predicate": "biolink:member_of",
+                "object": query_set_uuid,
+                "sources":  [
+                    {
+                        "resource_id": primary_knowledge_source,
+                        "resource_role": "primary_knowledge_source"
+                    }
+                ],
+            }
+            trapi_response["auxiliary_graphs"][aux_graph_id]["edges"].append(e004_edge_id)
 
         # "results" list entry for the current "object_id" similarity match
         trapi_results_entry: Dict = {
             "node_bindings": {
                 qnode_subject_key: [{"id": query_set_uuid}],
-                qnode_object_key: [{"id": object_id}]
+                qnode_object_key: [{"id": matched_term_id}]
             },
             "analyses": [
                 {
-                    "resource_id": "infores:monarchinitiative",
-                    "edge_bindings": {"e01": [{"id": edge_id}]}
+                    "resource_id": DEFAULT_PROVENANCE,
+                    "edge_bindings": {"e01": [{"id": e001_edge_id}]}
                 }
             ]
         }

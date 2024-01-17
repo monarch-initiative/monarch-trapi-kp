@@ -7,7 +7,7 @@ from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
 from mta.services.config import config
-from mta.services.util import RESULT
+from mta.services.util import DEFAULT_PROVENANCE, RESULT
 from mta.services.util.constraints import check_attributes
 from mta.services.util.attribute_mapping import (
     map_data,
@@ -88,7 +88,7 @@ class Question:
         self._question_json = copy.deepcopy(question_json)
 
         # self.toolkit = toolkit
-        self.provenance = config.get("PROVENANCE_TAG", "infores:monarchinitiative")
+        self.provenance = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
 
     def _construct_sources_tree(self, sources: List[Dict]) -> List[Dict]:
         """

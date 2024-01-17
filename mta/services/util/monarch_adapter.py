@@ -230,6 +230,7 @@ class MonarchInterface:
 
                 result["primary_knowledge_source"] = "infores:semsimian-kp"
                 result["ingest_knowledge_source"] = "infores:hpo-annotations"
+                result["match_predicate"] = "biolink:phenotype_of"
                 result["result_map"] = result_map
 
             # may be None if there were no identifiers
