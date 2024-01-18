@@ -16,7 +16,7 @@ from mtkp.services.util import (
     tag_value
 )
 from mtkp.services.util.monarch_adapter import SemsimSearchCategory, MonarchInterface
-from mtkp.services.util.api_utils import get_monarch_interface
+from mtkp.services.util.api_utils import get_example, get_monarch_interface
 from mtkp.services.util.question import Question
 
 test_resource_id: str = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
@@ -54,19 +54,21 @@ def test_missing_end_tag_path():
     assert not value
 
 
-TEST_IDENTIFIERS = [
-    "HP:0002104",
-    "HP:0012378"
-]
+TEST_TRAPI_QUERY: Dict = get_example("reasoner-trapi-1.4")
+TEST_TRAPI_MESSAGE = TEST_TRAPI_QUERY["message"]
+TEST_IDENTIFIERS = tag_value(TEST_TRAPI_MESSAGE, "query_graph.nodes.phenotypes.ids")
 
 
 @pytest.mark.asyncio
 async def test_semsim_search():
     monarch_interface: MonarchInterface = get_monarch_interface()
+
     # The success of this test depends a bit on the contents of
     # Monarch and the SemSimian algorithm as of January 2024
     semsim_result: List[Dict] = await monarch_interface.semsim_search(
-        identifiers=TEST_IDENTIFIERS, group=SemsimSearchCategory.MONDO
+        identifiers=TEST_IDENTIFIERS,
+        group=SemsimSearchCategory.MONDO,
+        result_limit=5
     )
     assert semsim_result, "Semsimian search failed - empty result?"
     subject_id = tag_value(semsim_result[0], "subject.id")
@@ -76,19 +78,26 @@ async def test_semsim_search():
     assert all([entry in object_termset.keys() for entry in object_termset])
     result: RESULTS_MAP = monarch_interface.parse_raw_semsim(
         full_result=semsim_result,
-        match_category="biolink:PhenotypicFeature",
-        ingest_knowledge_source="infores:hpo-annotations"
+        match_category="biolink:PhenotypicFeature"
     )
     assert "MONDO:0008807" in result.keys()
     match_list: MATCH_LIST = result["MONDO:0008807"]["matches"]
     term_data: TERM_DATA
-    assert all([term_data["id"] in ["HP:0002104", "HP:0012378"] for term_data in match_list])
+    assert all(
+        [
+            term_data["subject_id"] in ["HP:0002104", "HP:0012378"] and
+            term_data["category"] == "biolink:PhenotypicFeature"
+            for term_data in match_list
+        ]
+    )
 
 
 @pytest.mark.asyncio
 async def test_run_query():
     monarch_interface: MonarchInterface = get_monarch_interface()
-    result: RESULT = await monarch_interface.run_query(identifiers=TEST_IDENTIFIERS)
+    result: RESULT = await monarch_interface.run_query(
+        trapi_message=TEST_TRAPI_MESSAGE, result_limit=5
+    )
     assert result
     assert "primary_knowledge_source" in result and result["primary_knowledge_source"] == "infores:semsimian-kp"
     assert "result_map" in result and result["result_map"]
@@ -97,7 +106,13 @@ async def test_run_query():
     result_entry: RESULT_ENTRY = results_map["MONDO:0008807"]
     match_list: MATCH_LIST = result_entry["matches"]
     term_data: TERM_DATA
-    assert all([term_data["id"] in ["HP:0002104", "HP:0012378"] for term_data in match_list])
+    assert all(
+        [
+            term_data["subject_id"] in ["HP:0002104", "HP:0012378"] and
+            term_data["category"] == "biolink:PhenotypicFeature"
+            for term_data in match_list
+        ]
+    )
 
 
 @pytest.mark.parametrize(
