@@ -1,8 +1,10 @@
 # Monarch TRAPI Knowledge Provider ("KP")
 
-This project is a NCATS Translator API ("TRAPI") application facade for the Monarch Initiative information system, converting it into a TRAPI Knowledge Provider ("KP") responding specifically to Multi-Curie "Similarity" Queries.
+This project is a [NCATS Translator API ("TRAPI")](https://github.com/NCATSTranslator/ReasonerAPI) application for the Monarch Initiative information system, making it behave like a TRAPI Knowledge Provider ("KP") responding specifically to Multi-Curie "similarity" queries by accessing its embedded ["SemSimian" algorithm](https://github.com/monarch-initiative/semsimian).
 
-The initial implementation will support the following use case: _**Given a set of (Human Phenotype Ontology term 'HP' term identified) phenotypes, what diseases might they match?**_
+The initial implementation will support the following use case:
+
+_**Given a set of (Human Phenotype Ontology term 'Human Phenotype Ontology ("HPO") term identified) phenotypes, what Monarch Disease Ontology ("MONDO") indexed diseases do they match?**_
 
 The goal is to find a good, probably creative answer that satisfies as many of the N inputs as possible, but may not satisfy all of them.
 
