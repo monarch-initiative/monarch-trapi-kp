@@ -88,12 +88,14 @@ class MonarchInterface:
         @staticmethod
         async def semsim_search(
                 identifiers: List[str],
-                group: SemsimSearchCategory
+                group: SemsimSearchCategory,
+                result_limit: int
         ) -> List[Dict]:
             """
             Generalized call to Monarch SemSim search endpoint.
-            :param identifiers: list of identifiers to be matched.
-            :param group: concept category targeted for matching.
+            :param identifiers: List[str], list of identifiers to be matched.
+            :param group: SemsimSearchCategory, concept category targeted for matching.
+            :param result_limit: int, the limit on the number of query results to be returned.
             :return: List[Dict], of 'raw' SemSimian result objects
             """
             #
@@ -112,7 +114,7 @@ class MonarchInterface:
             query = {
               "termset": identifiers,
               "group": group.value,
-              "limit": 50
+              "limit": result_limit
             }
             headers = {
                 "accept": "application/json",
@@ -125,11 +127,10 @@ class MonarchInterface:
             )
 
             if not response.status_code == 200:
-                logger.error(
-                    f"Monarch SemSimian at '\nUrl: '{MONARCH_SEMSIMIAN}', "
-                    f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
-                )
-                return list()
+                error_msg = f"Monarch SemSimian at '\nUrl: '{MONARCH_SEMSIMIAN}', Query: '{query}' returned HTTP error code: '{response.status_code}'"
+                logger.error(error_msg)
+                error: Dict = {"error": error_msg}
+                return [error]
 
             return response.json()
 
@@ -185,7 +186,7 @@ class MonarchInterface:
 
             return result
 
-        async def phenotype_semsim_to_disease(self, trapi_message: Dict) -> RESULT:
+        async def phenotype_semsim_to_disease(self, trapi_message: Dict, result_limit: int) -> RESULT:
             """
             Initial MVP is a single somewhat hardcoded MVP query against Monarch,
             sending an input list of (HPO-indexed) phenotypic feature CURIEs
@@ -196,6 +197,7 @@ class MonarchInterface:
                   parameterized given proper interpretation of the input TRAPI message.
 
             :param trapi_message: Dict, TRAPI Request.Message.QueryGraph query data.
+            :param result_limit: int, the limit on the number of query results to be returned.
             :return: RESULT dictionary of metadata and a RESULT_MAP, indexed by target curies,
                     containing the target annotation, plus lists of annotated RESULT_ENTRY
                     instances of similarity matching phenotypic feature terms.
@@ -223,33 +225,40 @@ class MonarchInterface:
             if query_terms is not None:
                 full_result: List[Dict] = await self.semsim_search(
                     identifiers=query_terms,
-                    group=SemsimSearchCategory.MONDO
+                    group=SemsimSearchCategory.MONDO,
+                    result_limit=result_limit
                 )
-                result_map: RESULTS_MAP = self.parse_raw_semsim(
-                    full_result=full_result,
-                    match_category=category
-                )
+                if "error" not in full_result[0]:
+                    result_map: RESULTS_MAP = self.parse_raw_semsim(
+                        full_result=full_result,
+                        match_category=category
+                    )
 
-                result["primary_knowledge_source"] = "infores:semsimian-kp"
-                result["ingest_knowledge_source"] = "infores:hpo-annotations"
-                result["match_predicate"] = "biolink:phenotype_of"
-                result["result_map"] = result_map
+                    result["primary_knowledge_source"] = "infores:semsimian-kp"
+                    result["ingest_knowledge_source"] = "infores:hpo-annotations"
+                    result["match_predicate"] = "biolink:phenotype_of"
+                    result["result_map"] = result_map
+                else:
+                    result["error"] = full_result[0]["error"]
 
             # may be None if there were no identifiers
             return result
 
-        async def run_query(self, trapi_message: Dict) -> RESULT:
+        async def run_query(self, trapi_message: Dict, result_limit: int) -> RESULT:
             """
             Running a SemSim query against Monarch.
             This MVP only supports one (hard-coded) use case. Future versions of this
             method should check the trapi_message for information about the query nature.
 
             :param trapi_message: Dict, Python dictionary version of query parameters
+            :param result_limit: int, the limit on the number of query results to be returned.
             :return: Dictionary of Monarch 'subject' identifier hits indexing
                      Lists of matched input identifiers.
             :rtype: RESULT
             """
-            return await self.phenotype_semsim_to_disease(trapi_message=trapi_message)
+            return await self.phenotype_semsim_to_disease(
+                trapi_message=trapi_message, result_limit=result_limit
+            )
 
     instance = None
 

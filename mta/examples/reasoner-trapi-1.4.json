@@ -30,5 +30,6 @@
           }
       }
    },
-   "workflow": [{"id":  "lookup"}]
+   "workflow": [{"id":  "lookup"}],
+   "limit": 10
 }

@@ -45,7 +45,13 @@ class Question:
     EDGE_BINDINGS_KEY = 'edge_bindings'
     CURIE_KEY = 'curie'
 
-    def __init__(self, question_json):
+    def __init__(self, question_json, result_limit: int):
+        """
+        Constructor for a Question.
+        :param question_json: the contents of a TRAPI Query.Message JSON blob
+        :param result_limit: a non-TRAPI extra property indicating
+                             the limit on query results to be returned.
+        """
         # Example Query Graph for the Monarch SemSimian KP
         # {
         #   "message": {
@@ -86,6 +92,7 @@ class Question:
         #       }
         #     }
         self._question_json = copy.deepcopy(question_json)
+        self._result_limit = result_limit
 
         # self.toolkit = toolkit
         self.provenance = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
@@ -263,9 +270,14 @@ class Question:
 
         results: Dict[str, List[str]]
         start = time.time()
-        result: RESULT = await monarch_interface.run_query(trapi_message=self._question_json)
+        result: RESULT = await monarch_interface.run_query(
+            trapi_message=self._question_json, result_limit=self._result_limit
+        )
         end = time.time()
         logger.info(f"SemSimian query took {end - start} seconds")
+
+        if "error" in result:
+            return result
 
         trapi_message: Dict = build_trapi_message(trapi_message=self._question_json, result=result)
 

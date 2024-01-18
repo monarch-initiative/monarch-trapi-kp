@@ -56,6 +56,16 @@ Run the following script to start up the server from the command line terminal:
   ```
 ## Viewing the System
 
-When run the system locally from the CLI or using Docker (but not within any named host), an OpenAPI web form exposing the TRAPI API is available at http://localhost:8080/1.4/docs.  Of course, TRAPI endpoints may also be directly accessed, as expected.
+### TRAPI API
+
+When run the system locally from the CLI or using Docker (but not within any named host), an OpenAPI web form exposing the TRAPI API is available at http://localhost:8080/1.4/docs.  
+
+Of course, the standard TRAPI 1.4 endpoints may also be directly accessed, as expected. These consist of the **/meta_knowledge_graph** returning the Biolink Model compliant dictionary of edge templates and the **/query** endpoint for posting queries to the system.
+
+Note that for the **/query** endpoint, the TRAPI query graph body can have the (optional) extra non-TRAPI standard JSON object key **limit** which instructs the system about the maximum number of results should be returned (Default: return the top 5 results). The current maximum allowable SemSimian value for this value appears to be 50. Higher values will trigger a 422 HTTP return code error.
+
+### 'Common' API
 
 An additional set of endpoints - so-called 'COMMON' API endpoints - is available at http://localhost:8080/common/docs.  Aside from accessing available release metadata about the system (via the /common/metadata path), this set of endpoints also provides a few non-TRAPI general purpose endpoints to retrieve specific data results more conveniently than TRAPI, such as retrieving a node record by CURIE.
+
+Only the **/metadata** endpoint is implemented at this moment.

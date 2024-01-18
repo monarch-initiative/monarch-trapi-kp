@@ -251,7 +251,7 @@ async def test_run_query():
 )
 def test_source_construct_sources_tree(sources: List[Dict], output: List[Dict]):
     # dummy Question - don't care about input question JSON for this test...
-    question: Question = Question(question_json={})
+    question: Question = Question(question_json={}, result_limit=0)
     # ... 'cuz comparing sources tree directly
     formatted_sources = question._construct_sources_tree(sources)
     assert not DeepDiff(output, formatted_sources, ignore_order=True, report_repetition=True)

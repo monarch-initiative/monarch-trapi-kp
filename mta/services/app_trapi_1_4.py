@@ -4,7 +4,7 @@ from fastapi import Body, Depends, FastAPI, Response, status
 from reasoner_pydantic import MetaKnowledgeGraph
 from mta.models.models_trapi_1_4 import ReasonerRequest
 
-
+from mta.services.config import config
 from mta.services.util.monarch_adapter import MonarchInterface
 from mta.services.util.metadata import GraphMetadata
 from mta.services.util.question import Question
@@ -15,6 +15,13 @@ from mta.services.util.api_utils import (
     construct_open_api_schema,
     get_example,
     json_response
+)
+from mta.services.util.logutil import LoggingUtil
+
+logger = LoggingUtil.init_logging(
+    __name__,
+    config.get('logging_level'),
+    config.get('logging_format')
 )
 
 # Mount open api at /1.4/openapi.json
@@ -55,11 +62,20 @@ async def reasoner_api(
         monarch_interface: MonarchInterface = Depends(get_monarch_interface)
 ) -> Response:
     """
-    Handle TRAPI request.
-    :return: starlette Response wrapped ReasonerRequest.
+    Handle TRAPI Query request.
+    :return: starlette wrapped ReasonerRequest.
     :rtype: Response(ReasonerRequest)
     """
     request_json = request.dict(by_alias=True)
+
+    # This is an application-specific
+    # TRAPI Query OpenAPI "additionalProperties" value
+    result_limit: int
+    try:
+        result_limit = int(request_json.get('limit')) or 5
+    except ValueError:
+        logger.warning("Invalid result limit string in TRAPI Query JSON. Setting to default 5 value.")
+        result_limit = 5
 
     # default workflow
     workflow = request_json.get('workflow') or [{"id": "lookup", "parameters": None, "runner_parameters": None}]
@@ -67,7 +83,7 @@ async def reasoner_api(
 
     # TODO: do we need a new 'workflow' code to explicitly signal the 'multi-curie' use case?
     if 'lookup' in workflows:
-        question = Question(request_json["message"])
+        question = Question(request_json["message"], result_limit=result_limit)
         try:
             response_message = await question.answer(monarch_interface)
             request_json.update({'message': response_message, 'workflow': workflow})
