@@ -1,4 +1,4 @@
-# Monarch Translator ARA
+# Monarch TRAPI Knowledge Provider ("KP")
 
 NCATS Translator ARA TRAPI wrapper for the Monarch Initiative system, specifically targeting TRAPI Multi-Curie Queries.
 
