@@ -6,17 +6,17 @@ import json
 from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
-from mta.services.config import config
-from mta.services.util import DEFAULT_PROVENANCE, RESULT
-from mta.services.util.constraints import check_attributes
-from mta.services.util.attribute_mapping import (
+from mtkp.services.config import config
+from mtkp.services.util import DEFAULT_PROVENANCE, RESULT
+from mtkp.services.util.constraints import check_attributes
+from mtkp.services.util.attribute_mapping import (
     map_data,
     skip_list,
     get_attribute_bl_info
 )
-from mta.services.util.logutil import LoggingUtil
-from mta.services.util.trapi import build_trapi_message
-from mta.services.util.monarch_adapter import MonarchInterface
+from mtkp.services.util.logutil import LoggingUtil
+from mtkp.services.util.trapi import build_trapi_message
+from mtkp.services.util.monarch_adapter import MonarchInterface
 
 # set the value type mappings
 VALUE_TYPES = map_data['value_type_map']
@@ -119,9 +119,9 @@ class Question:
         # if primary source and aggregator source are specified in the graph,
         # upstream_resource_ids of all aggregator_ks be that source
 
-        # if aggregator ks are coming from db, mta would add itself as aggregator and use other aggregator ids
+        # if aggregator ks are coming from db, mtkp would add itself as aggregator and use other aggregator ids
         # as upstream resources, if no aggregators are found and only primary ks is provided that would be added
-        # as upstream for the mta entry
+        # as upstream for the mtkp entry
         formatted_sources = []
         resource_ids_with_resource_role = {}
         source_record_urls_to_resource_id = {}

@@ -4,15 +4,17 @@ version = "0.0.0"
 description = "TRAPI ARA wrapper for the Monarch Initiative Knowledge Graph & System"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
-    "Kevin Schaper <kevin@tislab.org>"
+    "Kevin Schaper <kevin@tislab.org>",
+    "Matt Brush <matt@tislab.org>",
+    "Sierra Moxon <smoxon@lbl.gov>"
 ]
 maintainers = ["Richard Bruskiewich <richard.bruskiewich@delphinai.com>"]
 license = "BSD 3-Clause"
 readme = "README.md"
 
 homepage = "https://monarchinitiative.org/"
-repository = "https://github.com/monarch-initiative/monarch-translator-ara"
-documentation = "https://github.com/monarch-initiative/monarch-translator-ara/README.md"
+repository = "https://github.com/monarch-initiative/monarch-trapi-kp"
+documentation = "https://github.com/monarch-initiative/monarch-trapi-kp/README.md"
 keywords = [
     "LBNL",
     "NCATS",
@@ -34,7 +36,7 @@ classifiers = [
 ]
 
 packages = [
-    {include = "mta"}
+    {include = "mtkp"}
 ]
 
 include = [
@@ -67,8 +69,8 @@ opentelemetry-instrumentation-fastapi = "^0.42b0"
 # [tool.poetry.group.dev.dependencies]
 
 [tool.poetry.urls]
-"Change Log" = "https://github.com/monarch-initiative/monarch-translator-ara/blob/main/CHANGELOG.md"
-"Bug Tracker" = "https://github.com/monarch-initiative/monarch-translator-ara/issues"
+"Change Log" = "https://github.com/monarch-initiative/monarch-trapi-kp/blob/main/CHANGELOG.md"
+"Bug Tracker" = "https://github.com/monarch-initiative/monarch-trapi-kp/issues"
 
 [tool.poetry.extras]
 

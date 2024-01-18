@@ -2,21 +2,21 @@
 
 from fastapi import Body, Depends, FastAPI, Response, status
 from reasoner_pydantic import MetaKnowledgeGraph
-from mta.models.models_trapi_1_4 import ReasonerRequest
+from mtkp.models.models_trapi_1_4 import ReasonerRequest
 
-from mta.services.config import config
-from mta.services.util.monarch_adapter import MonarchInterface
-from mta.services.util.metadata import GraphMetadata
-from mta.services.util.question import Question
-# from mta.services.util.overlay import Overlay
-from mta.services.util.api_utils import (
+from mtkp.services.config import config
+from mtkp.services.util.monarch_adapter import MonarchInterface
+from mtkp.services.util.metadata import GraphMetadata
+from mtkp.services.util.question import Question
+# from mtkp.services.util.overlay import Overlay
+from mtkp.services.util.api_utils import (
     get_monarch_interface,
     get_graph_metadata,
     construct_open_api_schema,
     get_example,
     json_response
 )
-from mta.services.util.logutil import LoggingUtil
+from mtkp.services.util.logutil import LoggingUtil
 
 logger = LoggingUtil.init_logging(
     __name__,

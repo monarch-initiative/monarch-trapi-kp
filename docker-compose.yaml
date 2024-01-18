@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: .
+    environment:
+      WEB_HOST: ${WEB_HOST}
+      WEB_PORT: ${WEB_PORT}
+      MTA_SERVICE_ADDRESS: ${MTA_SERVICE_ADDRESS}
+      MTA_TITLE: ${MTA_TITLE}
+      MTA_VERSION: ${MTA_VERSION}
+      BL_VERSION: ${BL_VERSION}
+      MODE: ${MODE}
+      OTEL_ENABLED: ${OTEL_ENABLED}
+      OTEL_USE_CONSOLE_EXPORTER: ${OTEL_USE_CONSOLE_EXPORTER}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME}
+      JAEGER_HOST: ${JAEGER_HOST}
+      JAEGER_PORT: ${JAEGER_PORT}
+    ports:
+    - "80:8080"

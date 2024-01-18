@@ -5,8 +5,8 @@ from typing import Optional, List, Dict
 from enum import Enum
 import requests
 
-from mta.services.config import config
-from mta.services.util import (
+from mtkp.services.config import config
+from mtkp.services.util import (
     TERM_DATA,
     MATCH_LIST,
     RESULT_ENTRY,
@@ -14,7 +14,7 @@ from mta.services.util import (
     RESULT,
     tag_value
 )
-from mta.services.util.logutil import LoggingUtil
+from mtkp.services.util.logutil import LoggingUtil
 
 logger = LoggingUtil.init_logging(
     __name__,

@@ -45,14 +45,14 @@ Run the following script to start up the server from the command line terminal:
    Or build an image and run it. From the root directory, type:
   
   ```bash
-    docker build --tag mta-test .
+    docker build --tag mtkp-test .
   ```
   
   ```bash
    docker run --env-file .env \
-    --name mta \
+    --name mtkp \
     -p 8080:8080 \
-    mta-test
+    mtkp-test
 
   ```
 ## Viewing the System

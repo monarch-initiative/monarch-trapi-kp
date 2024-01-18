@@ -11,7 +11,7 @@ from fastapi import (
 )
 # from fastapi.responses import JSONResponse
 #
-# from mta.models.models_trapi_1_4 import (
+# from mtkp.models.models_trapi_1_4 import (
 #     Message,
 #     ReasonerRequest,
 #     # CypherRequest,
@@ -21,12 +21,12 @@ from fastapi import (
 #     # CypherResponse,
 #     PredicatesResponse
 # )
-# from mta.services.util.bl_helper import BLHelper
-from mta.services.util.monarch_adapter import MonarchInterface
-from mta.services.util.metadata import GraphMetadata
-# from mta.services.util.overlay import Overlay
-# from mta.services.util.question import Question
-from mta.services.util.api_utils import (
+# from mtkp.services.util.bl_helper import BLHelper
+from mtkp.services.util.monarch_adapter import MonarchInterface
+from mtkp.services.util.metadata import GraphMetadata
+# from mtkp.services.util.overlay import Overlay
+# from mtkp.services.util.question import Question
+from mtkp.services.util.api_utils import (
     get_monarch_interface,
     # get_bl_helper,
     construct_open_api_schema,

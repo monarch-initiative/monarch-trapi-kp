@@ -5,11 +5,11 @@ import os
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-from mta.services.config import config
-from mta.services.util.logutil import LoggingUtil
-from mta.services.app_common import APP_COMMON
-from mta.services.app_trapi_1_4 import APP_TRAPI_1_4
-from mta.services.util.api_utils import construct_open_api_schema
+from mtkp.services.config import config
+from mtkp.services.util.logutil import LoggingUtil
+from mtkp.services.app_common import APP_COMMON
+from mtkp.services.app_trapi_1_4 import APP_TRAPI_1_4
+from mtkp.services.util.api_utils import construct_open_api_schema
 
 TITLE = config.get('MTA_TITLE', 'Monarch Translator ARA')
 
@@ -62,7 +62,7 @@ if os.environ.get("OTEL_ENABLED", False):
         # from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
         from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 
-    service_name = os.environ.get('MTA_TITLE', 'MTA')
+    service_name = os.environ.get("MTA_TITLE", "MTKP")
     assert service_name and isinstance(service_name, str)
     resource = Resource(attributes={
         SERVICE_NAME: os.environ.get("OTEL_SERVICE_NAME", service_name),

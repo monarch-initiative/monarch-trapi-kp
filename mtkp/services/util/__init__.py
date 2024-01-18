@@ -3,8 +3,8 @@ Shared Data Models declared here
 """
 from typing import Union, List, Dict, Optional, Any
 
-from mta.services.util.logutil import LoggingUtil
-from mta.services.config import config
+from mtkp.services.util.logutil import LoggingUtil
+from mtkp.services.config import config
 
 logger = LoggingUtil.init_logging(
     __name__,

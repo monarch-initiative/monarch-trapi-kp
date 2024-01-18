@@ -5,11 +5,11 @@ from fastapi.openapi.utils import get_openapi
 import json
 import os
 
-from mta.services.util.monarch_adapter import MonarchInterface
-from mta.services.util.metadata import GraphMetadata
+from mtkp.services.util.monarch_adapter import MonarchInterface
+from mtkp.services.util.metadata import GraphMetadata
 
-# from mta.services.util.bl_helper import BLHelper
-from mta.services.config import config
+# from mtkp.services.util.bl_helper import BLHelper
+from mtkp.services.config import config
 
 
 def get_monarch_interface():
@@ -28,14 +28,14 @@ def get_graph_metadata():
 
 
 def construct_open_api_schema(app, trapi_version, prefix=""):
-    mta_title = config.get('MTA_TITLE', 'Monarch Translator ARA')
-    mta_version = os.environ.get('MTA_VERSION', '1.4.0')
+    mtkp_title = config.get('MTA_TITLE', 'Monarch Translator ARA')
+    mtkp_version = os.environ.get('MTA_VERSION', '1.4.0')
     server_url = os.environ.get('PUBLIC_URL', '')
     if app.openapi_schema:
         return app.openapi_schema
     open_api_schema = get_openapi(
-        title=mta_title,
-        version=mta_version,
+        title=mtkp_title,
+        version=mtkp_version,
         description='',
         routes=app.routes,
     )
@@ -48,7 +48,7 @@ def construct_open_api_schema(app, trapi_version, prefix=""):
     terms_of_service = open_api_extended_spec.get("termsOfService")
     servers_conf = open_api_extended_spec.get("servers")
     tags = open_api_extended_spec.get("tags")
-    title_override = (open_api_extended_spec.get("title") or mta_title)
+    title_override = (open_api_extended_spec.get("title") or mtkp_title)
     description = open_api_extended_spec.get("description")
     x_trapi_extension = open_api_extended_spec.get("x-trapi", {"version": trapi_version, "operations": ["lookup"]})
     if tags:

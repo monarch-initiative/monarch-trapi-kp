@@ -13,7 +13,10 @@ class Config(dict):
 
     @staticmethod
     def get_resource_path(resource_name):
-        """ Given a string resolve it to a module relative file path unless it is already an absolute path. """
+        """
+        Given a string resolve it to a module relative file path
+        unless it is already an absolute path.
+        """
         resource_path = resource_name
         if not resource_path.startswith(os.sep):
             resource_path = os.path.join(os.path.dirname(__file__), resource_path)
@@ -81,4 +84,4 @@ class Config(dict):
                 return value
 
 
-config = Config('mta.conf')
+config = Config('mtkp.conf')
