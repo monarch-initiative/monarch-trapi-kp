@@ -44,13 +44,12 @@ Run the following script to start up the server from the command line terminal:
   
   ```bash
     docker build --tag mta-test .
-    cd ../
   ```
   
   ```bash
-   docker run --env-file .env\
-    --name mta\
-    -p 8080:8080\
+   docker run --env-file .env \
+    --name mta \
+    -p 8080:8080 \
     mta-test
 
   ```
