@@ -55,6 +55,23 @@ Run the following script to start up the server from the command line terminal:
     mtkp-test
 
   ```
+
+#### Troubleshooting
+
+You may occasionally see the following mysterious error: 
+
+```
+Running uvicorn APP with --host  --port 8080
+INFO:     Will watch for changes in these directories: ['/code/monarch-trapi-kp']
+ERROR:    [Errno -2] Name or service not known
+```
+
+especially in Docker container runs.  If you look closely here, you'll see that although the --host parameter is given to uvicorn, in fact, the parameter value is empty!
+
+First, for reliable 'source' reading of the **.env** file, enclose all environmental variable values in "double quotes".   
+
+Secondly, if you are developing under Microsoft Windows (even if using a cygwin or equivalent bash shell), whenever you change the contents of your **.env** file,  ensure that your **.env** file has 'unix' style **\n** end-of-line characters (i.e.. no Windoze **\r** carriage returns!) by running a *nix command line tool like '**dos2unix**' to force all end-of-line indications to be _*nix_ compatible.
+
 ## Viewing the System
 
 ### TRAPI API
