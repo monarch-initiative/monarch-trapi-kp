@@ -69,7 +69,22 @@ Run the following script to start up the server from the command line terminal:
     --name mtkp \
     -p 8080:8080 \
     mtkp-test
+  ```
 
+View logs using:
+
+  ```bash
+    docker logs -f mtkp
+  ```
+
+A quicker way to deployment is to use Docker Compose and the provided docker-compose.yaml file:
+
+  ```bash
+    docker build
+    
+    # -d runs the container in the background
+    docker up -d
+    docker logs -f
   ```
 
 ## Viewing the System
