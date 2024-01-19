@@ -21,10 +21,6 @@ WORKDIR /code
 COPY pyproject.toml poetry.lock README.md Makefile .
 COPY . .
 
-RUN git clone --single-branch https://github.com/monarch-initiative/monarch-trapi-kp.git
-WORKDIR /code/monarch-trapi-kp
-ENV PYTHONPATH=/code/monarch-trapi-kp
-
 RUN rm -rf .venv
 EXPOSE 8081 8080
 RUN poetry install
