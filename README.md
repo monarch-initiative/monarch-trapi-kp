@@ -102,3 +102,13 @@ Note that for the **/query** endpoint, the TRAPI query graph body can have the (
 An additional set of endpoints - so-called 'COMMON' API endpoints - is available at http://localhost:8080/common/docs.  Aside from accessing available release metadata about the system (via the /common/metadata path), this set of endpoints also provides a few non-TRAPI general purpose endpoints to retrieve specific data results more conveniently than TRAPI, such as retrieving a node record by CURIE.
 
 Only the **/metadata** endpoint is implemented at this moment.
+
+
+### AWS deployment
+
+- create an AWS EC2 instance
+- ssh to the instance
+- install docker / start the service
+- build the docker image
+- run the docker image in the background
+- 

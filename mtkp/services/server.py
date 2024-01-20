@@ -86,4 +86,4 @@ if os.environ.get("OTEL_ENABLED", False):
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(APP, host='0.0.0.0', port=8080)
+    uvicorn.run(APP, host="127.0.0.1", port=8080, log_level="info", reload=True)
