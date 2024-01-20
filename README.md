@@ -24,7 +24,7 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
    ```bash   
     WEB_HOST=0.0.0.0
     WEB_PORT=8080
-    MTA_SERVICE_ADDRESS=localhost
+    MTA_SERVICE_ADDRESS=54.87.193.222
     MTA_TITLE=MonarchTranslatorARA
     MTA_VERSION='1.4.0'
     BL_VERSION='4.1.0'
@@ -40,11 +40,16 @@ INFO:     Will watch for changes in these directories: ['/code/monarch-trapi-kp'
 ERROR:    [Errno -2] Name or service not known
 ```
 
-especially in Docker container runs.  If you look closely here, you'll see that although the **--host** parameter is given to uvicorn, in fact, the parameter value is empty!
+especially in Docker container runs.  If you look closely here, you'll see that although 
+the **--host** parameter is given to uvicorn, in fact, the parameter value is empty!
 
-First, for reliable 'source' reading of the **.env** file, enclose all environmental variable values in "double quotes".   
+First, for reliable 'source' reading of the **.env** file, enclose all environmental variable 
+values in "double quotes".   
 
-Secondly, if you are developing under Microsoft Windows (even if using a cygwin or equivalent bash shell), whenever you change the contents of your **.env** file,  ensure that your **.env** file has 'unix' style **\n** end-of-line characters (i.e.. no Windoze **\r** carriage returns!) by running a *nix command line tool like '**dos2unix**' to force all end-of-line indications to be _*nix_ compatible.
+Secondly, if you are developing under Microsoft Windows (even if using a cygwin or equivalent
+bash shell), whenever you change the contents of your **.env** file,  ensure that your **.env** file has 
+'unix' style **\n** end-of-line characters (i.e.. no Windoze **\r** carriage returns!) by running a *nix 
+command line tool like '**dos2unix**' to force all end-of-line indications to be _*nix_ compatible.
 
 ## Running the System
 
