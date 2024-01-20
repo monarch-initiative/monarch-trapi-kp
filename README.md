@@ -22,12 +22,14 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
    Copy the `.env-template` file, saved as `.env` in repository root dir, then customize accordingly, for example:
    
    ```bash   
-    WEB_HOST="0.0.0.0"
-    WEB_PORT="8080"
+    WEB_HOST=0.0.0.0
+    WEB_PORT=8080
+    # Use a real IP here during deployment, e.g.
+    # MTA_SERVICE_ADDRESS=54.87.193.222
     MTA_SERVICE_ADDRESS="localhost"
-    MTA_TITLE="Monarch TRAPI KP"
-    MTA_VERSION="1.4.0"
-    BL_VERSION="4.1.0"
+    MTA_TITLE=MonarchTranslatorARA
+    MTA_VERSION='1.4.0'
+    BL_VERSION='4.1.0'
    ```
 
 #### Troubleshooting
@@ -40,11 +42,16 @@ INFO:     Will watch for changes in these directories: ['/code/monarch-trapi-kp'
 ERROR:    [Errno -2] Name or service not known
 ```
 
-especially in Docker container runs.  If you look closely here, you'll see that although the **--host** parameter is given to uvicorn, in fact, the parameter value is empty!
+especially in Docker container runs.  If you look closely here, you'll see that although 
+the **--host** parameter is given to uvicorn, in fact, the parameter value is empty!
 
-First, for reliable 'source' reading of the **.env** file, enclose all environmental variable values in "double quotes".   
+First, for reliable 'source' reading of the **.env** file, enclose all environmental variable 
+values in "double quotes".   
 
-Secondly, if you are developing under Microsoft Windows (even if using a cygwin or equivalent bash shell), whenever you change the contents of your **.env** file,  ensure that your **.env** file has 'unix' style **\n** end-of-line characters (i.e.. no Windoze **\r** carriage returns!) by running a *nix command line tool like '**dos2unix**' to force all end-of-line indications to be _*nix_ compatible.
+Secondly, if you are developing under Microsoft Windows (even if using a cygwin or equivalent
+bash shell), whenever you change the contents of your **.env** file,  ensure that your **.env** file has 
+'unix' style **\n** end-of-line characters (i.e.. no Windoze **\r** carriage returns!) by running a *nix 
+command line tool like '**dos2unix**' to force all end-of-line indications to be _*nix_ compatible.
 
 ## Running the System
 
@@ -102,3 +109,13 @@ Note that for the **/query** endpoint, the TRAPI query graph body can have the (
 An additional set of endpoints - so-called 'COMMON' API endpoints - is available at http://localhost:8080/common/docs.  Aside from accessing available release metadata about the system (via the /common/metadata path), this set of endpoints also provides a few non-TRAPI general purpose endpoints to retrieve specific data results more conveniently than TRAPI, such as retrieving a node record by CURIE.
 
 Only the **/metadata** endpoint is implemented at this moment.
+
+
+### AWS deployment
+
+- create an AWS EC2 instance
+- ssh to the instance
+- install docker / start the service
+- build the docker image
+- run the docker image in the background
+- 
