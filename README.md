@@ -24,7 +24,9 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
    ```bash   
     WEB_HOST=0.0.0.0
     WEB_PORT=8080
-    MTA_SERVICE_ADDRESS=54.87.193.222
+    # Use a real IP here during deployment, e.g.
+    # MTA_SERVICE_ADDRESS=54.87.193.222
+    MTA_SERVICE_ADDRESS="localhost"
     MTA_TITLE=MonarchTranslatorARA
     MTA_VERSION='1.4.0'
     BL_VERSION='4.1.0'

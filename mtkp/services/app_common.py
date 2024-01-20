@@ -40,7 +40,7 @@ APP_COMMON = FastAPI(openapi_url='/common/openapi.json', docs_url='/common/docs'
 
 
 #
-# TODO: excluding this overlay() code in a first iteration of the Monarch ARA
+# TODO: excluding this overlay() code in a first iteration of the Monarch TRAPI KP
 #
 # async def overlay(
 #         request: ReasonerRequest = Body(
@@ -135,7 +135,7 @@ APP_COMMON.add_api_route(
 
 
 #
-# TODO: excluding this simple_spec() code in a first iteration of the Monarch ARA
+# TODO: excluding this simple_spec() code in a first iteration of the Monarch TRAPI KP
 #
 # async def simple_spec(
 #         source: str = None,

@@ -28,7 +28,7 @@ def get_graph_metadata():
 
 
 def construct_open_api_schema(app, trapi_version, prefix=""):
-    mtkp_title = config.get('MTA_TITLE', 'Monarch Translator ARA')
+    mtkp_title = config.get('MTA_TITLE', 'Monarch TRAPI KP')
     mtkp_version = os.environ.get('MTA_VERSION', '1.4.0')
     server_url = os.environ.get('PUBLIC_URL', '')
     if app.openapi_schema:

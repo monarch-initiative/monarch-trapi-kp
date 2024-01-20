@@ -11,7 +11,7 @@ from mtkp.services.app_common import APP_COMMON
 from mtkp.services.app_trapi_1_4 import APP_TRAPI_1_4
 from mtkp.services.util.api_utils import construct_open_api_schema
 
-TITLE = config.get('MTA_TITLE', 'Monarch Translator ARA')
+TITLE = config.get('MTA_TITLE', 'Monarch TRAPI KP')
 
 VERSION = os.environ.get('MTA_VERSION', '1.4.0')
 
