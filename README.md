@@ -22,12 +22,12 @@ The Python virtual environment and dependencies of MTA are managed using Poetry.
    Copy the `.env-template` file, saved as `.env` in repository root dir, then customize accordingly, for example:
    
    ```bash   
-    WEB_HOST=0.0.0.0
-    WEB_PORT=8080
-    MTA_SERVICE_ADDRESS=localhost
-    MTA_TITLE=MonarchTranslatorARA
-    MTA_VERSION='1.4.0'
-    BL_VERSION='4.1.0'
+    WEB_HOST="0.0.0.0"
+    WEB_PORT="8080"
+    MTA_SERVICE_ADDRESS="localhost"
+    MTA_TITLE="Monarch TRAPI KP"
+    MTA_VERSION="1.4.0"
+    BL_VERSION="4.1.0"
    ```
 
 #### Troubleshooting

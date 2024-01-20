@@ -30,7 +30,7 @@ For the other knowledge source attributions in edges, a typical 'sources' attrib
        }
      ]
 
-but the PLATER code from which the Monarch TRAPI ARA code is derived, may not properly deal with 'supporting_data_source'  in the upstream_resource_ids. This needs to be reviewed.
+but the PLATER code from which the Monarch TRAPI KP code is derived, may not properly deal with 'supporting_data_source'  in the upstream_resource_ids. This needs to be reviewed.
 
 ========================================================================================
 

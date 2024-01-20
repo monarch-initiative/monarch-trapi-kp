@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "MonarchTranslatorARA"
+name = "Monarch TRAPI KP"
 version = "0.0.0"
-description = "TRAPI ARA wrapper for the Monarch Initiative Knowledge Graph & System"
+description = "TRAPI KP wrapper for SemSimian Searches of the Monarch Initiative Knowledge Graph"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",
     "Kevin Schaper <kevin@tislab.org>",
