@@ -1,8 +1,8 @@
 # Monarch TRAPI Knowledge Provider ("KP")
 
-This project is a [NCATS Translator API ("TRAPI")](https://github.com/NCATSTranslator/ReasonerAPI) application for the Monarch Initiative information system, making it behave like a TRAPI Knowledge Provider ("KP") responding specifically to Multi-Curie "similarity" queries by accessing its embedded ["SemSimian" algorithm](https://github.com/monarch-initiative/semsimian).
+This project is a [NCATS Translator API ("TRAPI")](https://github.com/NCATSTranslator/ReasonerAPI) wrapper for the Monarch Initiative information system - or rather specifically, the **_Semantic Similarity_** ("SemSimian") component of the system - making it behave like a TRAPI Knowledge Provider ("KP") responding  to Multi-Curie "similarity" queries against its embedded ["SemSimian" algorithm](https://github.com/monarch-initiative/semsimian).
 
-The initial implementation will support the following use case:
+The initial release of the wrapper application supports the following use case:
 
 _**Given a set of (Human Phenotype Ontology term 'Human Phenotype Ontology ("HPO") term identified) phenotypes, what Monarch Disease Ontology ("MONDO") indexed diseases do they match?**_
 
@@ -12,7 +12,7 @@ The goal is to find a good, probably creative answer that satisfies as many of t
 
 ### Install dependencies within a suitable virtual environment
 
-The Python virtual environment and dependencies of MTA are managed using Poetry. Assuming that you have Poetry installed and a suitable version of Python (i.e. ">=3.9,<3.13") installed, then:
+The Python virtual environment and dependencies of MTA are managed using Poetry. Assuming that you have [Poetry](https://python-poetry.org/docs/) and a suitable version of Python (i.e. ">=3.9,<3.12") installed, then:
 
     poetry shell
     poetry install
