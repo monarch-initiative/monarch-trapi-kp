@@ -119,9 +119,9 @@ class Question:
         # if primary source and aggregator source are specified in the graph,
         # upstream_resource_ids of all aggregator_ks be that source
 
-        # if aggregator ks are coming from db, mtkp would add itself as aggregator and use other aggregator ids
+        # if aggregator ks are coming from db, mmcq would add itself as aggregator and use other aggregator ids
         # as upstream resources, if no aggregators are found and only primary ks is provided that would be added
-        # as upstream for the mtkp entry
+        # as upstream for the mmcq entry
         formatted_sources = []
         resource_ids_with_resource_role = dict()
         source_record_urls_to_resource_id = dict()

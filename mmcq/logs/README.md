@@ -1,7 +1,7 @@
 List of files in current dir:
-- **mtkp.log:** log file of the application
+- **mmcq.log:** log file of the application
 
-TODO: note that except for the mtkp.log file, the contents of this README may be out-of-date
+TODO: note that except for the mmcq.log file, the contents of this README may be out-of-date
 - **edge_errors.json:** contains summary of kgx edge validation
 - **node_errors.json:** contains summary of kgx node validation
 - **graph_summary.json:** contains summary of the graph. 

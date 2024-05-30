@@ -67,7 +67,7 @@ command line tool like '**dos2unix**' to force all end-of-line indications to be
 
 ### Run the Server from the CLI
 
-Run the following script to start up the server from the command line terminal:
+Run the following script to start up the server from the command line terminal (under a Unix-type operating system):
 
   ```bash
       ./main.sh
@@ -78,20 +78,20 @@ Run the following script to start up the server from the command line terminal:
    Or build an image and run it. From the root directory, type:
   
   ```bash
-    docker build --tag mtkp-test .
+    docker build --tag mmcq-test .
   ```
   
   ```bash
    docker run --env-file .env \
-    --name mtkp \
+    --name mmcq \
     -p 8080:8080 \
-    mtkp-test
+    mmcq-test
   ```
 
 View logs using:
 
   ```bash
-    docker logs -f mtkp
+    docker logs -f mmcq
   ```
 
 A quicker way to deployment is to use Docker Compose and the provided docker-compose.yaml file:

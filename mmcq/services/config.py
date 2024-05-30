@@ -84,4 +84,4 @@ class Config(dict):
                 return value
 
 
-config = Config('mtkp.conf')
+config = Config('mmcq.conf')

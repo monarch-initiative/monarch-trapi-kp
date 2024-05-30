@@ -8,7 +8,7 @@ class LoggingUtil(object):
 
     @staticmethod
     def init_logging(name, level=logging.INFO, format_sel='medium', log_file_level=None):
-        log_file_path = os.path.join(os.path.dirname(__file__), '../../logs/mtkp.log')
+        log_file_path = os.path.join(os.path.dirname(__file__), '../../logs/mmcq.log')
         # get a logger
         logger = logging.getLogger(__name__)
 

@@ -7,8 +7,7 @@ ENV PYTHONFAULTHANDLER=1 \
   PIP_NO_CACHE_DIR=off \
   PIP_DISABLE_PIP_VERSION_CHECK=on \
   PIP_DEFAULT_TIMEOUT=100 \
-  # TODO: check if this is still needed, or can use 1.2
-  POETRY_VERSION=1.3.2 \
+  POETRY_VERSION=1.8.3 \
   DEBIAN_FRONTEND=noninteractive
 
 # We are cloning the code base internally

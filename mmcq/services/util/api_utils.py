@@ -9,7 +9,7 @@ from mmcq.models import LATEST_BIOLINK_MODEL
 from mmcq.services.util.monarch_adapter import MonarchInterface
 from mmcq.services.util.metadata import GraphMetadata
 
-# from mtkp.services.util.bl_helper import BLHelper
+# from mmcq.services.util.bl_helper import BLHelper
 from mmcq.services.config import config
 
 

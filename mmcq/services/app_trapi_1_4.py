@@ -8,7 +8,7 @@ from mmcq.services.config import config
 from mmcq.services.util.monarch_adapter import MonarchInterface
 from mmcq.services.util.metadata import GraphMetadata
 from mmcq.services.util.question import Question
-# from mtkp.services.util.overlay import Overlay
+# from mmcq.services.util.overlay import Overlay
 from mmcq.services.util.api_utils import (
     get_monarch_interface,
     get_graph_metadata,
