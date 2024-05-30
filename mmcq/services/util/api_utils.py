@@ -5,16 +5,17 @@ from fastapi.openapi.utils import get_openapi
 import json
 import os
 
-from mtkp.services.util.monarch_adapter import MonarchInterface
-from mtkp.services.util.metadata import GraphMetadata
+from mmcq.models import LATEST_BIOLINK_MODEL
+from mmcq.services.util.monarch_adapter import MonarchInterface
+from mmcq.services.util.metadata import GraphMetadata
 
 # from mtkp.services.util.bl_helper import BLHelper
-from mtkp.services.config import config
+from mmcq.services.config import config
 
 
 def get_monarch_interface():
     """Get graph interface."""
-    return MonarchInterface(bl_version=config.get('BL_VERSION'))
+    return MonarchInterface(biolink_version=LATEST_BIOLINK_MODEL)
 
 
 def get_graph_metadata():
@@ -28,14 +29,14 @@ def get_graph_metadata():
 
 
 def construct_open_api_schema(app, trapi_version, prefix=""):
-    mtkp_title = config.get('MTA_TITLE', 'Monarch TRAPI KP')
-    mtkp_version = os.environ.get('MTA_VERSION', '1.4.0')
+    mmcq_title = config.get('MMCQ_TITLE', 'Monarch MCQ')
+    mmcq_version = os.environ.get('MMCQ_VERSION', '1.4.0')
     server_url = os.environ.get('PUBLIC_URL', '')
     if app.openapi_schema:
         return app.openapi_schema
     open_api_schema = get_openapi(
-        title=mtkp_title,
-        version=mtkp_version,
+        title=mmcq_title,
+        version=mmcq_version,
         description='',
         routes=app.routes,
     )
@@ -48,7 +49,7 @@ def construct_open_api_schema(app, trapi_version, prefix=""):
     terms_of_service = open_api_extended_spec.get("termsOfService")
     servers_conf = open_api_extended_spec.get("servers")
     tags = open_api_extended_spec.get("tags")
-    title_override = (open_api_extended_spec.get("title") or mtkp_title)
+    title_override = (open_api_extended_spec.get("title") or mmcq_title)
     description = open_api_extended_spec.get("description")
     x_trapi_extension = open_api_extended_spec.get("x-trapi", {"version": trapi_version, "operations": ["lookup"]})
     if tags:
@@ -57,7 +58,7 @@ def construct_open_api_schema(app, trapi_version, prefix=""):
     if x_translator_extension:
         # if x_translator_team is defined amends schema with x_translator extension
         open_api_schema["info"]["x-translator"] = x_translator_extension
-        open_api_schema["info"]["x-translator"]["biolink-version"] = config.get("BL_VERSION", "2.1.0")
+        open_api_schema["info"]["x-translator"]["biolink-version"] = LATEST_BIOLINK_MODEL
         open_api_schema["info"]["x-translator"]["infores"] = \
             config.get('PROVENANCE_TAG', 'infores:automat.notspecified')
 
@@ -81,7 +82,7 @@ def construct_open_api_schema(app, trapi_version, prefix=""):
                 cnf['x-location'] = os.environ.get("LOCATION_VALUE", "location")
                 cnf['x-trapi'] = trapi_version
                 cnf['x-translator'] = {}
-                cnf['x-translator']['biolink-version'] = config.get("BL_VERSION", "2.1.0")
+                cnf['x-translator']['biolink-version'] = LATEST_BIOLINK_MODEL
                 cnf['x-translator']['test-data-location'] = server_url.strip('/') + "/sri_testing_data"
         open_api_schema["servers"] = servers_conf
 

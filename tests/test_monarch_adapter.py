@@ -5,8 +5,8 @@ from typing import List, Dict
 import pytest
 from deepdiff.diff import DeepDiff
 
-from mtkp.services.config import config
-from mtkp.services.util import (
+from mmcq.services.config import config
+from mmcq.services.util import (
     DEFAULT_PROVENANCE,
     TERM_DATA,
     MATCH_LIST,
@@ -15,9 +15,9 @@ from mtkp.services.util import (
     RESULT,
     tag_value
 )
-from mtkp.services.util.monarch_adapter import SemsimSearchCategory, MonarchInterface
-from mtkp.services.util.api_utils import get_example, get_monarch_interface
-from mtkp.services.util.question import Question
+from mmcq.services.util.monarch_adapter import SemsimSearchCategory, MonarchInterface
+from mmcq.services.util.api_utils import get_example, get_monarch_interface
+from mmcq.services.util.question import Question
 
 test_resource_id: str = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
 

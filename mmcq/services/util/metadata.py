@@ -5,6 +5,8 @@ Translator SmartAPI Registry but cached locally?
 import os
 import json
 
+# from mmcq.models import LATEST_BIOLINK_MODEL
+
 
 class GraphMetadata:
     """
@@ -66,7 +68,7 @@ class GraphMetadata:
         #     # version is technically not part of the spec anymore
         #     # but this ensures validation with the model until it's removed
         #     if 'version' not in self.sri_testing_data:
-        #         self.sri_testing_data['version'] = config.get('BL_VERSION')
+        #         self.sri_testing_data['version'] = from mmcq.models import LATEST_BIOLINK_MODEL
 
     instance = None
 

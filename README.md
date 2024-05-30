@@ -1,4 +1,4 @@
-# Monarch TRAPI Knowledge Provider ("KP")
+# Monarch SemSimian Multi-CURIE Query TRAPI Knowledge Provider ("MMCQ")
 
 This project is a [NCATS Translator API ("TRAPI")](https://github.com/NCATSTranslator/ReasonerAPI) wrapper for the Monarch Initiative information system - or rather specifically, the **_Semantic Similarity_** ("SemSimian") component of the system - making it behave like a TRAPI Knowledge Provider ("KP") responding  to Multi-Curie "similarity" queries against its embedded ["SemSimian" algorithm](https://github.com/monarch-initiative/semsimian).
 
@@ -12,24 +12,34 @@ The goal is to find a good, probably creative answer that satisfies as many of t
 
 ### Install dependencies within a suitable virtual environment
 
-The Python virtual environment and dependencies of MTA are managed using Poetry. Assuming that you have [Poetry](https://python-poetry.org/docs/) and a suitable version of Python (i.e. ">=3.9,<3.12") installed, then:
+The Python virtual environment and dependencies of MMCQ are managed using Poetry. Assuming that you have [Poetry](https://python-poetry.org/docs/) and a suitable version of Python (i.e. ">=3.9,<3.12") installed, then:
 
     poetry shell
     poetry install
  
-### Configure MTA settings
+### Configure MMCQ settings
    
    Copy the `.env-template` file, saved as `.env` in repository root dir, then customize accordingly, for example:
    
-   ```bash   
+   ```bash
+    # SemSimian backend API for 'development' environment 
+    # (see the '.env-template' file for possible alternat
+    # parameters for a 'production' deployment)
+    SEMSIMIAN_PROTOCOL="http://"
+    SEMSIMIAN_HOST="api-v3.monarchinitiative.org"
+    SEMSIMIAN_PORT=""  # default is HTTP port '80'
+    SEMSIMIAN_SEARCH="/v3/api/semsim/search"
+    
+    # Front End Web Service
     WEB_HOST=0.0.0.0
     WEB_PORT=8080
+    
+    # TRAPI Service Endpoint
     # Use a real IP here during deployment, e.g.
-    # MTA_SERVICE_ADDRESS=54.87.193.222
-    MTA_SERVICE_ADDRESS="localhost"
-    MTA_TITLE=MonarchTranslatorARA
-    MTA_VERSION='1.4.0'
-    BL_VERSION='4.1.0'
+    # MMCQ_SERVICE_ADDRESS=54.87.193.222
+    MMCQ_SERVICE_ADDRESS="localhost"
+    MMCQ_TITLE="Monarch SemSimian MCQ"
+    MMCQ_VERSION='1.4.0'
    ```
 
 #### Troubleshooting
@@ -50,7 +60,7 @@ values in "double quotes".
 
 Secondly, if you are developing under Microsoft Windows (even if using a cygwin or equivalent
 bash shell), whenever you change the contents of your **.env** file,  ensure that your **.env** file has 
-'unix' style **\n** end-of-line characters (i.e.. no Windoze **\r** carriage returns!) by running a *nix 
+'unix' style **\n** end-of-line characters (i.e. no Windoze **\r** carriage returns!) by running a *nix 
 command line tool like '**dos2unix**' to force all end-of-line indications to be _*nix_ compatible.
 
 ## Running the System
@@ -118,4 +128,3 @@ Only the **/metadata** endpoint is implemented at this moment.
 - install docker / start the service
 - build the docker image
 - run the docker image in the background
-- 

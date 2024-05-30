@@ -2,8 +2,8 @@
 x-translator:
   component: KP
   team: [] # add teams
-  biolink-version: # picked up from environment variable `BL_VERSION`
-  infores: # picked up from environment variable `PROVENANCE_TAG'
+  biolink-version:
+  infores:
 x-trapi:
   version: 1.4.0
 contact:
@@ -15,7 +15,7 @@ termsOfService: "" # link to terms of service
 tags:
   - name: trapi
 description: "" # Description for the whole spec
-title: "" # title for the whole spec, overrides MTA_TITLE env value
+title: "" # title for the whole spec, overrides MMCQ_TITLE env value
 servers:
   - description: Default server
     url: http://54.87.193.222:8080/ # full url not this will be the url used when using openapi docs

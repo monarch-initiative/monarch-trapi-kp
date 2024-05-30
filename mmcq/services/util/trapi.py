@@ -7,7 +7,7 @@ from typing import Optional, List, Dict, Set
 from functools import lru_cache
 from copy import deepcopy
 from uuid import uuid4
-from mtkp.services.util import (
+from mmcq.services.util import (
     DEFAULT_PROVENANCE,
     TERM_DATA,
     MATCH_LIST,

@@ -6,17 +6,17 @@ import json
 from reasoner_pydantic.qgraph import AttributeConstraint
 from reasoner_pydantic.shared import Attribute
 
-from mtkp.services.config import config
-from mtkp.services.util import DEFAULT_PROVENANCE, RESULT
-from mtkp.services.util.constraints import check_attributes
-from mtkp.services.util.attribute_mapping import (
+from mmcq.services.config import config
+from mmcq.services.util import DEFAULT_PROVENANCE, RESULT
+from mmcq.services.util.constraints import check_attributes
+from mmcq.services.util.attribute_mapping import (
     map_data,
     skip_list,
     get_attribute_bl_info
 )
-from mtkp.services.util.logutil import LoggingUtil
-from mtkp.services.util.trapi import build_trapi_message
-from mtkp.services.util.monarch_adapter import MonarchInterface
+from mmcq.services.util.logutil import LoggingUtil
+from mmcq.services.util.trapi import build_trapi_message
+from mmcq.services.util.monarch_adapter import MonarchInterface
 
 # set the value type mappings
 VALUE_TYPES = map_data['value_type_map']

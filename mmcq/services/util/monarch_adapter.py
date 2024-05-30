@@ -6,10 +6,9 @@ from enum import Enum
 import os
 import requests
 
-from bmt import Toolkit
-
-from mtkp.services.config import config
-from mtkp.services.util import (
+from mmcq.models import LATEST_BIOLINK_MODEL
+from mmcq.services.config import config
+from mmcq.services.util import (
     TERM_DATA,
     MATCH_LIST,
     RESULT_ENTRY,
@@ -17,7 +16,7 @@ from mtkp.services.util import (
     RESULT,
     tag_value
 )
-from mtkp.services.util.logutil import LoggingUtil
+from mmcq.services.util.logutil import LoggingUtil
 
 logger = LoggingUtil.init_logging(
     __name__,
@@ -25,10 +24,6 @@ logger = LoggingUtil.init_logging(
     config.get('logging_format'),
 )
 
-# TODO: assume that this is safe,
-#       to keep up-to-date with latest Biolink Model.
-#       If not, then we'll hardcode this in the future?
-LATEST_BIOLINK_MODEL = Toolkit().get_model_version()
 
 # TODO: maybe we should avoid hard coding the default here,
 #       but rather, fail if the environment variable isn't set?
@@ -274,12 +269,12 @@ class MonarchInterface:
 
     instance = None
 
-    def __init__(self, query_timeout=600, bl_version=LATEST_BIOLINK_MODEL):
+    def __init__(self, query_timeout=600, biolink_version=LATEST_BIOLINK_MODEL):
         # create a new instance if not already created.
         if not MonarchInterface.instance:
             MonarchInterface.instance = MonarchInterface._MonarchInterface(
                 query_timeout=query_timeout,
-                bl_version=bl_version
+                bl_version=biolink_version
             )
 
     def __getattr__(self, item):
