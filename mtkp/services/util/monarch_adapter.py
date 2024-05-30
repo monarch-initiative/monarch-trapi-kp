@@ -3,7 +3,10 @@ GraphAdapter to Monarch graph API
 """
 from typing import Optional, List, Dict
 from enum import Enum
+import os
 import requests
+
+from bmt import Toolkit
 
 from mtkp.services.config import config
 from mtkp.services.util import (
@@ -22,8 +25,17 @@ logger = LoggingUtil.init_logging(
     config.get('logging_format'),
 )
 
-LATEST_BIOLINK_MODEL = "1.4.0"
-MONARCH_SEMSIMIAN = "http://api-v3.monarchinitiative.org/v3/api/semsim/search"
+# TODO: assume that this is safe,
+#       to keep up-to-date with latest Biolink Model.
+#       If not, then we'll hardcode this in the future?
+LATEST_BIOLINK_MODEL = Toolkit().get_model_version()
+
+# TODO: maybe we should avoid hard coding the default here,
+#       but rather, fail if the environment variable isn't set?
+MONARCH_SEMSIMIAN = os.environ.get(
+    'SEMSIMIAN_SEARCH',
+    default='http://api-v3.monarchinitiative.org/v3/api/semsim/search'
+)
 
 
 class SemsimSearchCategory(Enum):
