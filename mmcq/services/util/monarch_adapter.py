@@ -25,12 +25,18 @@ logger = LoggingUtil.init_logging(
 )
 
 
-# TODO: maybe we should avoid hard coding the default here,
-#       but rather, fail if the environment variable isn't set?
-MONARCH_SEMSIMIAN = os.environ.get(
-    'SEMSIMIAN_SEARCH',
-    default='http://api-v3.monarchinitiative.org/v3/api/semsim/search'
-)
+SEMSIMIAN_SCHEME = os.environ.get('SEMSIMIAN_SCHEME', 'http')
+# TODO: not sure if an empty scheme is okay here?
+SEMSIMIAN_SCHEME = f"{SEMSIMIAN_SCHEME}://" if SEMSIMIAN_SCHEME else ""
+
+SEMSIMIAN_HOST = os.environ.get("SEMSIMIAN_HOST", "api-v3.monarchinitiative.org")
+
+SEMSIMIAN_PORT = os.environ.get("SEMSIMIAN_PORT", None)
+SEMSIMIAN_PORT = f":{SEMSIMIAN_PORT}" if SEMSIMIAN_PORT else ""
+
+SEMSIMIAN_SEARCH = os.environ.get("SEMSIMIAN_SEARCH", "/v3/api/semsim/search")
+
+SEMSIMIAN_ENDPOINT = f"{SEMSIMIAN_SCHEME}{SEMSIMIAN_HOST}{SEMSIMIAN_PORT}{SEMSIMIAN_SEARCH}"
 
 
 class SemsimSearchCategory(Enum):
@@ -128,13 +134,14 @@ class MonarchInterface:
                 "Content-Type": "application/json"
             }
             response = requests.post(
-                MONARCH_SEMSIMIAN,
+                SEMSIMIAN_ENDPOINT,
                 json=query,
                 headers=headers
             )
 
             if not response.status_code == 200:
-                error_msg = f"Monarch SemSimian at '\nUrl: '{MONARCH_SEMSIMIAN}', Query: '{query}' returned HTTP error code: '{response.status_code}'"
+                error_msg = f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +\
+                            f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
                 logger.error(error_msg)
                 error: Dict = {"error": error_msg}
                 return [error]

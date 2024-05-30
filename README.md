@@ -25,7 +25,7 @@ The Python virtual environment and dependencies of MMCQ are managed using Poetry
     # SemSimian backend API for 'development' environment 
     # (see the '.env-template' file for possible alternat
     # parameters for a 'production' deployment)
-    SEMSIMIAN_PROTOCOL="http://"
+    SEMSIMIAN_SCHEME="http://"
     SEMSIMIAN_HOST="api-v3.monarchinitiative.org"
     SEMSIMIAN_PORT=""  # default is HTTP port '80'
     SEMSIMIAN_SEARCH="/v3/api/semsim/search"

@@ -4,7 +4,7 @@ services:
     build:
       context: .
     environment:
-      SEMSIMIAN_PROTOCOL: "${SEMSIMIAN_PROTOCOL}"
+      SEMSIMIAN_SCHEME: "${SEMSIMIAN_SCHEME}"
       SEMSIMIAN_HOST: "${SEMSIMIAN_HOST}"
       SEMSIMIAN_PORT: "${SEMSIMIAN_PORT}"
       SEMSIMIAN_SEARCH: "${SEMSIMIAN_SEARCH}"
