@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import time
 import copy
 import json
@@ -123,8 +123,8 @@ class Question:
         # as upstream resources, if no aggregators are found and only primary ks is provided that would be added
         # as upstream for the mtkp entry
         formatted_sources = []
-        resource_ids_with_resource_role = {}
-        source_record_urls_to_resource_id = {}
+        resource_ids_with_resource_role = dict()
+        source_record_urls_to_resource_id = dict()
 
         # filter out source entries that actually have values
         for source in sources:
@@ -143,7 +143,7 @@ class Question:
             source['resource_role'] = source['resource_role'].lstrip("biolink:")
 
             resource_ids_with_resource_role[source['resource_role']] = \
-                resource_ids_with_resource_role.get(source['resource_role'], set())
+                resource_ids_with_resource_role.setdefault(source['resource_role'], set())
 
             source_record_urls_to_resource_id[source['resource_id']] = \
                 source['source_record_urls'] if 'source_record_urls' in source else None
@@ -156,7 +156,7 @@ class Question:
 
         for resource_role in resource_ids_with_resource_role:
 
-            upstreams = None
+            upstreams: Optional[Dict] = None
 
             if resource_role == "aggregator_knowledge_source":
                 upstreams = resource_ids_with_resource_role.get("primary_knowledge_source", None)
