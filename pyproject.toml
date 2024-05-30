@@ -38,7 +38,7 @@ classifiers = [
 ]
 
 packages = [
-    {include = "mtkp"}
+    {include = "mmcq"}
 ]
 
 include = [
