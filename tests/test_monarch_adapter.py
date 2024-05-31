@@ -54,7 +54,7 @@ def test_missing_end_tag_path():
     assert not value
 
 
-TEST_TRAPI_QUERY: Dict = get_example("reasoner-trapi-1.4")
+TEST_TRAPI_QUERY: Dict = get_example("reasoner-trapi-1.5")
 TEST_TRAPI_MESSAGE = TEST_TRAPI_QUERY["message"]
 TEST_IDENTIFIERS = tag_value(TEST_TRAPI_MESSAGE, "query_graph.nodes.phenotypes.ids")
 

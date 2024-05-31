@@ -5,7 +5,7 @@ x-translator:
   biolink-version:
   infores:
 x-trapi:
-  version: 1.4.0
+  version: 1.5.0
 contact:
   email: "default@mail.org" # email
   name: "default-name" # name

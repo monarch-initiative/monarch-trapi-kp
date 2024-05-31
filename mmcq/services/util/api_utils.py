@@ -30,7 +30,7 @@ def get_graph_metadata():
 
 def construct_open_api_schema(app, trapi_version, prefix=""):
     mmcq_title = config.get('MMCQ_TITLE', 'Monarch MCQ')
-    mmcq_version = os.environ.get('MMCQ_VERSION', '1.4.0')
+    mmcq_version = os.environ.get('MMCQ_VERSION', '1.5.0')
     server_url = os.environ.get('PUBLIC_URL', '')
     if app.openapi_schema:
         return app.openapi_schema

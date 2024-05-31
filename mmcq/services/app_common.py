@@ -11,7 +11,7 @@ from fastapi import (
 )
 # from fastapi.responses import JSONResponse
 #
-# from mmcq.models.models_trapi_1_4 import (
+# from mmcq.models.models_trapi_1_5 import (
 #     Message,
 #     ReasonerRequest,
 #     # CypherRequest,
@@ -104,7 +104,7 @@ APP_COMMON.add_api_route(
     response_model=List,
     summary=(
         "Get one hop results from source type to target type. "
-        "Note: Please GET /1.4/meta_knowledge_graph to determine "
+        "Note: Please GET /1.5/meta_knowledge_graph to determine "
         "what target goes with a source"
     ),
     description=(
