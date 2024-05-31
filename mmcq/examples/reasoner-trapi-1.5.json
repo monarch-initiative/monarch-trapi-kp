@@ -6,7 +6,8 @@
               "categories": [
                 "biolink:PhenotypicFeature"
               ],
-              "ids": [
+              "ids": ["UUID:4403ddf2-f724-4b3b-a877-de08315b784f"],
+              "member_ids": [
                 "HP:0002104",
                 "HP:0012378"
               ],
