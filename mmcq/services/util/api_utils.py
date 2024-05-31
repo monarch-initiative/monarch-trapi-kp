@@ -6,6 +6,7 @@ import json
 import os
 
 from mmcq.models import LATEST_BIOLINK_MODEL
+from mmcq.services.util import DEFAULT_PROVENANCE
 from mmcq.services.util.monarch_adapter import MonarchInterface
 from mmcq.services.util.metadata import GraphMetadata
 
@@ -60,7 +61,7 @@ def construct_open_api_schema(app, trapi_version, prefix=""):
         open_api_schema["info"]["x-translator"] = x_translator_extension
         open_api_schema["info"]["x-translator"]["biolink-version"] = LATEST_BIOLINK_MODEL
         open_api_schema["info"]["x-translator"]["infores"] = \
-            config.get('PROVENANCE_TAG', 'infores:automat.notspecified')
+            config.get('provenance_tag', DEFAULT_PROVENANCE)
 
     if contact_config:
         open_api_schema["info"]["contact"] = contact_config

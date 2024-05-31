@@ -19,7 +19,7 @@ from mmcq.services.util.monarch_adapter import SemsimSearchCategory, MonarchInte
 from mmcq.services.util.api_utils import get_example, get_monarch_interface
 from mmcq.services.util.question import Question
 
-test_resource_id: str = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
+test_resource_id: str = config.get('provenance_tag', DEFAULT_PROVENANCE)
 
 _TEST_JSON_DATA = {
         "testing": {

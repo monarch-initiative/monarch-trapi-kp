@@ -95,7 +95,7 @@ class Question:
         self._result_limit = result_limit
 
         # self.toolkit = toolkit
-        self.provenance = config.get("PROVENANCE_TAG", DEFAULT_PROVENANCE)
+        self.provenance = config.get('provenance_tag', DEFAULT_PROVENANCE)
 
     def _construct_sources_tree(self, sources: List[Dict]) -> List[Dict]:
         """
