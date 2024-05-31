@@ -226,7 +226,7 @@ class MonarchInterface:
                 # Gatekeeper signal "is_set" and "set_interpretation"
                 # with "ids" - these are the input terms?
                 if "is_set" in details and details["is_set"] and \
-                        "set_interpretation" in details and details["set_interpretation"] == "OR+" and \
+                        "set_interpretation" in details and details["set_interpretation"] == "MANY" and \
                         "ids" in details:
                     query_terms = details["ids"]
 

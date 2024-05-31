@@ -67,7 +67,7 @@ class Question:
         #           ],
         #           "is_set": true,
         #           "constraints": [],
-        #           "set_interpretation": "OR+"
+        #           "set_interpretation": "MANY"
         #         },
         #         "n1": {
         #           "ids": null,

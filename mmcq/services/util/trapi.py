@@ -59,7 +59,7 @@ def get_categories(category: str) -> List[str]:
 
 def is_subject_qnode(node_data: Dict) -> bool:
     return True if "is_set" in node_data and node_data["is_set"] and \
-            "set_interpretation" in node_data and node_data["set_interpretation"] == "OR+" and \
+            "set_interpretation" in node_data and node_data["set_interpretation"] == "MANY" and \
             "ids" in node_data else False
 
 
@@ -126,7 +126,7 @@ def build_trapi_message(
     #             "HP:0012378"
     #           ],
     #           "is_set": true,
-    #           "set_interpretation": "OR+"
+    #           "set_interpretation": "MANY"
     #         },
     #         "diseases": {
     #           "categories": [

@@ -11,7 +11,7 @@
                 "HP:0012378"
               ],
               "is_set": true,
-              "set_interpretation": "OR+"
+              "set_interpretation": "MANY"
             },
             "diseases": {
               "categories": [
