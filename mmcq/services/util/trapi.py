@@ -71,8 +71,14 @@ def build_trapi_message(
 ) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
-    Input result is a RESULT dictionary of format somewhat like:
+    Input result is a RESULT dictionary of format looking somewhat like:
     {
+        "set_interpretation": "MANY",
+        "set_identifier": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
+        "query_terms": [
+                "HP:0002104",
+                "HP:0012378"
+        ],
         "primary_knowledge_source": "infores:semsimian-kp",
         "ingest_knowledge_source": "infores:hpo-annotations",
         "result_map": {
@@ -118,33 +124,36 @@ def build_trapi_message(
     # is assumed to be somewhat of the follow format:
     #
     # "query_graph": {
-    #       "nodes": {
-    #         "phenotypes": {
-    #           "categories": [
-    #             "biolink:PhenotypicFeature"
-    #           ],
-    #           "ids": [
-    #             "HP:0002104",
-    #             "HP:0012378"
-    #           ],
-    #           "is_set": true,
-    #           "set_interpretation": "MANY"
-    #         },
-    #         "diseases": {
-    #           "categories": [
-    #             "biolink:Disease"
-    #           ]
-    #         }
-    #       },
-    #       "edges": {
-    #         "e01": {
-    #               "subject": "n0",
-    #               "object": "n1",
-    #               "predicates": [
-    #                     "biolink:similar_to"
+    #           "nodes": {
+    #             "phenotypes": {
+    #               "categories": [
+    #                 "biolink:PhenotypicFeature"
+    #               ],
+    #               "ids": ["UUID:4403ddf2-f724-4b3b-a877-de08315b784f"],
+    #               "member_ids": [
+    #                 "HP:0002104",
+    #                 "HP:0012378"
+    #               ],
+    #               "is_set": true,
+    #               "set_interpretation": "MANY"
+    #             },
+    #             "diseases": {
+    #               "categories": [
+    #                 "biolink:Disease"
     #               ]
-    #         }
+    #             }
+    #           },
+    #           "edges": {
+    #             "e01": {
+    #               "subject": "phenotypes",
+    #               "object": "diseases",
+    #               "predicates": [
+    #                 "biolink:similar_to"
+    #               ]
+    #             }
+    #           }
     #       }
+    #    } }
     #   }
     #
     # Code to extract (meta-)data from the TRAPI message
@@ -185,7 +194,7 @@ def build_trapi_message(
     #                 "name": "Fatigue (HPO)",
     #                 "categories": ["biolink:PhenotypicFeature"]
     #             },
-    #             "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f": {
+    #             "UUID:4403ddf2-f724-4b3b-a877-de08315b784f": {
     #                 "members": ["HP:0002104","HP:0012378"],
     #                 "categories": ["biolink:PhenotypicFeature"],
     #                 "is_set": true
@@ -198,7 +207,7 @@ def build_trapi_message(
     #         },
     #         "edges": {
     #             "e001": {
-    #                     "subject": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f",
+    #                     "subject": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
     #                     "predicate": "biolink:similar_to",
     #                     "object": "MONDO:0015317",
     #                     "sources": [
@@ -411,7 +420,7 @@ def build_trapi_message(
     #             "node_bindings": {
     #                 "phenotypes": [
     #                     {
-    #                         "id": "UUID:c5d67629-ce16-41e9-8b35-e4acee04ed1f"
+    #                         "id": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f"
     #                     }
     #                 ],
     #                 "diseases": [
@@ -432,9 +441,13 @@ def build_trapi_message(
     #     ]
     # }
 
+    set_interpretation: str = result["set_interpretation"]
+    set_identifier: str = result["set_identifier"]
+    query_terms: List[str] = result["query_terms"]
     primary_knowledge_source: str = result["primary_knowledge_source"]
     ingest_knowledge_source: str = result["ingest_knowledge_source"]
     match_predicate: str = result["match_predicate"]
+    result_map: RESULTS_MAP = result["result_map"]
 
     common_sources: List[Dict] = [
         {
@@ -449,8 +462,6 @@ def build_trapi_message(
 
     matched_term_id: str
     node_map: Dict = dict()
-    result_map: RESULTS_MAP = result["result_map"]
-
     reset_edge_idx()
 
     query_term_membership_edges: Dict[str, str] = dict()
@@ -488,6 +499,9 @@ def build_trapi_message(
         matched_terms.sort()
         matched_terms_key = ",".join(matched_terms)
 
+        # TODO: I need to fix this here to use the supplied 'result["set_identifier"]'
+        #       and relate this to the original query_terms set, with postprocessing of the
+        #       'result_map' driven by the stipulated set_interpretation ("MANY" versus "ALL")
         # Create UUID identifier for node representing the set of input query terms.
         # Assume that one unique UUID is created for each strict subset of input terms that are matched.
         query_set_uuid: str

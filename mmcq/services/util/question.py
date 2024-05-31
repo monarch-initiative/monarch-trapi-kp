@@ -279,7 +279,10 @@ class Question:
         if "error" in result:
             return result
 
-        trapi_message: Dict = build_trapi_message(trapi_message=self._question_json, result=result)
+        trapi_message: Dict = build_trapi_message(
+            trapi_message=self._question_json,
+            result=result
+        )
 
         # May be unaltered if parameters were unavailable
         self._question_json.update(self.transform_attributes(trapi_message))
