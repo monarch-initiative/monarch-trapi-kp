@@ -94,14 +94,17 @@ View logs using:
     docker logs -f mmcq
   ```
 
-A quicker way to deployment is to use Docker Compose and the provided docker-compose.yaml file:
+A quicker way to deployment is to [install Docker Compose](https://docs.docker.com/compose/install/) then use the provided **docker-compose.yaml** file:
 
   ```bash
-    docker build
+    docker-compose build
     
     # -d runs the container in the background
-    docker up -d
-    docker logs -f
+    docker-compose up -d
+    docker-compose logs -f
+    
+    # shut the server down when finished...
+    docker-compose down
   ```
 
 ## Viewing the System
