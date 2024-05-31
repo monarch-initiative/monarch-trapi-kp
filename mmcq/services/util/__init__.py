@@ -21,10 +21,11 @@ RESULT_ENTRY = Union[str, Dict[str, Union[str, List[Union[str, TERM_DATA]]]]]
 
 # A RESULTS_MAP are RESULT_ENTRY matches indexed by SemSimian 'subject_id' hits
 RESULTS_MAP = Dict[str, RESULT_ENTRY]
+QUERY_TERMS = List[str]
 
 # The top level RESULT wrapper data type returns both its dataset
 # plus some global metadata annotation, like global provenance
-RESULT = Dict[str, Union[str, RESULTS_MAP]]
+RESULT = Dict[str, Union[str, QUERY_TERMS, RESULTS_MAP]]
 
 
 def get_nested_tag_value(data: Dict, path: List[str], pos: int) -> Optional[Any]:

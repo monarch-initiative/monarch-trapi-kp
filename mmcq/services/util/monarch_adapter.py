@@ -17,6 +17,7 @@ from mmcq.services.util import (
     tag_value
 )
 from mmcq.services.util.logutil import LoggingUtil
+from mmcq.services.util.trapi import is_mcq_subject_qnode
 
 logger = LoggingUtil.init_logging(
     __name__,
@@ -100,13 +101,13 @@ class MonarchInterface:
 
         @staticmethod
         async def semsim_search(
-                identifiers: List[str],
+                query_terms: List[str],
                 group: SemsimSearchCategory,
                 result_limit: int
         ) -> List[Dict]:
             """
             Generalized call to Monarch SemSim search endpoint.
-            :param identifiers: List[str], list of identifiers to be matched.
+            :param query_terms: List[str], list of query_terms to be matched.
             :param group: SemsimSearchCategory, concept category targeted for matching.
             :param result_limit: int, the limit on the number of query results to be returned.
             :return: List[Dict], of 'raw' SemSimian result objects
@@ -125,7 +126,7 @@ class MonarchInterface:
             # }'
             #
             query = {
-              "termset": identifiers,
+              "termset": query_terms,
               "group": group.value,
               "limit": result_limit
             }
@@ -219,26 +220,30 @@ class MonarchInterface:
             """
             nodes: Dict = trapi_message["query_graph"]["nodes"]
             qnode_id: str
-            details: Dict
+            qnode_details: Dict
+            set_interpretation: Optional[str] = None
+            set_identifier: Optional[str] = None
             query_terms: Optional[List[str]] = None
             category: Optional[str] = None
-            for qnode_id, details in nodes.items():
-                # Gatekeeper signal "is_set" and "set_interpretation"
-                # with "ids" - these are the input terms?
-                if "is_set" in details and details["is_set"] and \
-                        "set_interpretation" in details and details["set_interpretation"] == "MANY" and \
-                        "ids" in details:
-                    query_terms = details["ids"]
+            for qnode_id, qnode_details in nodes.items():
+                if is_mcq_subject_qnode(qnode_details):
+                    set_interpretation = qnode_details["set_interpretation"]
+                    # we assume only one uniquely identified
+                    # set of query terms for the node
+                    set_identifier = qnode_details["ids"][0]
+                    query_terms = qnode_details["member_ids"]
 
                     # blind assumption: associated terms 'category' is properly set here in this query
-                    category = details["categories"][0] \
-                        if "categories" in details and details["categories"] else "biolink:NamedThing"
+                    category = qnode_details["categories"][0] \
+                        if "categories" in qnode_details and qnode_details["categories"] \
+                        else "biolink:NamedThing"
+                    break
 
             result: RESULT = dict()
 
             if query_terms is not None:
                 full_result: List[Dict] = await self.semsim_search(
-                    identifiers=query_terms,
+                    query_terms=query_terms,
                     group=SemsimSearchCategory.MONDO,
                     result_limit=result_limit
                 )
@@ -248,14 +253,21 @@ class MonarchInterface:
                         match_category=category
                     )
 
+                    result["set_interpretation"] = set_interpretation
+                    result["set_identifier"] = set_identifier
+                    result["query_terms"] = query_terms
                     result["primary_knowledge_source"] = "infores:semsimian-kp"
                     result["ingest_knowledge_source"] = "infores:hpo-annotations"
                     result["match_predicate"] = "biolink:phenotype_of"
                     result["result_map"] = result_map
                 else:
                     result["error"] = full_result[0]["error"]
+            else:
+                # Will be None if the query graph did not contain all the
+                # metadata settings and node details required for an MMCQ query
+                logger.warning("Current query graph is incomplete for supported MMCQ queries")
 
-            # may be None if there were no identifiers
+            # may be None if there were no query_terms
             return result
 
         async def run_query(self, trapi_message: Dict, result_limit: int) -> RESULT:
@@ -267,9 +279,11 @@ class MonarchInterface:
             :param trapi_message: Dict, Python dictionary version of query parameters
             :param result_limit: int, the limit on the number of query results to be returned.
             :return: Dictionary of Monarch 'subject' identifier hits indexing
-                     Lists of matched input identifiers.
+                     Lists of matched input query_terms.
             :rtype: RESULT
             """
+            # TODO: here we may support additional SemSimian search use cases
+            #       in the future, other than phenotypes to disease
             return await self.phenotype_semsim_to_disease(
                 trapi_message=trapi_message, result_limit=result_limit
             )

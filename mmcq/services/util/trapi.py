@@ -57,10 +57,12 @@ def get_categories(category: str) -> List[str]:
     return categories
 
 
-def is_subject_qnode(node_data: Dict) -> bool:
-    return True if "is_set" in node_data and node_data["is_set"] and \
-            "set_interpretation" in node_data and node_data["set_interpretation"] == "MANY" and \
-            "ids" in node_data else False
+def is_mcq_subject_qnode(node_data: Dict) -> bool:
+    return "is_set" in node_data and node_data["is_set"] and \
+           "set_interpretation" in node_data and node_data["set_interpretation"] and \
+           node_data["set_interpretation"] in ["MANY", "ALL"] and \
+           "ids" in node_data and node_data["ids"] and \
+           "member_ids" in node_data and node_data["member_ids"]
 
 
 def build_trapi_message(
@@ -154,7 +156,7 @@ def build_trapi_message(
     qnode_object_key: str = "n1"
 
     for qnode_id, node_data in nodes.items():
-        if is_subject_qnode(node_data):
+        if is_mcq_subject_qnode(node_data):
             qnode_subject_key = qnode_id
         else:
             qnode_object_key = qnode_id
