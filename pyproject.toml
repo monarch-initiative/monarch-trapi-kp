@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "monarch-trapi-kp"
-version = "0.0.1"
+version = "0.0.2"
 description = "Translator (Knowledge Provider) Reasoner API wrapper for the Semantic Similarity algorithm against the knowledge graph of the Monarch Initiative information system"
 authors = [
     "Richard Bruskiewich <richard.bruskiewich@delphinai.com>",

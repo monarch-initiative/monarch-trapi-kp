@@ -2,7 +2,7 @@
 
 # 0.0.2
 
-- June 2024 update to January prototype.
+- June 2024 TRAPI 1.5 update to January MCQ prototype
 
 # 0.0.1
 
