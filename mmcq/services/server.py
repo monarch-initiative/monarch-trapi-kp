@@ -48,8 +48,6 @@ APP.include_router(APP_COMMON.router)
 # Instead, /1.4/openapi.json should be SmartAPI registered.
 APP.openapi_schema = construct_open_api_schema(app=APP, trapi_version='N/A')
 
-
-
 if __name__ == '__main__':
     import uvicorn
     uvicorn.run(APP, host="0.0.0.0", port=8080, log_level="info", reload=True)

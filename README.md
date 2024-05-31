@@ -35,8 +35,9 @@ The Python virtual environment and dependencies of MMCQ are managed using Poetry
     WEB_PORT=8080
     
     # TRAPI Service Endpoint
-    # Use a real IP here during deployment, e.g.
-    # MMCQ_SERVICE_ADDRESS=54.87.193.222
+    # Use a real host name or IP here during deployment,
+    # e.g. something like:
+    # MMCQ_SERVICE_ADDRESS=trapi-mcq.monarchinitiative.org
     MMCQ_SERVICE_ADDRESS="localhost"
     MMCQ_TITLE="Monarch SemSimian MCQ"
     MMCQ_VERSION='1.4.0'
