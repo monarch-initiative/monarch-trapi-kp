@@ -246,6 +246,14 @@ def build_trapi_message(
     #                           "value_type_id": "linkml:String",
     #                           "attribute_source": "infores:semsimian-kp"
     #                       },
+    #                       {
+    #                           "attribute_type_id": "biolink:agent_type",
+    #                           "value": "automated_agent",
+    #                       },
+    #                       {
+    #                           "attribute_type_id": "biolink:knowledge_level",
+    #                           "value": "knowledge_assertion",
+    #                       }
     #                     ]
     #                   }
     #            ...etc... see the additional edges below
@@ -333,6 +341,14 @@ def build_trapi_message(
     #             "value": "HP:0025142"  # this is the common subsumer a.k.a. 'ancestor_id'
     #             "value_type_id": "linkml:Uriorcurie",
     #             "attribute_source": "infores:semsimian-kp"
+    #         },
+    #         {
+    #             "attribute_type_id": "biolink:agent_type",
+    #             "value": "automated_agent",
+    #         },
+    #         {
+    #             "attribute_type_id": "biolink:knowledge_level",
+    #             "value": "knowledge_assertion",
     #         }
     #     ]
     # }
@@ -371,7 +387,15 @@ def build_trapi_message(
     #             "value": ["orphanet:137935"]    # this is an illustrative by mismatched publication for this edge
     #             "value_type_id": "linkml:Uriorcurie",
     #             "attribute_source": "infores:hpo-annotations"
-    #        	}
+    #        	},
+    #           {
+    #             "attribute_type_id": "biolink:agent_type",
+    #             "value": "automated_agent",
+    #           },
+    #           {
+    #             "attribute_type_id": "biolink:knowledge_level",
+    #             "value": "knowledge_assertion",
+    #           }
     #     ]
     # }
     #
@@ -568,17 +592,25 @@ def build_trapi_message(
             "sources": deepcopy(sources),
             "attributes": [
                 {
-                  "attribute_type_id": "biolink:score",
-                  "original_attribute_name": AGGREGATE_SIMILARITY_SCORE,
-                  "value": answer_score,
-                  "value_type_id": "linkml:Float",
-                  "attribute_source": primary_knowledge_source
+                    "attribute_type_id": "biolink:score",
+                    "original_attribute_name": AGGREGATE_SIMILARITY_SCORE,
+                    "value": answer_score,
+                    "value_type_id": "linkml:Float",
+                    "attribute_source": primary_knowledge_source
                 },
                 {
-                  "attribute_type_id": "biolink:support_graphs",
-                  "value": [support_graph_id],
-                  "value_type_id": "linkml:String",
-                  "attribute_source": primary_knowledge_source
+                    "attribute_type_id": "biolink:support_graphs",
+                    "value": [support_graph_id],
+                    "value_type_id": "linkml:String",
+                    "attribute_source": primary_knowledge_source
+                },
+                {
+                    "attribute_type_id": "biolink:agent_type",
+                    "value": "automated_agent",
+                },
+                {
+                    "attribute_type_id": "biolink:knowledge_level",
+                    "value": "knowledge_assertion",
                 }
             ]
         }
@@ -632,6 +664,14 @@ def build_trapi_message(
                         "value": term_data["matched_term"],  # this is the common subsumer i.e. 'matched_term'
                         "value_type_id": "linkml:Uriorcurie",
                         "attribute_source": primary_knowledge_source
+                    },
+                    {
+                        "attribute_type_id": "biolink:agent_type",
+                        "value": "automated_agent",
+                    },
+                    {
+                        "attribute_type_id": "biolink:knowledge_level",
+                        "value": "knowledge_assertion",
                     }
                 ]
             }
@@ -670,6 +710,14 @@ def build_trapi_message(
                     #     "value_type_id": "linkml:Uriorcurie",
                     #     "attribute_source": ingest_knowledge_source
                     # }
+                    {
+                        "attribute_type_id": "biolink:agent_type",
+                        "value": "automated_agent",
+                    },
+                    {
+                        "attribute_type_id": "biolink:knowledge_level",
+                        "value": "knowledge_assertion",
+                    }
                 ]
             }
             trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(e003_edge_id)
