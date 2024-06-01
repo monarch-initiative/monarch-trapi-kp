@@ -10,9 +10,21 @@
   "edges": [
     {
       "subject": "biolink:PhenotypicFeature",
+      "predicate": "biolink:has_member",
+      "object": "biolink:PhenotypicFeature",
+      "association": "biolink:PhenotypicFeatureToPhenotypicFeatureAssociation"
+    },
+    {
+      "subject": "biolink:Disease",
+      "predicate": "biolink:has_phenotype",
+      "object": "biolink:PhenotypicFeature",
+      "association": "biolink:DiseaseToPhenotypicFeatureAssociation"
+    },
+    {
+      "subject": "biolink:PhenotypicFeature",
       "predicate": "biolink:similar_to",
-      "object": "biolink:Disease",
-      "association": "biolink:PhenotypicFeatureToDiseaseAssociation"
+      "object": "biolink:PhenotypicFeature",
+      "association": "biolink:PhenotypicFeatureToPhenotypicFeatureAssociation"
     }
   ]
 }
