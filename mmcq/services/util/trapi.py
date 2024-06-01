@@ -578,7 +578,7 @@ def build_trapi_message(
     # 1.  Define knowledge graph nodes
     # 2.  Define knowledge graph edges
     #
-    # 1.1 A node object representing the set, identified by its UUID
+    # 1.1 A node object representing the input query term set, identified by its UUID
     #
     #     "UUID:4403ddf2-f724-4b3b-a877-de08315b784f": {
     #         "members": ["HP:0002104","HP:0012378"],
@@ -596,7 +596,8 @@ def build_trapi_message(
 
     for term_id in query_terms:
         #
-        # 1.2 Node objects representing the individual members of the query set.
+        # 1.2 Node objects representing the
+        #     individual members of the query set.
         #
         #   "HP:0002104": {
         #       "name": "Apnea (HPO)",
@@ -617,35 +618,31 @@ def build_trapi_message(
         }
 
         #
-        # 2.1 A series of `member_of` edges that connect this set node to each of its member CURIEs.
+        # 2.1  Add `member_of` edges that connect the
+        #      set node to each of its member CURIEs.
         #
-        #   "MONDO:0008807": {
-        #       "name": "obsolete apnea, central sleep",
-        #       "categories": ["biolink:Disease"],
-        #       "is_set": False
-        #   }
-        #         "e0001": {
-        #             "subject": "HP:0002104",
-        #             "predicate": "biolink:member_of",
-        #             "object": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
-        #             "sources": [
-        #                 {
-        #                     "resource_id": "infores:user-interface",
-        #                     "resource_role": "primary_knowledge_source"
-        #                 }
-        #             ],
-        #             "attributes": [
-        #                 {
-        #                     "attribute_type_id": "biolink:agent_type",
-        #                     "value": "manual_agent",
-        #                 },
-        #                 {
-        #                     "attribute_type_id": "biolink:knowledge_level",
-        #                     "value": "knowledge_assertion",
-        #                 }
-        #             ]
-        #         }
-        #         ...other 'member_of' edges, one per input query term
+        #     "e0001": {
+        #         "subject": "HP:0002104",
+        #         "predicate": "biolink:member_of",
+        #         "object": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
+        #         "sources": [
+        #             {
+        #                 "resource_id": "infores:user-interface",
+        #                 "resource_role": "primary_knowledge_source"
+        #             }
+        #         ],
+        #         "attributes": [
+        #             {
+        #                 "attribute_type_id": "biolink:agent_type",
+        #                 "value": "manual_agent",
+        #             },
+        #             {
+        #                 "attribute_type_id": "biolink:knowledge_level",
+        #                 "value": "knowledge_assertion",
+        #             }
+        #         ]
+        #     }
+        #     ...other 'member_of' edges, one per input query term
         #
         member_edge_id: str = next_edge_id()
         trapi_response["knowledge_graph"]["edges"][member_edge_id] = {
@@ -672,14 +669,60 @@ def build_trapi_message(
 
         for matched_term_id, result_entry in result_map.items():
 
-            # Capture the primary answer node object matched
+            # TODO: how do we keep tabs of results in order
+            #       to distinguish between 'MANY' and 'ALL" results?
+
+            #
+            # 1.3 Capture the primary answer node object matched, i.e. identified disease
+            #
+            #   "MONDO:0008807": {
+            #       "name": "obsolete apnea, central sleep",
+            #       "categories": ["biolink:Disease"],
+            #       "is_set": False,
+            #       "provided_by": ["infores:semsimian-kp"]  # or should this be MONDO?
+            #   }
             if matched_term_id not in node_map:
                 node_map[matched_term_id] = {
                     "id": matched_term_id,
                     "name": result_entry["name"],
                     "categories": get_categories(category=result_entry["category"]),
-                    "is_set": False
+                    "is_set": False,
+                    "provided_by": result_entry["provided_by"]
                 }
+            #
+            # Creation of 'Answer Edges' that connect result nodes to the queried set node
+            #
+            # 2.2 MCQ services MUST create Answer Edges that connect CURIEs representing each result
+            #     they generate, to the UUID of the queried set, then add them to the knowledge_graph.
+            #     These edges should use a predicate that matches what is specified by the query.
+            #
+            # "kgedge_0003": {
+            #     "subject": "mondo:diseasex",
+            #     "predicate": "has_phenotype",
+            #     "object": "uuid:a24164cd2648b3524",
+            #     "sources": [
+            #         {
+            #           "resource_id": "infores:semsimian-kp",
+            #           "resource_role": "primary_knowledge_source",
+            #           "source_record_urls": null,
+            #           "upstream_resource_ids": null
+            #         },
+            #         {
+            #           "resource_id": "infores:monarchinitiative",
+            #           "resource_role": "aggregator_knowledge_source",
+            #           "source_record_urls": null,
+            #           "upstream_resource_ids": [
+            #             "infores:semsimian-kp"
+            #           ]
+            #         }
+            #     ]
+            #     "agent_type": "automated_agent",
+            #     "knowledge_level": "statistical_association"
+            #     "support_graphs": [
+            #         "ag1",
+            #         "ag2"
+            #   ]
+            # }
 
             # RESULT_MAPS-level answer 'score'
             answer_score = result_entry["score"]
@@ -698,40 +741,6 @@ def build_trapi_message(
             matches: MATCH_LIST = result_entry["matches"]
             term_data: TERM_DATA
 
-        #
-        # Creation of 'Answer Edges' that connect result nodes to the queried set node
-        #
-        # 2.2 MCQ services MUST create Answer Edges that connect CURIEs representing each result
-        #     they generate, to the UUID of the queried set, then add them to the knowledge_graph.
-        #     These edges should use a predicate that matches what is specified by the query.
-        #
-        # "kgedge_0003": {
-        #     "subject": "mondo:diseasex",
-        #     "predicate": "has_phenotype",
-        #     "object": "uuid:a24164cd2648b3524",
-        #     "sources": [
-        #         {
-        #           "resource_id": "infores:semsimian-kp",
-        #           "resource_role": "primary_knowledge_source",
-        #           "source_record_urls": null,
-        #           "upstream_resource_ids": null
-        #         },
-        #         {
-        #           "resource_id": "infores:monarchinitiative",
-        #           "resource_role": "aggregator_knowledge_source",
-        #           "source_record_urls": null,
-        #           "upstream_resource_ids": [
-        #             "infores:semsimian-kp"
-        #           ]
-        #         }
-        #     ]
-        #     "agent_type": "automated_agent",
-        #     "knowledge_level": "statistical_association"
-        #     "support_graphs": [
-        #         "ag1",
-        #         "ag2"
-        #   ]
-        # }
 
         # Add the 'e002' 'answer edge', as described above,
         # directly reporting that the (UUID-identified) input term
