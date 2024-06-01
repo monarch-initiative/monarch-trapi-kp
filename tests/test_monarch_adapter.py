@@ -56,7 +56,7 @@ def test_missing_end_tag_path():
 
 TEST_TRAPI_QUERY: Dict = get_example("reasoner-trapi-1.5")
 TEST_TRAPI_MESSAGE = TEST_TRAPI_QUERY["message"]
-TEST_IDENTIFIERS = tag_value(TEST_TRAPI_MESSAGE, "query_graph.nodes.phenotypes.ids")
+TEST_IDENTIFIERS = tag_value(TEST_TRAPI_MESSAGE, "query_graph.nodes.phenotypes.member_ids")
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,7 @@ async def test_semsim_search():
     # The success of this test depends a bit on the contents of
     # Monarch and the SemSimian algorithm as of January 2024
     semsim_result: List[Dict] = await monarch_interface.semsim_search(
-        identifiers=TEST_IDENTIFIERS,
+        query_terms=TEST_IDENTIFIERS,
         group=SemsimSearchCategory.MONDO,
         result_limit=5
     )
@@ -85,7 +85,7 @@ async def test_semsim_search():
     term_data: TERM_DATA
     assert all(
         [
-            term_data["subject_id"] in ["HP:0002104", "HP:0012378"] and
+            term_data["object_id"] in ["HP:0002104", "HP:0012378"] and
             term_data["category"] == "biolink:PhenotypicFeature"
             for term_data in match_list
         ]
@@ -108,7 +108,7 @@ async def test_run_query():
     term_data: TERM_DATA
     assert all(
         [
-            term_data["subject_id"] in ["HP:0002104", "HP:0012378"] and
+            term_data["object_id"] in ["HP:0002104", "HP:0012378"] and
             term_data["category"] == "biolink:PhenotypicFeature"
             for term_data in match_list
         ]
