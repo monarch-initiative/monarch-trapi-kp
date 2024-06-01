@@ -3,12 +3,10 @@ TRAPI JSON accessing data utilities.
 This module knows about the TRAPI syntax such that it can
 extract parameters and build TRAPI Responses from results
 """
-from typing import Optional, List, Dict, Set
+from typing import Optional, List, Dict
 from functools import lru_cache
 from copy import deepcopy
-from uuid import uuid4
 from mmcq.services.util import (
-    DEFAULT_PROVENANCE,
     TERM_DATA,
     MATCH_LIST,
     RESULTS_MAP,
@@ -67,7 +65,8 @@ def is_mcq_subject_qnode(node_data: Dict) -> bool:
 
 def build_trapi_message(
         trapi_message: Dict,
-        result: RESULT
+        result: RESULT,
+        provenance: str
 ) -> Dict:
     """
     Uses the object id indexed list of subjects to build the internal message contents of the knowledge graph.
@@ -117,6 +116,7 @@ def build_trapi_message(
 
     :param trapi_message: Dict, input TRAPI Message (Query Graph)
     :param result: RESULT, SemSimian subject - object identifier mapping dataset with some metadata annotation
+    :param provenance: str, default global provenance for the system result
     :return: query result contents of the TRAPI Response.Message body (KnowledgeGraph, AuxGraph and Results added)
     """
     # Statement results as noted above, from the original QGraph,
@@ -124,48 +124,47 @@ def build_trapi_message(
     # is assumed to be somewhat of the follow format:
     #
     # "query_graph": {
-    #           "nodes": {
-    #             "phenotypes": {
-    #               "categories": [
-    #                 "biolink:PhenotypicFeature"
-    #               ],
-    #               "ids": ["UUID:4403ddf2-f724-4b3b-a877-de08315b784f"],
-    #               "member_ids": [
-    #                 "HP:0002104",
-    #                 "HP:0012378"
-    #               ],
-    #               "is_set": true,
-    #               "set_interpretation": "MANY"
-    #             },
-    #             "diseases": {
-    #               "categories": [
-    #                 "biolink:Disease"
-    #               ]
-    #             }
-    #           },
-    #           "edges": {
-    #             "e01": {
-    #               "subject": "phenotypes",
-    #               "object": "diseases",
-    #               "predicates": [
-    #                 "biolink:similar_to"
-    #               ]
-    #             }
-    #           }
-    #       }
-    #    } }
+    #   "nodes": {
+    #     "phenotypes": {
+    #       "categories": [
+    #         "biolink:PhenotypicFeature"
+    #       ],
+    #       "ids": ["UUID:4403ddf2-f724-4b3b-a877-de08315b784f"],
+    #       "member_ids": [
+    #         "HP:0002104",
+    #         "HP:0012378"
+    #       ],
+    #       "is_set": true,
+    #       "set_interpretation": "MANY"
+    #     },
+    #     "diseases": {
+    #       "categories": [
+    #         "biolink:Disease"
+    #       ]
+    #     }
+    #   },
+    #   "edges": {
+    #     "e01": {
+    #       "subject": "phenotypes",
+    #       "object": "diseases",
+    #       "predicates": [
+    #         "biolink:similar_to"
+    #       ]
+    #     }
     #   }
+    # }
     #
-    # Code to extract (meta-)data from the TRAPI Request Message Query Graph
 
+    # Code to extract (meta-)data from the TRAPI Request Message Query Graph
     nodes: Dict = trapi_message["query_graph"]["nodes"]
     qnode_id: str
-    details: Dict
+    node_data: Dict
     qnode_subject_key: str = "n0"
     qnode_object_key: str = "n1"
 
-    # TODO: there should generally only be two query nodes
-    #       defined (is it problematic otherwise? Should this be tested earlier?)
+    # TODO: we expect only be two defined query nodes.
+    #       Would it problematic otherwise?
+    #       Should this be checked earlier?
     for qnode_id, node_data in nodes.items():
         if is_mcq_subject_qnode(node_data):
             qnode_subject_key = qnode_id
@@ -188,7 +187,6 @@ def build_trapi_message(
     #
     #     "knowledge_graph": {
     #         "nodes":
-
 
     #             "e001": {
     #                     "subject": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
@@ -352,7 +350,7 @@ def build_trapi_message(
     #             "upstream_resource_ids": []
     #            },
     #           {
-    #             "resource_id": "infores:monarch-initiative",
+    #             "resource_id": "infores:monarchinitiative",
     #             "resource_role": "aggregator_knowledge_source",
     #             "source_record_urls": None,
     #             "upstream_resource_ids": ["infores:hpo-annotations"]
@@ -450,13 +448,12 @@ def build_trapi_message(
     # }
 
     set_interpretation: str = result["set_interpretation"]
-    set_identifier: str = result["set_identifier"]
+    input_query_set_id: str = result["set_identifier"]
     query_terms: List[str] = result["query_terms"]
     query_term_category: str = result["query_term_category"]
     primary_knowledge_source: str = result["primary_knowledge_source"]
     ingest_knowledge_source: str = result["ingest_knowledge_source"]
     match_predicate: str = result["match_predicate"]
-    result_map: RESULTS_MAP = result["result_map"]
 
     common_sources: List[Dict] = [
         {
@@ -586,8 +583,8 @@ def build_trapi_message(
     #         "is_set": True
     #     },
     #
-    node_map[set_identifier] = {
-        "id": set_identifier,
+    node_map[input_query_set_id] = {
+        "id": input_query_set_id,
         "members": query_terms.copy(),  # for safety, just use a copy of the original list
         "categories": get_categories(category=query_term_category),
         "is_set": True,
@@ -648,7 +645,7 @@ def build_trapi_message(
         trapi_response["knowledge_graph"]["edges"][member_edge_id] = {
             "subject": term_id,
             "predicate": "biolink:member_of",
-            "object": set_identifier,
+            "object": input_query_set_id,
             "sources": [
                 {
                     "resource_id": "infores:user-interface",
@@ -666,81 +663,95 @@ def build_trapi_message(
                 }
             ]
         }
+        query_term_membership_edges[term_id] = member_edge_id
 
-        for matched_term_id, result_entry in result_map.items():
+    result_map: RESULTS_MAP = result["result_map"]
+    for matched_term_id, result_entry in result_map.items():
 
-            # TODO: how do we keep tabs of results in order
-            #       to distinguish between 'MANY' and 'ALL" results?
+        # TODO: how do we keep tabs of results in order
+        #       to distinguish between 'MANY' and 'ALL" results?
 
-            #
-            # 1.3 Capture the primary answer node object matched, i.e. identified disease
-            #
-            #   "MONDO:0008807": {
-            #       "name": "obsolete apnea, central sleep",
-            #       "categories": ["biolink:Disease"],
-            #       "is_set": False,
-            #       "provided_by": ["infores:semsimian-kp"]  # or should this be MONDO?
-            #   }
-            if matched_term_id not in node_map:
-                node_map[matched_term_id] = {
-                    "id": matched_term_id,
-                    "name": result_entry["name"],
-                    "categories": get_categories(category=result_entry["category"]),
-                    "is_set": False,
-                    "provided_by": result_entry["provided_by"]
+        #
+        # 1.3 Capture the primary answer node object matched, i.e. identified disease
+        #
+        #   "MONDO:0008807": {
+        #       "name": "obsolete apnea, central sleep",
+        #       "categories": ["biolink:Disease"],
+        #       "is_set": False,
+        #       "provided_by": ["infores:semsimian-kp"]  # or should this be MONDO?
+        #   }
+        if matched_term_id not in node_map:
+            node_map[matched_term_id] = {
+                "id": matched_term_id,
+                "name": result_entry["name"],
+                "categories": get_categories(category=result_entry["category"]),
+                "is_set": False,
+                "provided_by": result_entry["provided_by"]
+            }
+        #
+        # Creation of 'Answer Edges' that connect result nodes to the queried set node
+        #
+        # 2.2 MCQ services MUST create Answer Edges that connect CURIEs representing each result
+        #     they generate, to the UUID of the queried set, then add them to the knowledge_graph.
+        #     These edges should use a predicate that matches what is specified by the query.
+        #
+        # "answer_edge_1": {
+        #     "subject": "MONDO:0008807",
+        #     "predicate": "similar_to",
+        #     "object": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
+        #     "sources": [
+        #         {
+        #            "resource_id": "infores:semsimian-kp",
+        #            "resource_role": "primary_knowledge_source",
+        #            "source_record_urls": None,
+        #            "upstream_resource_ids": ["infores:upheno"]
+        #         },
+        #         {
+        #            "resource_id": "infores:monarchinitiative",
+        #            "resource_role": "aggregator_knowledge_source",
+        #            "source_record_urls": None,
+        #            "upstream_resource_ids": [
+        #              "infores:semsimian-kp"
+        #            ]
+        #         },
+        #         {
+        #             "resource_id": "infores:upheno",
+        #             "resource_role": "supporting_data_source",
+        #             "source_record_urls": None,
+        #             "upstream_resource_ids": None
+        #         }
+        #     ]
+        #     "attributes": [
+        #         {
+        #             "attribute_type_id": "biolink:agent_type",
+        #             "value": "manual_agent",
+        #         },
+        #         {
+        #             "attribute_type_id": "biolink:knowledge_level",
+        #             "value": "knowledge_assertion",
+        #         }
+        #     ]
+        #     "support_graphs": [
+        #         "ag1",
+        #         "ag2"
+        #     ]
+        # }
+
+        # RESULT_MAPS-level answer 'score'.
+        # Unsure whether to put it on the answer edge below since
+        # the match to query terms may be indirect and
+        # sometimes, matching only a subset of the terms?
+        answer_score = result_entry["score"]
+
+        # Complete the shared 'sources' edge provenance block
+        answer_sources: List[Dict] = deepcopy(common_sources)
+        if "provided_by" in result_entry:
+            answer_sources.append(
+                {
+                    "resource_id": result_entry["provided_by"],
+                    "resource_role": "supporting_data_source"
                 }
-            #
-            # Creation of 'Answer Edges' that connect result nodes to the queried set node
-            #
-            # 2.2 MCQ services MUST create Answer Edges that connect CURIEs representing each result
-            #     they generate, to the UUID of the queried set, then add them to the knowledge_graph.
-            #     These edges should use a predicate that matches what is specified by the query.
-            #
-            # "kgedge_0003": {
-            #     "subject": "mondo:diseasex",
-            #     "predicate": "has_phenotype",
-            #     "object": "uuid:a24164cd2648b3524",
-            #     "sources": [
-            #         {
-            #           "resource_id": "infores:semsimian-kp",
-            #           "resource_role": "primary_knowledge_source",
-            #           "source_record_urls": null,
-            #           "upstream_resource_ids": null
-            #         },
-            #         {
-            #           "resource_id": "infores:monarchinitiative",
-            #           "resource_role": "aggregator_knowledge_source",
-            #           "source_record_urls": null,
-            #           "upstream_resource_ids": [
-            #             "infores:semsimian-kp"
-            #           ]
-            #         }
-            #     ]
-            #     "agent_type": "automated_agent",
-            #     "knowledge_level": "statistical_association"
-            #     "support_graphs": [
-            #         "ag1",
-            #         "ag2"
-            #   ]
-            # }
-
-            # RESULT_MAPS-level answer 'score'
-            answer_score = result_entry["score"]
-
-            # Complete the shared 'sources' provenance block
-            sources: List[Dict] = deepcopy(common_sources)
-            if "provided_by" in result_entry:
-                sources.append(
-                    {
-                        "resource_id": result_entry["provided_by"],
-                        "resource_role": "supporting_data_source"
-                    }
-                )
-
-            # Extract the various terms matched from the query
-            matches: MATCH_LIST = result_entry["matches"]
-            term_data: TERM_DATA
-
+            )
 
         # Add the 'e002' 'answer edge', as described above,
         # directly reporting that the (UUID-identified) input term
@@ -750,16 +761,17 @@ def build_trapi_message(
         # the 'e001' core similarity 'answer' edge mapping the
         # (UUID-identified) multi-curie subset of query (HPO) input terms,
         # onto the term profile matched node (e.g. MONDO "disease")
-        e002_edge_id: str = next_edge_id()
-        support_graph_id: str = f"sg-{e001_edge_id}"
+        answer_edge_id: str = next_edge_id()
+        support_graph_id: str = f"sg-{answer_edge_id}"
         trapi_response["auxiliary_graphs"][support_graph_id] = {"edges": []}
 
-        # Build the 'e001' core similarity 'answer' edge
-        trapi_response["knowledge_graph"]["edges"][e001_edge_id] = {
-            "subject": query_set_uuid,
+        # Build the core similarity 'answer' edge:
+        # "Disease--[similar_to]->Query_Phenotype_Set"
+        trapi_response["knowledge_graph"]["edges"][answer_edge_id] = {
+            "subject": matched_term_id,
             "predicate": "biolink:similar_to",
-            "object": matched_term_id,
-            "sources": deepcopy(sources),
+            "object": input_query_set_id,
+            "sources": deepcopy(answer_sources),
             "attributes": [
                 {
                     "attribute_type_id": "biolink:score",
@@ -785,6 +797,10 @@ def build_trapi_message(
             ]
         }
 
+        # Extract the various terms matched by the query
+        matches: MATCH_LIST = result_entry["matches"]
+        term_data: TERM_DATA
+
         # Note that the term_data entries here report
         # SemSimian "similarity.object_best_matches"
         for term_data in matches:
@@ -792,14 +808,16 @@ def build_trapi_message(
             term_subject_id: str = term_data["subject_id"]
             term_object_id: str = term_data["object_id"]
 
-            # Add subject and object terms uniquely to nodes catalog
-            # The identical Biolink node category is assumed for both nodes
+            # Add subject and object terms uniquely to nodes catalog, if not already present
+            # The identical Biolink concept 'category' is assumed for both nodes
             if term_subject_id not in node_map:
                 node_map[term_subject_id] = {
                     "id": term_subject_id,
                     "name": term_data["subject_name"],
                     "categories": get_categories(category=term_data["category"])
                 }
+            if "name" not in node_map[term_subject_id]:
+                node_map[term_subject_id]["name"] = term_data["subject_name"]
 
             if term_object_id not in node_map:
                 node_map[term_object_id] = {
@@ -807,19 +825,23 @@ def build_trapi_message(
                     "name": term_data["object_name"],
                     "categories": get_categories(category=term_data["category"])
                 }
+            if "name" not in node_map[term_object_id]:
+                node_map[term_object_id]["name"] = term_data["object_name"]
 
-            # Add "support graph" edges 'e002', 'e003' and 'e004',
-            # as noted above, to the "knowledge_graph"
+            # Add "support graph" edges to the "knowledge_graph"
 
-            # e002: A support graph edge reporting one of many pairwise similarity assertions
-            #       between an input query phenotype and a phenotype associated with a returned Disease.
+            # "Match_Associated_Term--[similar_to]->Input_Query_Term"
             #
-            e002_edge_id: str = next_edge_id()
-            trapi_response["knowledge_graph"]["edges"][e002_edge_id] = {
+            # A support graph edge reporting one of many pairwise similarity assertions between
+            # a phenotype associated with a returned Matched term (e.g. Disease)
+            # and an input query term (e.g. input phenotype of interest).
+            #
+            match_to_input_term_edge_id: str = next_edge_id()
+            trapi_response["knowledge_graph"]["edges"][match_to_input_term_edge_id] = {
                 "subject": term_subject_id,
                 "predicate": "biolink:similar_to",
                 "object": term_object_id,
-                "sources": deepcopy(sources),
+                "sources": deepcopy(answer_sources),
                 "attributes": [
                     {
                         "attribute_type_id": "biolink:score",
@@ -831,7 +853,8 @@ def build_trapi_message(
                     {
                         "attribute_type_id": "biolink:match",
                         "original_attribute_name": MATCH_TERM,
-                        "value": term_data["matched_term"],  # this is the common subsumer i.e. 'matched_term'
+                        # this is the common subsumer i.e. 'matched_term'
+                        "value": term_data["matched_term"],
                         "value_type_id": "linkml:Uriorcurie",
                         "attribute_source": primary_knowledge_source
                     },
@@ -845,16 +868,18 @@ def build_trapi_message(
                     }
                 ]
             }
-            trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(e002_edge_id)
+            trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(match_to_input_term_edge_id)
 
-            #  e003: A support graph edge reporting the matched phenotype in the
-            #        pairwise-similarity edge above to be associated with the Disease result.
+            #  "Matched_Term--[<match_predicate>]->Associated_Term"
+            #
+            #  A support graph edge reporting the associated term (e.g. Phenotype) in the
+            #  pairwise-similarity edge associated with the matched term (e.g. Disease) result.
 
-            e003_edge_id: str = next_edge_id()
-            trapi_response["knowledge_graph"]["edges"][e003_edge_id] = {
-                "subject": term_object_id,
+            matched_term_edge_id: str = next_edge_id()
+            trapi_response["knowledge_graph"]["edges"][matched_term_edge_id] = {
+                "subject": matched_term_id,
                 "predicate": match_predicate,
-                "object": matched_term_id,
+                "object": term_subject_id,
                 "sources": [
                     {
                         "resource_id": ingest_knowledge_source,
@@ -872,7 +897,7 @@ def build_trapi_message(
                     },
                     # TODO: the following attribute needs to be the
                     #       HPO Annotations publication, whose value
-                    #       is retrieved from the Monarch (HPOA ingest),
+                    #       is retrieved from the Monarch (e.g. HPOA ingest),
                     #       linking the phenotype with its disease.
                     # {
                     #     "attribute_type_id": "biolink:publications",
@@ -890,22 +915,23 @@ def build_trapi_message(
                     }
                 ]
             }
-            trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(e003_edge_id)
+            trapi_response["auxiliary_graphs"][support_graph_id]["edges"].append(matched_term_edge_id)
 
-        # All match results depend on the UUID set,
-        # so add those edges to the corresponding auxiliary graph
-        trapi_response["auxiliary_graphs"][support_graph_id]["edges"].extend(query_term_membership_edges.values())
+            # All match results are linked to the input query terms matched,
+            # so add the set membership edges to the corresponding support graph
+            trapi_response["auxiliary_graphs"][support_graph_id]["edges"]\
+                .append(query_term_membership_edges[term_object_id])
 
         # "results" list entry for the current "object_id" similarity match
         trapi_results_entry: Dict = {
             "node_bindings": {
-                qnode_subject_key: [{"id": query_set_uuid}],
+                qnode_subject_key: [{"id": input_query_set_id}],
                 qnode_object_key: [{"id": matched_term_id}]
             },
             "analyses": [
                 {
-                    "resource_id": DEFAULT_PROVENANCE,
-                    "edge_bindings": {"e01": [{"id": e001_edge_id}]}
+                    "resource_id": provenance,
+                    "edge_bindings": {"e01": [{"id": answer_edge_id}]}
                 }
             ]
         }

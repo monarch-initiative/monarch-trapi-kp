@@ -165,39 +165,38 @@ class MonarchInterface:
             for entry in full_result:
                 # Subtle reversion of assertion: SemSimian
                 # 'subject' becomes the 'object' of interest
-                object_id = tag_value(entry, "subject.id")
-                result[object_id]: RESULT_ENTRY = dict()
+                subject_id = tag_value(entry, "subject.id")
+                result[subject_id]: RESULT_ENTRY = dict()
                 subject_name = tag_value(entry, "subject.name")
-                result[object_id]["name"] = subject_name
+                result[subject_id]["name"] = subject_name
                 subject_category = tag_value(entry, "subject.category")
-                result[object_id]["category"] = subject_category
-                result[object_id]["score"] = entry["score"]
+                result[subject_id]["category"] = subject_category
+                result[subject_id]["score"] = entry["score"]
 
                 provided_by = tag_value(entry, "subject.provided_by")
                 if provided_by:
-                    result[object_id]["provided_by"] = \
+                    result[subject_id]["provided_by"] = \
                         _map_source.setdefault(provided_by, f"infores:{provided_by}")
 
-                # We only take the Similarity 'object_best_matches'
-                # for which the 'match_source' values correspond
-                # to the original input query terms
+                # We only take the Similarity 'object_best_matches' for which the
+                # 'match_source' values correspond to the original input query terms
                 object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
-                result[object_id]["matches"]: MATCH_LIST = list()
+                result[subject_id]["matches"]: MATCH_LIST = list()
                 if object_best_matches:
                     for object_match in object_best_matches.values():
                         similarity: Dict = object_match["similarity"]
                         matched_term: str = similarity["ancestor_id"] \
                             if similarity["ancestor_id"] else object_match["match_target"]
                         term_data: TERM_DATA = {
-                            "subject_id": object_match["match_source"],
-                            "subject_name": object_match["match_source_label"],
+                            "subject_id": object_match["match_target"],
+                            "subject_name": object_match["match_target_label"],
+                            "object_id": object_match["match_source"],
+                            "object_name": object_match["match_source_label"],
                             "category": match_category,
-                            "object_id": object_match["match_target"],
-                            "object_name": object_match["match_target_label"],
                             "score": object_match["score"],
                             "matched_term": matched_term
                         }
-                        result[object_id]["matches"].append(term_data)
+                        result[subject_id]["matches"].append(term_data)
 
             return result
 
@@ -249,10 +248,6 @@ class MonarchInterface:
                     result_limit=result_limit
                 )
                 if "error" not in full_result[0]:
-                    result_map: RESULTS_MAP = self.parse_raw_semsim(
-                        full_result=full_result,
-                        match_category=category
-                    )
 
                     result["set_interpretation"] = set_interpretation
                     result["set_identifier"] = set_identifier
@@ -260,7 +255,12 @@ class MonarchInterface:
                     result["query_term_category"] = category
                     result["primary_knowledge_source"] = "infores:semsimian-kp"
                     result["ingest_knowledge_source"] = "infores:hpo-annotations"
-                    result["match_predicate"] = "biolink:phenotype_of"
+                    result["match_predicate"] = "biolink:has_phenotype"
+
+                    result_map: RESULTS_MAP = self.parse_raw_semsim(
+                        full_result=full_result,
+                        match_category=category
+                    )
                     result["result_map"] = result_map
                 else:
                     result["error"] = full_result[0]["error"]

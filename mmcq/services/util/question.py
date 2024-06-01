@@ -281,7 +281,8 @@ class Question:
 
         trapi_message: Dict = build_trapi_message(
             trapi_message=self._question_json,
-            result=result
+            result=result,
+            provenance=self.provenance
         )
 
         # May be unaltered if parameters were unavailable
