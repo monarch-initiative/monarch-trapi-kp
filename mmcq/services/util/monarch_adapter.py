@@ -233,7 +233,8 @@ class MonarchInterface:
                     set_identifier = qnode_details["ids"][0]
                     query_terms = qnode_details["member_ids"]
 
-                    # blind assumption: associated terms 'category' is properly set here in this query
+                    # TODO: blind assumption: associated query terms
+                    # 'category' is properly set here, in the query node
                     category = qnode_details["categories"][0] \
                         if "categories" in qnode_details and qnode_details["categories"] \
                         else "biolink:NamedThing"
@@ -256,6 +257,7 @@ class MonarchInterface:
                     result["set_interpretation"] = set_interpretation
                     result["set_identifier"] = set_identifier
                     result["query_terms"] = query_terms
+                    result["query_term_category"] = category
                     result["primary_knowledge_source"] = "infores:semsimian-kp"
                     result["ingest_knowledge_source"] = "infores:hpo-annotations"
                     result["match_predicate"] = "biolink:phenotype_of"

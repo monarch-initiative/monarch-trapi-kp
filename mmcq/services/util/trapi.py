@@ -156,7 +156,7 @@ def build_trapi_message(
     #    } }
     #   }
     #
-    # Code to extract (meta-)data from the TRAPI message
+    # Code to extract (meta-)data from the TRAPI Request Message Query Graph
 
     nodes: Dict = trapi_message["query_graph"]["nodes"]
     qnode_id: str
@@ -164,6 +164,8 @@ def build_trapi_message(
     qnode_subject_key: str = "n0"
     qnode_object_key: str = "n1"
 
+    # TODO: there should generally only be two query nodes
+    #       defined (is it problematic otherwise? Should this be tested earlier?)
     for qnode_id, node_data in nodes.items():
         if is_mcq_subject_qnode(node_data):
             qnode_subject_key = qnode_id
@@ -185,27 +187,9 @@ def build_trapi_message(
     # (spanning each similarity mapping):
     #
     #     "knowledge_graph": {
-    #         "nodes": {
-    #             "HP:0002104": {
-    #                 "name": "Apnea (HPO)",
-    #                 "categories": ["biolink:PhenotypicFeature"]
-    #             },
-    #             "HP:0012378": {
-    #                 "name": "Fatigue (HPO)",
-    #                 "categories": ["biolink:PhenotypicFeature"]
-    #             },
-    #             "UUID:4403ddf2-f724-4b3b-a877-de08315b784f": {
-    #                 "members": ["HP:0002104","HP:0012378"],
-    #                 "categories": ["biolink:PhenotypicFeature"],
-    #                 "is_set": true
-    #             },
-    #             "MONDO:0008807": {
-    #                 "name": "obsolete apnea,
-    #                 central sleep",
-    #                 "categories": ["biolink:Disease"]
-    #             }
-    #         },
-    #         "edges": {
+    #         "nodes":
+
+
     #             "e001": {
     #                     "subject": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
     #                     "predicate": "biolink:similar_to",
@@ -468,6 +452,7 @@ def build_trapi_message(
     set_interpretation: str = result["set_interpretation"]
     set_identifier: str = result["set_identifier"]
     query_terms: List[str] = result["query_terms"]
+    query_term_category: str = result["query_term_category"]
     primary_knowledge_source: str = result["primary_knowledge_source"]
     ingest_knowledge_source: str = result["ingest_knowledge_source"]
     match_predicate: str = result["match_predicate"]
@@ -487,92 +472,268 @@ def build_trapi_message(
     matched_term_id: str
     node_map: Dict = dict()
     reset_edge_idx()
-
     query_term_membership_edges: Dict[str, str] = dict()
-    
-    for matched_term_id, result_entry in result_map.items():
 
-        # Capture the primary answer node object matched
-        if matched_term_id not in node_map:
-            node_map[matched_term_id] = {
-                "id": matched_term_id,
-                "name": result_entry["name"],
-                "categories": get_categories(category=result_entry["category"])
-            }
+    ################################################################################################
+    #
+    # DEPRECATED: this January 2024 code moved elsewhere, below, with some modification.
+    #
+    # for matched_term_id, result_entry in result_map.items():
+    #
+    #     # Capture the primary answer node object matched
+    #     if matched_term_id not in node_map:
+    #         node_map[matched_term_id] = {
+    #             "id": matched_term_id,
+    #             "name": result_entry["name"],
+    #             "categories": get_categories(category=result_entry["category"]),
+    #             "is_set": False
+    #         }
+    #
+    #     # RESULT_MAPS-level answer 'score'
+    #     answer_score = result_entry["score"]
+    #
+    #     # Complete the shared 'sources' provenance block
+    #     sources: List[Dict] = deepcopy(common_sources)
+    #     if "provided_by" in result_entry:
+    #         sources.append(
+    #             {
+    #                 "resource_id": result_entry["provided_by"],
+    #                 "resource_role": "supporting_data_source"
+    #             }
+    #         )
+    #
+    #     # Extract the various terms matched from the query
+    #     matches: MATCH_LIST = result_entry["matches"]
+    #     term_data: TERM_DATA
+    #
+    # TODO: I need to fix this here to use the supplied 'result["set_identifier"]'
+    #       and relate this to the original 'query_terms' set, with postprocessing of the
+    #       'result_map' driven by the stipulated 'set_interpretation' ("MANY" versus "ALL")
+    #
+    # DEPRECATED: January 2024 prototype assumed that one unique UUID is created
+    #             for each and every strict subset of input terms that are matched.
+    #             This is no longer true: just the original input query terms are
+    #             designated by a (single) node with a UUID, and the set defined by
+    #             'member_of' edges, then individual subject_id nodes are linked to
+    #             their diseases directly via 'phenotype_of' or indirectly via a transitive
+    #             subgraph 'similar_to' -> <other phenotype> -> 'phenotype_of' <disease>.
+    #
+    #     # Sanity check to ensure that all lists with
+    #     # identical terms, give an identical "matched_terms_key"
+    #     matched_terms: List[str] = [term_data["subject_id"] for term_data in matches]
+    #     matched_terms.sort()
+    #     matched_terms_key = ",".join(matched_terms)
+    #
+    #     # Create UUID identifier for node representing the set of input query terms.
+    #
+    #     query_set_uuid: str
+    #     if matched_terms_key not in node_map:
+    #         query_set_uuid = f"UUID:{str(uuid4())}"
+    #         members: Set[str] = set()
+    #         category_set: Set[str] = set()
+    #         for term_data in matches:
+    #             query_term: str = term_data["subject_id"]
+    #             members.add(query_term)
+    #             category_set.update(get_categories(category=term_data["category"]))
+    #
+    #             # e004: The following support graph edges reporting the input terms in the
+    #             #       pairwise-similarity edge above, to be a member of the query terms set.
+    #             #       This is obvious/trivial, so we may not need to report it.
+    #             #       But it makes the visualized support graph more complete/intuitive.
+    #             # TODO: double check "query_term_membership_edges" for correctness:
+    #             #       does it deal properly with strict subsets of query_terms
+    #             #       for a given matched_term_id, for a given UUID (the match_terms_key
+    #             #       above ensures a unit UUID for each strict subset but maybe not for
+    #             #       the "query_term_membership_edges" linked to the given UUID)?
+    #             if query_term not in query_term_membership_edges:
+    #                 e004_edge_id: str = next_edge_id()
+    #                 trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {
+    #                     "subject": query_term,
+    #                     "predicate": "biolink:member_of",
+    #                     "object": query_set_uuid,
+    #                     "sources": [
+    #                         {
+    #                             "resource_id": primary_knowledge_source,
+    #                             "resource_role": "primary_knowledge_source"
+    #                         }
+    #                     ]
+    #                 }
+    #                 query_term_membership_edges[query_term] = e004_edge_id
+    #
+    #         node_map[matched_terms_key] = {
+    #             "id": query_set_uuid,  # this will be the real node identifier later
+    #             "members": list(members),
+    #             "categories": list(category_set),
+    #             "is_set": True
+    #         }
+    #
+    #     else:
+    #         query_set_uuid = node_map[matched_terms_key]["id"]
+    ################################################################################################
 
-        # RESULT_MAPS-level answer 'score'
-        answer_score = result_entry["score"]
+    ################################################################################################
+    #
+    # May 2024 MMCQ implementation
+    #
+    # 1.  Define knowledge graph nodes
+    # 2.  Define knowledge graph edges
+    #
+    # 1.1 A node object representing the set, identified by its UUID
+    #
+    #     "UUID:4403ddf2-f724-4b3b-a877-de08315b784f": {
+    #         "members": ["HP:0002104","HP:0012378"],
+    #         "categories": ["biolink:PhenotypicFeature"],
+    #         "is_set": True
+    #     },
+    #
+    node_map[set_identifier] = {
+        "id": set_identifier,
+        "members": query_terms.copy(),  # for safety, just use a copy of the original list
+        "categories": get_categories(category=query_term_category),
+        "is_set": True,
+        "provided_by": ["infores:user-interface"]
+    }
 
-        # Complete the shared 'sources' provenance block
-        sources: List[Dict] = deepcopy(common_sources)
-        if "provided_by" in result_entry:
-            sources.append(
+    for term_id in query_terms:
+        #
+        # 1.2 Node objects representing the individual members of the query set.
+        #
+        #   "HP:0002104": {
+        #       "name": "Apnea (HPO)",
+        #       "categories": ["biolink:PhenotypicFeature"],
+        #       "is_set": False,
+        #       "provided_by": ["infores:user-interface"]
+        #   }
+        #   ...other nodes, one per query_term input
+        #
+        node_map[term_id] = {
+            "id": term_id,
+            # TODO: we may not have the name of the term here(?)
+            #       unless it is provided in the QGraph?
+            # "name": "<some_name>",
+            "categories": get_categories(category=query_term_category),
+            "is_set": False,
+            "provided_by": ["infores:user-interface"]
+        }
+
+        #
+        # 2.1 A series of `member_of` edges that connect this set node to each of its member CURIEs.
+        #
+        #   "MONDO:0008807": {
+        #       "name": "obsolete apnea, central sleep",
+        #       "categories": ["biolink:Disease"],
+        #       "is_set": False
+        #   }
+        #         "e0001": {
+        #             "subject": "HP:0002104",
+        #             "predicate": "biolink:member_of",
+        #             "object": "UUID:4403ddf2-f724-4b3b-a877-de08315b784f",
+        #             "sources": [
+        #                 {
+        #                     "resource_id": "infores:user-interface",
+        #                     "resource_role": "primary_knowledge_source"
+        #                 }
+        #             ],
+        #             "attributes": [
+        #                 {
+        #                     "attribute_type_id": "biolink:agent_type",
+        #                     "value": "manual_agent",
+        #                 },
+        #                 {
+        #                     "attribute_type_id": "biolink:knowledge_level",
+        #                     "value": "knowledge_assertion",
+        #                 }
+        #             ]
+        #         }
+        #         ...other 'member_of' edges, one per input query term
+        #
+        member_edge_id: str = next_edge_id()
+        trapi_response["knowledge_graph"]["edges"][member_edge_id] = {
+            "subject": term_id,
+            "predicate": "biolink:member_of",
+            "object": set_identifier,
+            "sources": [
                 {
-                    "resource_id": result_entry["provided_by"],
-                    "resource_role": "supporting_data_source"
+                    "resource_id": "infores:user-interface",
+                    "resource_role": "primary_knowledge_source"
                 }
-            )
+            ],
+            "attributes": [
+                {
+                    "attribute_type_id": "biolink:agent_type",
+                    "value": "manual_agent",
+                },
+                {
+                    "attribute_type_id": "biolink:knowledge_level",
+                    "value": "knowledge_assertion",
+                }
+            ]
+        }
 
-        # Extract the various terms matched from the query
-        matches: MATCH_LIST = result_entry["matches"]
-        term_data: TERM_DATA
+        for matched_term_id, result_entry in result_map.items():
 
-        # sanity check to ensure that all lists with
-        # identical terms, give an identical "matched_terms_key"
-        matched_terms: List[str] = [term_data["subject_id"] for term_data in matches]
-        matched_terms.sort()
-        matched_terms_key = ",".join(matched_terms)
+            # Capture the primary answer node object matched
+            if matched_term_id not in node_map:
+                node_map[matched_term_id] = {
+                    "id": matched_term_id,
+                    "name": result_entry["name"],
+                    "categories": get_categories(category=result_entry["category"]),
+                    "is_set": False
+                }
 
-        # TODO: I need to fix this here to use the supplied 'result["set_identifier"]'
-        #       and relate this to the original query_terms set, with postprocessing of the
-        #       'result_map' driven by the stipulated set_interpretation ("MANY" versus "ALL")
-        # Create UUID identifier for node representing the set of input query terms.
-        # Assume that one unique UUID is created for each strict subset of input terms that are matched.
-        query_set_uuid: str
-        if matched_terms_key not in node_map:
-            query_set_uuid = f"UUID:{str(uuid4())}"
-            members: Set[str] = set()
-            category_set: Set[str] = set()
-            for term_data in matches:
-                query_term: str = term_data["subject_id"]
-                members.add(query_term)
-                category_set.update(get_categories(category=term_data["category"]))
+            # RESULT_MAPS-level answer 'score'
+            answer_score = result_entry["score"]
 
-                # e004: The following support graph edges reporting the input terms in the
-                #       pairwise-similarity edge above, to be a member of the query terms set.
-                #       This is obvious/trivial, so we may not need to report it.
-                #       But it makes the visualized support graph more complete/intuitive.
-                # TODO: double check "query_term_membership_edges" for correctness:
-                #       does it deal properly with strict subsets of query_terms
-                #       for a given matched_term_id, for a given UUID (the match_terms_key
-                #       above ensures a unit UUID for each strict subset but maybe not for
-                #       the "query_term_membership_edges" linked to the given UUID)?
-                if query_term not in query_term_membership_edges:
-                    e004_edge_id: str = next_edge_id()
-                    trapi_response["knowledge_graph"]["edges"][e004_edge_id] = {
-                        "subject": query_term,
-                        "predicate": "biolink:member_of",
-                        "object": query_set_uuid,
-                        "sources": [
-                            {
-                                "resource_id": primary_knowledge_source,
-                                "resource_role": "primary_knowledge_source"
-                            }
-                        ]
+            # Complete the shared 'sources' provenance block
+            sources: List[Dict] = deepcopy(common_sources)
+            if "provided_by" in result_entry:
+                sources.append(
+                    {
+                        "resource_id": result_entry["provided_by"],
+                        "resource_role": "supporting_data_source"
                     }
-                    query_term_membership_edges[query_term] = e004_edge_id
-                
-            node_map[matched_terms_key] = {
-                "id": query_set_uuid,  # this will be the real node identifier later
-                "members": list(members),
-                "categories": list(category_set),
-                "is_set": True
-            }
+                )
 
-        else:
-            query_set_uuid = node_map[matched_terms_key]["id"]
+            # Extract the various terms matched from the query
+            matches: MATCH_LIST = result_entry["matches"]
+            term_data: TERM_DATA
 
-        # Add the 'e001' 'answer edge', as described above,
+        #
+        # Creation of 'Answer Edges' that connect result nodes to the queried set node
+        #
+        # 2.2 MCQ services MUST create Answer Edges that connect CURIEs representing each result
+        #     they generate, to the UUID of the queried set, then add them to the knowledge_graph.
+        #     These edges should use a predicate that matches what is specified by the query.
+        #
+        # "kgedge_0003": {
+        #     "subject": "mondo:diseasex",
+        #     "predicate": "has_phenotype",
+        #     "object": "uuid:a24164cd2648b3524",
+        #     "sources": [
+        #         {
+        #           "resource_id": "infores:semsimian-kp",
+        #           "resource_role": "primary_knowledge_source",
+        #           "source_record_urls": null,
+        #           "upstream_resource_ids": null
+        #         },
+        #         {
+        #           "resource_id": "infores:monarchinitiative",
+        #           "resource_role": "aggregator_knowledge_source",
+        #           "source_record_urls": null,
+        #           "upstream_resource_ids": [
+        #             "infores:semsimian-kp"
+        #           ]
+        #         }
+        #     ]
+        #     "agent_type": "automated_agent",
+        #     "knowledge_level": "statistical_association"
+        #     "support_graphs": [
+        #         "ag1",
+        #         "ag2"
+        #   ]
+        # }
+
+        # Add the 'e002' 'answer edge', as described above,
         # directly reporting that the (UUID-identified) input term
         # subset is similar (phenotypically) to a particular Disease
 
@@ -580,7 +741,7 @@ def build_trapi_message(
         # the 'e001' core similarity 'answer' edge mapping the
         # (UUID-identified) multi-curie subset of query (HPO) input terms,
         # onto the term profile matched node (e.g. MONDO "disease")
-        e001_edge_id: str = next_edge_id()
+        e002_edge_id: str = next_edge_id()
         support_graph_id: str = f"sg-{e001_edge_id}"
         trapi_response["auxiliary_graphs"][support_graph_id] = {"edges": []}
 
