@@ -41,7 +41,12 @@ APP.mount('/', APP_COMMON, '')
 # Add all routes of each app for open api generation at /openapi.json
 # This will create an aggregate openapi spec.
 APP.include_router(APP_TRAPI_1_5.router, prefix='/1.5')
-APP.include_router(APP_COMMON.router)
+
+# TODO: some additional non-TRAPI endpoints were specified by
+#       the original Plater code used as the starting point for this
+#       application; however, they are not actually fully implemented,
+#       if at all, so they are commented out for now.
+# APP.include_router(APP_COMMON.router)
 
 # Construct app /openapi.json... Note that this schema
 # will not be registered on the Translator SmartAPI registry.
