@@ -112,9 +112,9 @@ A quicker way to deployment is to [install Docker Compose](https://docs.docker.c
 
 ### TRAPI API
 
-When run the system locally from the CLI or using Docker (but not within any named host), an OpenAPI web form exposing the TRAPI API is available at http://localhost:8080/1.5/docs.  
+When run the system locally from the CLI or using Docker (but not within any named host), an OpenAPI web form exposing the TRAPI API is available at http://localhost:8080/1.5/docs.  The web form has a sample JSON query input that should work (the source file for this is [here](./mmcq/examples/reasoner-trapi-1.5.json)).
 
-Of course, the standard TRAPI 1.5 endpoints may also be directly accessed, as expected. These consist of the **/meta_knowledge_graph** returning the Biolink Model compliant dictionary of edge templates and the **/query** endpoint for posting queries to the system.
+All of the standard TRAPI 1.5 endpoints directly accessible, as expected. These mainly consist of the **/meta_knowledge_graph** returning the Biolink Model compliant dictionary of edge templates and the **/query** endpoint for posting queries to the system.
 
 Note that for the **/query** endpoint, the TRAPI query graph body can have the (optional) extra non-TRAPI standard JSON object key **limit** which instructs the system about the maximum number of results should be returned (Default: return the top 5 results). The current maximum allowable SemSimian value for this value appears to be 50. Higher values will trigger a 422 HTTP return code error.
 
