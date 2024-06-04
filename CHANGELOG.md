@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.0.5
+
+- trapi::is_mcq_subject_qnode() method now throws a RuntimeException if a node with "set_interpretation" value equal to either "MANY", or "ALL", is not formatted as expected. Sends back an error message, as a result, to the user.
+
+## 0.0.4
+
+- Hacky patch to Dockerfile for environment file variables
+- 
 ## 0.0.3
 
 - Significant refactoring of MMCQ TRAPI Response to comply with latest thinking about MCQ output for SemSimian.
