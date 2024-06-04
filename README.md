@@ -83,10 +83,7 @@ Run the following script to start up the server from the command line terminal (
   ```
   
   ```bash
-   docker run --env-file .env \
-    --name mmcq \
-    -p 8080:8080 \
-    mmcq-test
+   docker run  --name mmcq -p 8080:8080  mmcq-test
   ```
 
 View logs using:
