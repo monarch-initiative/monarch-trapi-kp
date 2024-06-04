@@ -276,7 +276,7 @@ class Question:
         end = time.time()
         logger.info(f"SemSimian query took {end - start} seconds")
 
-        if "error" in result:
+        if not result or "error" in result:
             return result
 
         trapi_message: Dict = build_trapi_message(
@@ -284,6 +284,9 @@ class Question:
             result=result,
             provenance=self.provenance
         )
+
+        if "error" in result:
+            return result
 
         # May be unaltered if parameters were unavailable
         self._question_json.update(self.transform_attributes(trapi_message))

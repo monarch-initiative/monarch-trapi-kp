@@ -56,11 +56,24 @@ def get_categories(category: str) -> List[str]:
 
 
 def is_mcq_subject_qnode(node_data: Dict) -> bool:
-    return "is_set" in node_data and node_data["is_set"] and \
-           "set_interpretation" in node_data and node_data["set_interpretation"] and \
-           node_data["set_interpretation"] in ["MANY", "ALL"] and \
-           "ids" in node_data and node_data["ids"] and \
-           "member_ids" in node_data and node_data["member_ids"]
+    if "is_set" in node_data and node_data["is_set"] and \
+            "set_interpretation" in node_data and node_data["set_interpretation"] and \
+            node_data["set_interpretation"] in ["MANY", "ALL"]:
+        if "ids" in node_data and len(node_data["ids"]) == 1 and \
+                str(node_data["ids"][0]).upper().startswith("UUID:") and \
+                "member_ids" in node_data and len(node_data["member_ids"]) > 0:
+            # Success: well-formed node of 'set_interpretation' type 'MANY' or 'ALL'!
+            return True
+        else:
+            # Failure: not well-formed
+            raise RuntimeError(
+                "Query Graph Node 'set_interpretation' is 'MANY' or 'ALL', thus 'ids' "
+                "must have a single global ('UUID') set identifier and query input identifiers "
+                "for the set need to be listed in the 'member_ids' list."
+            )
+    else:
+        # Not a set of 'set_interpretation' type 'MANY' or 'ALL'
+        return False
 
 
 def build_trapi_message(
@@ -154,6 +167,7 @@ def build_trapi_message(
     #   }
     # }
     #
+    assert trapi_message, "build_trapi_message(): Empty TRAPI Message?"
 
     # Code to extract (meta-)data from the TRAPI Request Message Query Graph
     nodes: Dict = trapi_message["query_graph"]["nodes"]
@@ -162,14 +176,17 @@ def build_trapi_message(
     qnode_subject_key: str = "n0"
     qnode_object_key: str = "n1"
 
-    # TODO: we expect only be two defined query nodes.
-    #       Would it problematic otherwise?
-    #       Should this be checked earlier?
+    if not nodes or len(nodes) > 2:
+        return {"error": f"build_trapi_message(): exact two query nodes are required; saw: '{str(nodes)}'?"}
+
     for qnode_id, node_data in nodes.items():
-        if is_mcq_subject_qnode(node_data):
-            qnode_subject_key = qnode_id
-        else:
-            qnode_object_key = qnode_id
+        try:
+            if is_mcq_subject_qnode(node_data):
+                qnode_subject_key = qnode_id
+            else:
+                qnode_object_key = qnode_id
+        except RuntimeError as rte:
+            return {"error": str(rte)}
 
     # First, initialize a stub template for the TRAPI Response
     trapi_response: Dict = {
@@ -447,6 +464,8 @@ def build_trapi_message(
     #     ]
     # }
 
+    # TODO: we need to filter output somewhere below based upon
+    #       'MANY' versus 'ALL' values of set_interpretation
     set_interpretation: str = result["set_interpretation"]
     input_query_set_id: str = result["set_identifier"]
     query_terms: List[str] = result["query_terms"]

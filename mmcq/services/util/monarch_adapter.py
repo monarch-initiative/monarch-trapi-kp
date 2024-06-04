@@ -224,50 +224,59 @@ class MonarchInterface:
             set_identifier: Optional[str] = None
             query_terms: Optional[List[str]] = None
             category: Optional[str] = None
-            for qnode_id, qnode_details in nodes.items():
-                if is_mcq_subject_qnode(qnode_details):
-                    set_interpretation = qnode_details["set_interpretation"]
-                    # we assume only one uniquely identified
-                    # set of query terms for the node
-                    set_identifier = qnode_details["ids"][0]
-                    query_terms = qnode_details["member_ids"]
 
-                    # TODO: blind assumption: associated query terms
-                    # 'category' is properly set here, in the query node
-                    category = qnode_details["categories"][0] \
-                        if "categories" in qnode_details and qnode_details["categories"] \
-                        else "biolink:NamedThing"
-                    break
-
+            # 'result' defined here in case the following
+            # code block triggers a reportable error
             result: RESULT = dict()
+            try:
+                for qnode_id, qnode_details in nodes.items():
 
-            if query_terms is not None:
-                full_result: List[Dict] = await self.semsim_search(
-                    query_terms=query_terms,
-                    group=SemsimSearchCategory.MONDO,
-                    result_limit=result_limit
-                )
-                if "error" not in full_result[0]:
+                    if is_mcq_subject_qnode(qnode_details):
+                        set_interpretation = qnode_details["set_interpretation"]
+                        # we assume only one uniquely identified
+                        # set of query terms for the node
+                        set_identifier = qnode_details["ids"][0]
+                        query_terms = qnode_details["member_ids"]
 
-                    result["set_interpretation"] = set_interpretation
-                    result["set_identifier"] = set_identifier
-                    result["query_terms"] = query_terms
-                    result["query_term_category"] = category
-                    result["primary_knowledge_source"] = "infores:semsimian-kp"
-                    result["ingest_knowledge_source"] = "infores:hpo-annotations"
-                    result["match_predicate"] = "biolink:has_phenotype"
+                        # TODO: blind assumption: associated query terms
+                        # 'category' is properly set here, in the query node
+                        category = qnode_details["categories"][0] \
+                            if "categories" in qnode_details and qnode_details["categories"] \
+                            else "biolink:NamedThing"
+                        break
 
-                    result_map: RESULTS_MAP = self.parse_raw_semsim(
-                        full_result=full_result,
-                        match_category=category
+                if query_terms is not None:
+                    full_result: List[Dict] = await self.semsim_search(
+                        query_terms=query_terms,
+                        group=SemsimSearchCategory.MONDO,
+                        result_limit=result_limit
                     )
-                    result["result_map"] = result_map
+
+                    if "error" not in full_result[0]:
+                        result["set_interpretation"] = set_interpretation
+                        result["set_identifier"] = set_identifier
+                        result["query_terms"] = query_terms
+                        result["query_term_category"] = category
+                        result["primary_knowledge_source"] = "infores:semsimian-kp"
+                        result["ingest_knowledge_source"] = "infores:hpo-annotations"
+                        result["match_predicate"] = "biolink:has_phenotype"
+
+                        result_map: RESULTS_MAP = self.parse_raw_semsim(
+                            full_result=full_result,
+                            match_category=category
+                        )
+                        result["result_map"] = result_map
+                    else:
+                        raise RuntimeError(full_result[0]["error"])
                 else:
-                    result["error"] = full_result[0]["error"]
-            else:
-                # Will be None if the query graph did not contain all the
-                # metadata settings and node details required for an MMCQ query
-                logger.warning("Current query graph is incomplete for supported MMCQ queries")
+                    # Will be None if the query graph did not contain all the
+                    # metadata settings and node details required for an MMCQ query
+                    raise RuntimeError("Current query graph is incomplete for supported MMCQ queries")
+
+            except RuntimeError as rte:
+                err_msg: str = str(rte)
+                logger.error(err_msg)
+                result["error"] = err_msg
 
             # may be None if there were no query_terms
             return result
