@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.8
+
+- Additional Phenotype-to-Disease query term sets added to Jupyter Notebook
+
 ## 0.0.7
 
 - Added a [Multi-Curie Queries Jupyter Notebook](./docs/MultiCurieQueries.ipynb), with some basic Phenotype-to-Disease queries. 
