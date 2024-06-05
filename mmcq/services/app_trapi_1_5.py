@@ -1,5 +1,5 @@
 """FastAPI app."""
-
+from typing import Optional, Any
 from fastapi import Body, Depends, FastAPI, Response, status
 from reasoner_pydantic import MetaKnowledgeGraph
 from mmcq.models.models_trapi_1_5 import ReasonerRequest
@@ -72,10 +72,11 @@ async def reasoner_api(
     # TRAPI Query OpenAPI "additionalProperties" value
     result_limit: int
     try:
-        result_limit = int(request_json.get('limit')) or 5
-    except ValueError:
-        logger.warning("Invalid result limit string in TRAPI Query JSON. Setting to default 5 value.")
-        result_limit = 5
+        limit: Optional[Any] = request_json.get('limit')
+        result_limit = int(limit) if limit is not None else 10
+    except (ValueError, TypeError):
+        logger.warning(f"Invalid result limit string {limit} in TRAPI Query JSON. Setting to default 10 value.")
+        result_limit = 10
 
     # default workflow
     workflow = request_json.get('workflow') or [{"id": "lookup", "parameters": None, "runner_parameters": None}]

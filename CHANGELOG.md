@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.7
+
+- Added a [Multi-Curie Queries Jupyter Notebook](./docs/MultiCurieQueries.ipynb), with some basic Phenotype-to-Disease queries. 
+- Some tiny code fixes to make more robust. Note Python 3.11 constraint and some extra (optional) poetry dependencies to run the notebook! 
 
 ## 0.0.6
 

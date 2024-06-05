@@ -112,6 +112,9 @@ class MonarchInterface:
             :param result_limit: int, the limit on the number of query results to be returned.
             :return: List[Dict], of 'raw' SemSimian result objects
             """
+            # sanity check: coerce 'result_limit' into positive integer range 1..50
+            if result_limit < 1 or result_limit > 50:
+                result_limit = 50
             #
             # Example HTTP POST to SemSimian:
             #
