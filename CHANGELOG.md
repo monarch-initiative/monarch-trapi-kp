@@ -1,5 +1,10 @@
 # Change Log
 
+
+## 0.0.6
+
+- Algorithm now differentiates between 'MANY' and 'ALL' SemSimian matches filtering out duplicate matches by taking the highest scoring (phenotypic) query term to (disease-related phenotype) match pairs
+
 ## 0.0.5
 
 - trapi::is_mcq_subject_qnode() method now throws a RuntimeException if a node with "set_interpretation" value equal to either "MANY", or "ALL", is not formatted as expected. Sends back an error message, as a result, to the user.
