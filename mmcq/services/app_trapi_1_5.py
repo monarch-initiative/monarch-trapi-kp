@@ -71,6 +71,7 @@ async def reasoner_api(
     # This is an application-specific
     # TRAPI Query OpenAPI "additionalProperties" value
     result_limit: int
+    limit: Optional = None
     try:
         limit: Optional[Any] = request_json.get('limit')
         result_limit = int(limit) if limit is not None else 10
