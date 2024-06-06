@@ -17,7 +17,7 @@ from mmcq.services.util import (
     tag_value
 )
 from mmcq.services.util.logutil import LoggingUtil
-from mmcq.services.util.trapi import is_mcq_subject_qnode
+from mmcq.services.util.trapi import mcq_subject_qnode
 
 logger = LoggingUtil.init_logging(
     __name__,
@@ -227,25 +227,20 @@ class MonarchInterface:
             set_identifier: Optional[str] = None
             query_terms: Optional[List[str]] = None
             category: Optional[str] = None
+            group: Optional[SemsimSearchCategory] = None
 
             # 'result' defined here in case the following
             # code block triggers a reportable error
             result: RESULT = dict()
             try:
                 for qnode_id, qnode_details in nodes.items():
-
-                    if is_mcq_subject_qnode(qnode_details):
+                    category: Optional[str] = mcq_subject_qnode(qnode_details)
+                    if category is not None:
                         set_interpretation = qnode_details["set_interpretation"]
                         # we assume only one uniquely identified
                         # set of query terms for the node
                         set_identifier = qnode_details["ids"][0]
                         query_terms = qnode_details["member_ids"]
-
-                        # TODO: blind assumption: associated query terms
-                        # 'category' is properly set here, in the query node
-                        category = qnode_details["categories"][0] \
-                            if "categories" in qnode_details and qnode_details["categories"] \
-                            else "biolink:NamedThing"
                         break
 
                 if query_terms is not None:

@@ -55,7 +55,15 @@ def get_categories(category: str) -> List[str]:
     return categories
 
 
-def is_mcq_subject_qnode(node_data: Dict) -> bool:
+def mcq_subject_qnode(node_data: Dict) -> Optional[str]:
+    """
+    Checks if the query node is the node holding the query terms
+    and returns the associated categories of that node, as a 'True'
+    boolean testable value; None otherwise.
+    :param node_data: QNode details for a single node.
+    :raises: RuntimeError if the query node is not a well-formed
+             multi-curie query input set specification.
+    """
     if "is_set" in node_data and node_data["is_set"] and \
             "set_interpretation" in node_data and node_data["set_interpretation"] and \
             node_data["set_interpretation"] in ["MANY", "ALL"]:
@@ -63,7 +71,9 @@ def is_mcq_subject_qnode(node_data: Dict) -> bool:
                 str(node_data["ids"][0]).upper().startswith("UUID:") and \
                 "member_ids" in node_data and len(node_data["member_ids"]) > 0:
             # Success: well-formed node of 'set_interpretation' type 'MANY' or 'ALL'!
-            return True
+            # TODO: fix this to grab the most specific category
+            #       from the list in case there are several?
+            return node_data["categories"][0]
         else:
             # Failure: not well-formed
             raise RuntimeError(
@@ -73,7 +83,7 @@ def is_mcq_subject_qnode(node_data: Dict) -> bool:
             )
     else:
         # Not a set of 'set_interpretation' type 'MANY' or 'ALL'
-        return False
+        return None
 
 
 def build_trapi_message(
@@ -182,7 +192,7 @@ def build_trapi_message(
 
     for qnode_id, node_data in nodes.items():
         try:
-            if is_mcq_subject_qnode(node_data):
+            if mcq_subject_qnode(node_data):
                 qnode_subject_key = qnode_id
             else:
                 qnode_object_key = qnode_id
