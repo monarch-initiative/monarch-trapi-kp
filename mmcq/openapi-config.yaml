@@ -18,4 +18,7 @@ description: "" # Description for the whole spec
 title: "" # title for the whole spec, overrides MMCQ_TITLE env value
 servers:
   - description: Default server
-    url: http://localhost:8080/ # full url not this will be the url used when using openapi docs
+    # This will be the base URL used when using openapi docs.
+    # Note that to properly work, the URL host+port
+    # should *NOT* have a trailing slash '/'
+    url: http://localhost:8080

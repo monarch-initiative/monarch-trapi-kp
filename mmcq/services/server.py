@@ -1,6 +1,4 @@
 """FastAPI app."""
-import logging
-import warnings
 import os
 
 from fastapi import FastAPI
