@@ -24,7 +24,8 @@ jobs:
           IMAGE_TAG=$(git describe --tags $REV)
           echo "IMAGE_TAG=${IMAGE_TAG//v}"
           echo "IMAGE_TAG=${IMAGE_TAG//v}" >> $GITHUB_OUTPUT
-
+      - name: Prepare to Build Image
+        run: cp .env-template .env
       - name: Build and Push Image
         uses: RafikFarhad/push-to-gcr-github-action@v5-beta
         with:
