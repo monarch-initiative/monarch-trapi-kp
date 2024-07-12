@@ -33,4 +33,4 @@ jobs:
           project_id: monarch-initiative
           image_name: monarch-api/monarch-mcq-trapi
           image_tag: latest, ${{ steps.get-tag.outputs.IMAGE_TAG }}, ${{ github.sha }}
-          dockerfile: ./backend/Dockerfile
+          dockerfile: ./Dockerfile
