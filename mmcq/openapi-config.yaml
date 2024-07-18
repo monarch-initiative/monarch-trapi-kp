@@ -16,6 +16,6 @@ tags:
   - name: trapi
 description: "" # Description for the whole spec
 title: "" # title for the whole spec, overrides MMCQ_TITLE env value
-servers:
-  - description: Default server
-    url: http://localhost:8080/ # full url not this will be the url used when using openapi docs
+#servers:
+#  - description: Default server
+#    url: http://localhost:8080/ # full url not this will be the url used when using openapi docs
