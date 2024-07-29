@@ -178,16 +178,15 @@ def build_trapi_message(
     qnode_object_key: str = "n1"
 
     if not nodes or len(nodes) > 2:
-        return {"error": f"build_trapi_message(): exact two query nodes are required; saw: '{str(nodes)}'?"}
+        raise RuntimeError(
+            f"build_trapi_message(): exact two query nodes are required; saw: '{str(nodes)}'?"
+        )
 
     for qnode_id, node_data in nodes.items():
-        try:
-            if is_mcq_subject_qnode(node_data):
-                qnode_subject_key = qnode_id
-            else:
-                qnode_object_key = qnode_id
-        except RuntimeError as rte:
-            return {"error": str(rte)}
+        if is_mcq_subject_qnode(node_data):
+            qnode_subject_key = qnode_id
+        else:
+            qnode_object_key = qnode_id
 
     # First, initialize a stub template for the TRAPI Response
     trapi_response: Dict = {

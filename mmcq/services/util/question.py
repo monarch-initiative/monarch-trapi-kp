@@ -45,9 +45,10 @@ class Question:
     EDGE_BINDINGS_KEY = 'edge_bindings'
     CURIE_KEY = 'curie'
 
-    def __init__(self, question_json, result_limit: int):
+    def __init__(self, query_id, question_json, result_limit: int):
         """
         Constructor for a Question.
+        :param query_id: UUID, tags every TRAPI query with a UUID, to facilitate query-specific error logging
         :param question_json: the contents of a TRAPI Query.Message JSON blob
         :param result_limit: a non-TRAPI extra property indicating
                              the limit on query results to be returned.
@@ -91,6 +92,7 @@ class Question:
         #         }
         #       }
         #     }
+        self._query_id = query_id
         self._question_json = copy.deepcopy(question_json)
         self._result_limit = result_limit
 
@@ -136,7 +138,10 @@ class Question:
                     source['resource_role']
             ):
                 # silently pruning TRAPI non-compliant source records
-                logger.warning(f"Invalid edge 'source' entry: '{str(source)}'? Skipped!")
+                logger.warning(
+                    f"Invalid edge 'source' entry: '{str(source)}'? Skipped!",
+                    query_id=self._query_id
+                )
                 continue
 
             # 'resource_role' values are now ResourceRoleEnum without a biolink: CURIE prefix
@@ -264,35 +269,42 @@ class Question:
         Gives a TRAPI response by updating the query graph
         with answers retrieved from the Monarch backend.
         :param monarch_interface: interface for Monarch
-        :return: Dict, TRAPI JSON Response object
+        :return: Tuple[Dict, List[str]], 2-tuple of TRAPI Response Message plus any associated error messages
         """
-        logger.info(f"TRAPI query answering query_graph: {json.dumps(self._question_json)}")
+        logger.info(
+            f"TRAPI query answering query_graph: {json.dumps(self._question_json)}",
+            query_id=self._query_id
+        )
 
         results: Dict[str, List[str]]
         start = time.time()
         result: RESULT = await monarch_interface.run_query(
-            trapi_message=self._question_json, result_limit=self._result_limit
+            query_id=self._query_id,
+            trapi_message=self._question_json,
+            result_limit=self._result_limit
         )
         end = time.time()
-        logger.info(f"SemSimian query took {end - start} seconds")
-
-        if not result or "error" in result:
-            return result
-
-        trapi_message: Dict = build_trapi_message(
-            trapi_message=self._question_json,
-            result=result,
-            provenance=self.provenance
+        logger.info(
+            f"SemSimian query took {end - start} seconds",
+            query_id=self._query_id
         )
 
-        if "error" in result:
-            return result
+        trapi_message: Dict = dict()
+        if result:
+            try:
+                trapi_message = build_trapi_message(
+                    trapi_message=self._question_json,
+                    result=result,
+                    provenance=self.provenance
+                )
+            except RuntimeError as rte:
+                logger.error(str(rte), query_id=self._query_id)
 
         # May be unaltered if parameters were unavailable
         self._question_json.update(self.transform_attributes(trapi_message))
         self._question_json = Question.apply_attribute_constraints(self._question_json)
 
-        return self._question_json
+        return self._question_json, logger.get_logs(self._query_id)
 
     @staticmethod
     def apply_attribute_constraints(message):

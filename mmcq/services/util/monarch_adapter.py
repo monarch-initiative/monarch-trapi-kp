@@ -4,6 +4,8 @@ GraphAdapter to Monarch graph API
 from typing import Optional, List, Dict
 from enum import Enum
 import os
+from uuid import UUID
+
 import requests
 
 from mmcq.models import LATEST_BIOLINK_MODEL
@@ -107,6 +109,7 @@ class MonarchInterface:
         ) -> List[Dict]:
             """
             Generalized call to Monarch SemSim search endpoint.
+
             :param query_terms: List[str], list of query_terms to be matched.
             :param group: SemsimSearchCategory, concept category targeted for matching.
             :param result_limit: int, the limit on the number of query results to be returned.
@@ -143,12 +146,11 @@ class MonarchInterface:
                 headers=headers
             )
 
-            if not response.status_code == 200:
-                error_msg = f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +\
-                            f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
-                logger.error(error_msg)
-                error: Dict = {"error": error_msg}
-                return [error]
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +
+                    f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
+                )
 
             return response.json()
 
@@ -203,7 +205,12 @@ class MonarchInterface:
 
             return result
 
-        async def phenotype_semsim_to_disease(self, trapi_message: Dict, result_limit: int) -> RESULT:
+        async def phenotype_semsim_to_disease(
+                self,
+                query_id: UUID,
+                trapi_message: Dict,
+                result_limit: int
+        ) -> RESULT:
             """
             Initial MVP is a single somewhat hardcoded MVP query against Monarch,
             sending an input list of (HPO-indexed) phenotypic feature CURIEs
@@ -213,6 +220,7 @@ class MonarchInterface:
                   the semsim_search 'group' and result 'ingest_knowledge_source' can be
                   parameterized given proper interpretation of the input TRAPI message.
 
+            :param query_id: UUID, tags every TRAPI query with a UUID, to facilitate query-specific error logging
             :param trapi_message: Dict, TRAPI Request.Message.QueryGraph query data.
             :param result_limit: int, the limit on the number of query results to be returned.
             :return: RESULT dictionary of metadata and a RESULT_MAP, indexed by target curies,
@@ -254,42 +262,41 @@ class MonarchInterface:
                         group=SemsimSearchCategory.MONDO,
                         result_limit=result_limit
                     )
-
-                    if "error" not in full_result[0]:
-                        result["set_interpretation"] = set_interpretation
-                        result["set_identifier"] = set_identifier
-                        result["query_terms"] = query_terms
-                        result["query_term_category"] = category
-                        result["primary_knowledge_source"] = "infores:semsimian-kp"
-                        result["ingest_knowledge_source"] = "infores:hpo-annotations"
-                        result["match_predicate"] = "biolink:has_phenotype"
-
+                    result["set_interpretation"] = set_interpretation
+                    result["set_identifier"] = set_identifier
+                    result["query_terms"] = query_terms
+                    result["query_term_category"] = category
+                    result["primary_knowledge_source"] = "infores:semsimian-kp"
+                    result["ingest_knowledge_source"] = "infores:hpo-annotations"
+                    result["match_predicate"] = "biolink:has_phenotype"
+                    if full_result[0]:
                         result_map: RESULTS_MAP = self.parse_raw_semsim(
                             full_result=full_result,
                             match_category=category
                         )
                         result["result_map"] = result_map
                     else:
-                        raise RuntimeError(full_result[0]["error"])
+                        result["result_map"] = dict()
                 else:
                     # Will be None if the query graph did not contain all the
                     # metadata settings and node details required for an MMCQ query
-                    raise RuntimeError("Current query graph is incomplete for supported MMCQ queries")
-
+                    raise RuntimeError(
+                        "Current query graph is missing properly defined query terms for multi-CURIE query"
+                    )
             except RuntimeError as rte:
-                err_msg: str = str(rte)
-                logger.error(err_msg)
-                result["error"] = err_msg
+                logger.error(str(rte), query_id=query_id)
+                return dict()
 
-            # may be None if there were no query_terms
+            # may be None if there were no 'query_terms'
             return result
 
-        async def run_query(self, trapi_message: Dict, result_limit: int) -> RESULT:
+        async def run_query(self, query_id: UUID, trapi_message: Dict, result_limit: int) -> RESULT:
             """
             Running a SemSim query against Monarch.
             This MVP only supports one (hard-coded) use case. Future versions of this
             method should check the trapi_message for information about the query nature.
 
+            :param query_id: UUID, tags every TRAPI query with a UUID, to facilitate query-specific error logging
             :param trapi_message: Dict, Python dictionary version of query parameters
             :param result_limit: int, the limit on the number of query results to be returned.
             :return: Dictionary of Monarch 'subject' identifier hits indexing
@@ -299,7 +306,9 @@ class MonarchInterface:
             # TODO: here we may support additional SemSimian search use cases
             #       in the future, other than phenotypes to disease
             return await self.phenotype_semsim_to_disease(
-                trapi_message=trapi_message, result_limit=result_limit
+                query_id=query_id,
+                trapi_message=trapi_message,
+                result_limit=result_limit
             )
 
     instance = None

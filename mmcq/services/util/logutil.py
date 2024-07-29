@@ -1,6 +1,100 @@
+from typing import List, Dict
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from datetime import datetime
+from uuid import UUID
+
+from reasoner_pydantic.shared import LogEntry, LogLevelEnum
+
+
+class LoggerWrapper(logging.LoggerAdapter):
+
+    query_log: Dict[UUID, List[LogEntry]] = {}
+
+    def process(self, msg, kwargs):
+        """
+        Process the logging message and keyword arguments passed in to
+        a logging call to insert contextual information. You can either
+        manipulate the message itself, the keyword args or both. Return
+        the message and kwargs modified (or not) to suit your needs.
+
+        Normally, you'll only need to override this one method in a
+        LoggerAdapter subclass for your specific needs.
+        """
+        # use this stub to capture the messages
+        # here, for MMCQ TRAPI LogEntity reporting
+        if "query_id" in kwargs and kwargs["query_id"]:  # ignore if value is None?
+            query_id = kwargs["query_id"]
+            if "query_id" not in self.query_log:
+                self.query_log[query_id] = []
+            log_entry: LogEntry = LogEntry(
+                timestamp=datetime.now(),
+                level=kwargs["level"] if "level" in kwargs else None,
+                # TODO: unsure if this needs to be set?
+                # "code": Optional[str] = Field(None, nullable=True)
+                message=msg
+            )
+            self.query_log[query_id].append(log_entry)
+        return msg, kwargs
+
+    @classmethod
+    def get_logs(cls, query_id: UUID) -> List[LogEntry]:
+        if query_id in cls.query_log:
+            return cls.query_log[query_id]
+        else:
+            return []
+
+    def debug(self, msg, /, *args, query_id: UUID = None, **kwargs):
+        """
+        Delegate a debug call to the underlying logger
+        after capturing the message for later export
+        """
+        kwargs["query_id"] = query_id
+        kwargs["level"] = LogLevelEnum.debug
+        msg, kwargs = self.process(msg, kwargs)
+        self.logger.debug(msg, *args, **kwargs)
+
+    def info(self, msg, /, *args, query_id: UUID = None, **kwargs):
+        """
+        Delegate an info call to the underlying logger
+        after capturing the message for later export
+        """
+        kwargs["query_id"] = query_id
+        kwargs["level"] = LogLevelEnum.info
+        msg, kwargs = self.process(msg, kwargs)
+        self.logger.debug(msg, *args, **kwargs)
+
+    def warning(self, msg, /, *args, query_id: UUID = None, **kwargs):
+        """
+        Delegate a warning call to the underlying logger
+        after capturing the message for later export
+        """
+        kwargs["query_id"] = query_id
+        kwargs["level"] = LogLevelEnum.warning
+        msg, kwargs = self.process(msg, kwargs)
+        self.logger.warning(msg, *args, **kwargs)
+
+    def error(self, msg, /, *args, query_id: UUID = None, **kwargs):
+        """
+        Delegate an error call to the underlying logger
+        after capturing the message for later export
+        """
+        kwargs["query_id"] = query_id
+        kwargs["level"] = LogLevelEnum.error
+        msg, kwargs = self.process(msg, kwargs)
+        self.logger.error(msg, *args, **kwargs)
+
+    def critical(self, msg, /, *args, query_id: UUID = None, **kwargs):
+        """
+        Delegate a critical call to the underlying logger
+        after capturing the message for later export
+        """
+        kwargs["query_id"] = query_id
+        # should be "critical" but LogLevelEnum doesn't have the code
+        kwargs["level"] = LogLevelEnum.error
+        msg, kwargs = self.process(msg, kwargs)
+        self.logger.critical(msg, *args, **kwargs)
 
 
 class LoggingUtil(object):
@@ -12,9 +106,9 @@ class LoggingUtil(object):
         # get a logger
         logger = logging.getLogger(__name__)
 
-        # returns a new logger if its not the root
+        # returns a new logger if it's not the root
         if not logger.parent.name == 'root':
-            return logger
+            return LoggerWrapper(logger)
 
         # define the output types
         format_types = {
@@ -60,4 +154,4 @@ class LoggingUtil(object):
         logger.addHandler(stream_handler)
 
         # return to the caller
-        return logger
+        return LoggerWrapper(logger)

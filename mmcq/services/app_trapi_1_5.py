@@ -1,6 +1,9 @@
 """FastAPI app."""
 from typing import Optional, Any
 from fastapi import Body, Depends, FastAPI, Response, status
+
+from uuid import uuid4, UUID
+
 from reasoner_pydantic import MetaKnowledgeGraph
 from mmcq.models.models_trapi_1_5 import ReasonerRequest
 
@@ -66,6 +69,10 @@ async def reasoner_api(
     :return: starlette wrapped ReasonerRequest.
     :rtype: Response(ReasonerRequest)
     """
+    # assign a new query_id to this request, to facilitate
+    # capture of logged errors into the TRAPI response logs
+    query_id: UUID = uuid4()
+
     request_json = request.dict(by_alias=True)
 
     # This is an application-specific
@@ -83,12 +90,23 @@ async def reasoner_api(
     workflow = request_json.get('workflow') or [{"id": "lookup", "parameters": None, "runner_parameters": None}]
     workflows = {wkfl['id']: wkfl for wkfl in workflow}
 
-    # TODO: do we need a new 'workflow' code to explicitly signal the 'multi-curie' use case?
+    # TODO: do we need a new 'workflow' code to explicitly
+    #       signal the 'multi-curie' use case?
     if 'lookup' in workflows:
-        question = Question(request_json["message"], result_limit=result_limit)
+        question = Question(
+            query_id=query_id,
+            question_json=request_json["message"],
+            result_limit=result_limit
+        )
         try:
-            response_message = await question.answer(monarch_interface)
-            request_json.update({'message': response_message, 'workflow': workflow})
+            response_message, logs = await question.answer(monarch_interface)
+            request_json.update(
+                {
+                    'message': response_message,
+                    'workflow': workflow,
+                    'logs': logs
+                }
+            )
         except RuntimeError as rte:
             response.status_code = status.HTTP_400_BAD_REQUEST
             request_json["description"] = str(rte)
