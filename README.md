@@ -22,6 +22,8 @@ The Python virtual environment and dependencies of MMCQ are managed using Poetry
 The [MultiCurieQueries.ipynb Jupyter Notebook](./docs/MultiCurieQueries.ipynb) _may_ require a minimum Python version of 3.11 to run and does require installation of the optional poetry dependencies. Modifying the above command as follows: 
 
     poetry install -E jupyter
+
+Please note that the MMCQ server itself must be running (see below) for the Jupyter Notebook itself to work!
  
 ### Configure MMCQ settings
    

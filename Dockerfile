@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y curl git python3 python3-pip python3-ve
 RUN python3 -m pip install "poetry==$POETRY_VERSION"
 RUN poetry self add "poetry-dynamic-versioning[plugin]"
 WORKDIR /code
-COPY pyproject.toml poetry.lock Makefile .env .
+COPY pyproject.toml poetry.lock Makefile .env ./
 RUN set -a
 RUN source .env
 RUN set +a
