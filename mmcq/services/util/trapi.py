@@ -6,13 +6,24 @@ extract parameters and build TRAPI Responses from results
 from typing import Optional, Any, List, Dict
 from functools import lru_cache
 from copy import deepcopy
+
+from bmt import Toolkit
+
+from mmcq.services.config import config
+from mmcq.services.util.logutil import LoggingUtil
+
 from mmcq.services.util import (
     TERM_DATA,
     MATCH_LIST,
     RESULTS_MAP,
     RESULT
 )
-from bmt import Toolkit
+
+logger = LoggingUtil.init_logging(
+    __name__,
+    config.get('logging_level'),
+    config.get('logging_format'),
+)
 
 # Synthetic 'original_attribute_name' for SemSimian attributes
 AGGREGATE_SIMILARITY_SCORE = "semsimian:score"
@@ -56,23 +67,24 @@ def get_categories(category: str) -> List[str]:
 
 
 def is_mcq_subject_qnode(node_data: Dict) -> bool:
-    if "is_set" in node_data and node_data["is_set"] and \
-            "set_interpretation" in node_data and node_data["set_interpretation"] and \
-            node_data["set_interpretation"] in ["MANY", "ALL"]:
-        if "ids" in node_data and len(node_data["ids"]) == 1 and \
-                str(node_data["ids"][0]).upper().startswith("UUID:") and \
-                "member_ids" in node_data and len(node_data["member_ids"]) > 0:
+    if ("set_interpretation" in node_data and node_data["set_interpretation"] and
+            node_data["set_interpretation"] in ["MANY", "ALL"]):
+        if ("is_set" in node_data and node_data["is_set"] and
+                "ids" in node_data and len(node_data["ids"]) == 1 and
+                str(node_data["ids"][0]).upper().startswith("UUID:") and
+                "member_ids" in node_data and len(node_data["member_ids"]) > 0):
             # Success: well-formed node of 'set_interpretation' type 'MANY' or 'ALL'!
             return True
         else:
-            # Failure: not well-formed
+            # Node with 'set_interpretation' of type
+            # 'MANY' or 'ALL' node is not well-formed
             raise RuntimeError(
-                "Query Graph Node 'set_interpretation' is 'MANY' or 'ALL', thus 'ids' "
-                "must have a single global ('UUID') set identifier and query input identifiers "
-                "for the set need to be listed in the 'member_ids' list."
+                "Query Graph Node 'set_interpretation' is 'MANY' or 'ALL', the node must be tagged "
+                "with 'is_set' True; the 'ids' list must have a single global ('UUID') set identifier "
+                "and query input identifiers for the set need to be listed in the 'member_ids' list."
             )
     else:
-        # Not a set of 'set_interpretation' type 'MANY' or 'ALL'
+        # Not a set of 'set_interpretation' of type 'MANY' or 'ALL'
         return False
 
 

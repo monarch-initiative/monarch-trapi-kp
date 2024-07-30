@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Any, List, Dict
 import logging
 from logging.handlers import RotatingFileHandler
 import os
@@ -11,7 +11,7 @@ from reasoner_pydantic.shared import LogEntry, LogLevelEnum
 class LoggerWrapper(logging.LoggerAdapter):
     def __init__(self, logger, extra=None):
         super().__init__(logger, extra)
-        self.query_log: Dict[UUID, List[LogEntry]] = {}
+        self.query_log: Dict[UUID, List[Dict[str, Any]]] = {}
 
     def process(self, msg, kwargs):
         """
@@ -28,7 +28,7 @@ class LoggerWrapper(logging.LoggerAdapter):
         if "query_id" in kwargs:
             query_id = kwargs.pop("query_id")
             if query_id:
-                if "query_id" not in self.query_log:
+                if query_id not in self.query_log:
                     self.query_log[query_id] = []
                 log_entry: LogEntry = LogEntry(
                     timestamp=datetime.now(),
@@ -37,7 +37,7 @@ class LoggerWrapper(logging.LoggerAdapter):
                     # "code": Optional[str] = Field(None, nullable=True)
                     message=msg
                 )
-                self.query_log[query_id].append(log_entry)
+                self.query_log[query_id].append(log_entry.to_dict())
         # sanity check - in case the 'level' key is still
         # present, because it was not processed above
         if "level" in kwargs:
@@ -47,7 +47,7 @@ class LoggerWrapper(logging.LoggerAdapter):
     def get_logs(self, query_id: UUID) -> List[Dict[str, str]]:
         if query_id in self.query_log:
             return [
-                {field: str(value) for field, value in entry.to_dict().items()}
+                {field: str(value) for field, value in entry.items()}
                 for entry in self.query_log[query_id]
             ]
         else:
