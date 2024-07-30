@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.9
+
+- Repaired MMCQ error reporting to report all validation state as TRAPI Response logs array of LogEntry items, returning empty TRAPI Response Message knowledge graph and results if there are errors (but not for just warnings, debug or info messages)
+
 ## 0.0.8
 
 - Additional Phenotype-to-Disease query term sets added to Jupyter Notebook
