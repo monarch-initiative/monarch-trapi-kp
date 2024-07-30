@@ -83,7 +83,10 @@ async def reasoner_api(
         limit: Optional[Any] = request_json.get('limit')
         result_limit = int(limit) if limit is not None else 10
     except (ValueError, TypeError):
-        logger.warning(f"Invalid result limit string {limit} in TRAPI Query JSON. Setting to default 10 value.")
+        logger.warning(
+            f"Invalid result limit string '{limit}' in TRAPI Query JSON. Setting to default 10 value.",
+            query_id=query_id
+        )
         result_limit = 10
 
     # default workflow
@@ -104,7 +107,7 @@ async def reasoner_api(
                 {
                     'message': response_message,
                     'workflow': workflow,
-                    'logs': logs
+                    'logs': logger.get_logs(query_id=query_id)+logs
                 }
             )
         except RuntimeError as rte:

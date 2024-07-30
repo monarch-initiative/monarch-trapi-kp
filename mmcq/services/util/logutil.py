@@ -9,8 +9,9 @@ from reasoner_pydantic.shared import LogEntry, LogLevelEnum
 
 
 class LoggerWrapper(logging.LoggerAdapter):
-
-    query_log: Dict[UUID, List[LogEntry]] = {}
+    def __init__(self, logger, extra=None):
+        super().__init__(logger, extra)
+        self.query_log: Dict[UUID, List[LogEntry]] = {}
 
     def process(self, msg, kwargs):
         """
@@ -25,12 +26,13 @@ class LoggerWrapper(logging.LoggerAdapter):
         # use this stub to capture the messages
         # here, for MMCQ TRAPI LogEntity reporting
         if "query_id" in kwargs and kwargs["query_id"]:  # ignore if value is None?
-            query_id = kwargs["query_id"]
+            query_id = kwargs.pop("query_id")
             if "query_id" not in self.query_log:
                 self.query_log[query_id] = []
+
             log_entry: LogEntry = LogEntry(
                 timestamp=datetime.now(),
-                level=kwargs["level"] if "level" in kwargs else None,
+                level=kwargs.pop("level") if "level" in kwargs else None,
                 # TODO: unsure if this needs to be set?
                 # "code": Optional[str] = Field(None, nullable=True)
                 message=msg
@@ -38,10 +40,12 @@ class LoggerWrapper(logging.LoggerAdapter):
             self.query_log[query_id].append(log_entry)
         return msg, kwargs
 
-    @classmethod
-    def get_logs(cls, query_id: UUID) -> List[LogEntry]:
-        if query_id in cls.query_log:
-            return cls.query_log[query_id]
+    def get_logs(self, query_id: UUID) -> List[Dict[str, str]]:
+        if query_id in self.query_log:
+            return [
+                {field: str(value) for field, value in entry.to_dict().items()}
+                for entry in self.query_log[query_id]
+            ]
         else:
             return []
 
@@ -102,7 +106,9 @@ class LoggingUtil(object):
 
     @staticmethod
     def init_logging(name, level=logging.INFO, format_sel='medium', log_file_level=None):
+
         log_file_path = os.path.join(os.path.dirname(__file__), '../../logs/mmcq.log')
+
         # get a logger
         logger = logging.getLogger(__name__)
 
