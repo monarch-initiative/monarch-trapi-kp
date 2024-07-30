@@ -1,7 +1,7 @@
 """
 GraphAdapter to Monarch graph API
 """
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 from enum import Enum
 import os
 from uuid import UUID
@@ -210,7 +210,7 @@ class MonarchInterface:
                 query_id: UUID,
                 trapi_message: Dict,
                 result_limit: int
-        ) -> RESULT:
+        ) -> Tuple[RESULT, List[Dict[str, str]]]:
             """
             Initial MVP is a single somewhat hardcoded MVP query against Monarch,
             sending an input list of (HPO-indexed) phenotypic feature CURIEs
@@ -223,10 +223,11 @@ class MonarchInterface:
             :param query_id: UUID, tags every TRAPI query with a UUID, to facilitate query-specific error logging
             :param trapi_message: Dict, TRAPI Request.Message.QueryGraph query data.
             :param result_limit: int, the limit on the number of query results to be returned.
-            :return: RESULT dictionary of metadata and a RESULT_MAP, indexed by target curies,
-                    containing the target annotation, plus lists of annotated RESULT_ENTRY
-                    instances of similarity matching phenotypic feature terms.
-            :rtype: RESULT
+            :return: Tuple[RESULT, List[Dict[str, str]]], Result plus logs
+                     RESULT is a dictionary of metadata and a RESULT_MAP, indexed by target curies,
+                     containing the target annotation, plus lists of annotated RESULT_ENTRY
+                     instances of similarity matching phenotypic feature terms.
+                     Logs are a list of LogEntry records converted to Python dictionaries
             """
             nodes: Dict = trapi_message["query_graph"]["nodes"]
             qnode_id: str
@@ -285,12 +286,17 @@ class MonarchInterface:
                     )
             except RuntimeError as rte:
                 logger.error(str(rte), query_id=query_id)
-                return dict()
+                return dict(), logger.get_logs(query_id)
 
-            # may be None if there were no 'query_terms'
-            return result
+            # may be empty if there were no 'query_terms'
+            return result, logger.get_logs(query_id)
 
-        async def run_query(self, query_id: UUID, trapi_message: Dict, result_limit: int) -> RESULT:
+        async def run_query(
+                self,
+                query_id: UUID,
+                trapi_message: Dict,
+                result_limit: int
+        ) -> Tuple[RESULT, List[Dict[str, str]]]:
             """
             Running a SemSim query against Monarch.
             This MVP only supports one (hard-coded) use case. Future versions of this
@@ -299,9 +305,11 @@ class MonarchInterface:
             :param query_id: UUID, tags every TRAPI query with a UUID, to facilitate query-specific error logging
             :param trapi_message: Dict, Python dictionary version of query parameters
             :param result_limit: int, the limit on the number of query results to be returned.
-            :return: Dictionary of Monarch 'subject' identifier hits indexing
-                     Lists of matched input query_terms.
-            :rtype: RESULT
+            :return: Tuple[RESULT, List[Dict[str, str]]], Result plus logs
+                     RESULT is a dictionary of metadata and a RESULT_MAP, indexed by target curies,
+                     containing the target annotation, plus lists of annotated RESULT_ENTRY
+                     instances of similarity matching phenotypic feature terms.
+                     Logs are a list of LogEntry records converted to Python dictionaries
             """
             # TODO: here we may support additional SemSimian search use cases
             #       in the future, other than phenotypes to disease

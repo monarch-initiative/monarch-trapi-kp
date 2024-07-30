@@ -278,7 +278,9 @@ class Question:
 
         results: Dict[str, List[str]]
         start = time.time()
-        result: RESULT = await monarch_interface.run_query(
+        result: RESULT
+        logs: List[Dict[str, str]]
+        result, logs = await monarch_interface.run_query(
             query_id=self._query_id,
             trapi_message=self._question_json,
             result_limit=self._result_limit
@@ -304,7 +306,7 @@ class Question:
         self._question_json.update(self.transform_attributes(trapi_message))
         self._question_json = Question.apply_attribute_constraints(self._question_json)
 
-        return self._question_json, logger.get_logs(self._query_id)
+        return self._question_json, logger.get_logs(self._query_id)+logs
 
     @staticmethod
     def apply_attribute_constraints(message):
@@ -320,7 +322,7 @@ class Question:
             if q_edges[q_id]['attribute_constraints']
         }
         # if there are no constraints no need to do stuff.
-        if not(len(node_constraints) or len(edge_constraints)):
+        if not (len(node_constraints) or len(edge_constraints)):
             return message
         # grab kg_ids for constrained items
         constrained_node_ids = {}

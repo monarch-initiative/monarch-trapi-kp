@@ -25,19 +25,23 @@ class LoggerWrapper(logging.LoggerAdapter):
         """
         # use this stub to capture the messages
         # here, for MMCQ TRAPI LogEntity reporting
-        if "query_id" in kwargs and kwargs["query_id"]:  # ignore if value is None?
+        if "query_id" in kwargs:
             query_id = kwargs.pop("query_id")
-            if "query_id" not in self.query_log:
-                self.query_log[query_id] = []
-
-            log_entry: LogEntry = LogEntry(
-                timestamp=datetime.now(),
-                level=kwargs.pop("level") if "level" in kwargs else None,
-                # TODO: unsure if this needs to be set?
-                # "code": Optional[str] = Field(None, nullable=True)
-                message=msg
-            )
-            self.query_log[query_id].append(log_entry)
+            if query_id:
+                if "query_id" not in self.query_log:
+                    self.query_log[query_id] = []
+                log_entry: LogEntry = LogEntry(
+                    timestamp=datetime.now(),
+                    level=kwargs.pop("level") if "level" in kwargs else None,
+                    # TODO: unsure if this needs to be set?
+                    # "code": Optional[str] = Field(None, nullable=True)
+                    message=msg
+                )
+                self.query_log[query_id].append(log_entry)
+        # sanity check - in case the 'level' key is still
+        # present, because it was not processed above
+        if "level" in kwargs:
+            kwargs.pop("level")
         return msg, kwargs
 
     def get_logs(self, query_id: UUID) -> List[Dict[str, str]]:
