@@ -128,13 +128,15 @@ class MonarchInterface:
             #   -d '{
             #   "termset": ["HP:0002104", "HP:0012378"],
             #   "group": "Human Diseases",
+            #   "directionality": "object_to_subject",
             #   "limit": 5
             # }'
             #
             query = {
-              "termset": query_terms,
-              "group": group.value,
-              "limit": result_limit
+                "termset": query_terms,
+                "group": group.value,
+                "directionality": "object_to_subject",
+                "limit": result_limit
             }
             headers = {
                 "accept": "application/json",
