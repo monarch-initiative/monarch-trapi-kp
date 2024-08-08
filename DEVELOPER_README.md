@@ -24,7 +24,7 @@ Steps to properly issue a new project release:
 
 1. Run the unit test suite to ensure that nothing fails. Iterate to fix failures (in the code or in terms of revised unit tests to reflect fresh code designs)
 2. Document release changes in the **CHANGELOG.md**
-3. Update the **`[Tool Poetry]version =`** field in the **pyprojects.yaml**, e.g. "0.0.9"
+3. Update the **`[Tool Poetry]version =`** field in the **pyprojects.yaml**, e.g. "0.0.10"
 4. Run **`poetry update`** (preferably, within a **`poetry shell`**)
 5. The project pip **requirements.txt** file snapshot of dependencies should also be updated at this point (type **`$ poetry export --output requirements.txt`**, assuming that the [proper poetry export plugin is installed](https://python-poetry.org/docs/pre-commit-hooks#poetry-export)). This may facilitate module deployment within environments that prefer to use pip rather than poetry to manage their deployments.
 6. Commit or pull request merge all files (including the **poetry.lock** file) to the local **main** branch.
