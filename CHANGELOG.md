@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.0.11
+
+- added new 'test.yml' workflow for CI validation of commits to the main branch
+- removed 'is_set' expectation from QNode validation of MCQ inputs since 'set_interpretation' only is now used
+
 ## 0.0.10
 
 - added "directionality": "object_to_subject" to SemSimian API call (as per recommendation of MMCQ team)
