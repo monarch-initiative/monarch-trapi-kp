@@ -69,8 +69,7 @@ def get_categories(category: str) -> List[str]:
 def is_mcq_subject_qnode(node_data: Dict) -> bool:
     if ("set_interpretation" in node_data and node_data["set_interpretation"] and
             node_data["set_interpretation"] in ["MANY", "ALL"]):
-        if ("is_set" in node_data and node_data["is_set"] and
-                "ids" in node_data and len(node_data["ids"]) == 1 and
+        if ("ids" in node_data and len(node_data["ids"]) == 1 and
                 str(node_data["ids"][0]).upper().startswith("UUID:") and
                 "member_ids" in node_data and len(node_data["member_ids"]) > 0):
             # Success: well-formed node of 'set_interpretation' type 'MANY' or 'ALL'!
