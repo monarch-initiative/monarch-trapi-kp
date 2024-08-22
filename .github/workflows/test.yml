@@ -4,7 +4,8 @@ on:
   workflow_call:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches:
+    - 'main'
     paths:
     - 'pyproject.toml'
     - 'poetry.lock'
