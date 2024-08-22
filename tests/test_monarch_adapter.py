@@ -2,6 +2,7 @@
 Unit Tests for the Monarch Adapter
 """
 from typing import List, Dict
+from uuid import uuid4, UUID
 import pytest
 from deepdiff.diff import DeepDiff
 
@@ -95,8 +96,11 @@ async def test_semsim_search():
 @pytest.mark.asyncio
 async def test_run_query():
     monarch_interface: MonarchInterface = get_monarch_interface()
-    result: RESULT = await monarch_interface.run_query(
-        trapi_message=TEST_TRAPI_MESSAGE, result_limit=5
+    query_id: UUID = uuid4()
+    result: RESULT
+    logs: List[Dict[str, str]]
+    result, logs = await monarch_interface.run_query(
+        query_id=query_id, trapi_message=TEST_TRAPI_MESSAGE, result_limit=5
     )
     assert result
     assert "primary_knowledge_source" in result and result["primary_knowledge_source"] == "infores:semsimian-kp"
@@ -266,7 +270,8 @@ async def test_run_query():
 )
 def test_source_construct_sources_tree(sources: List[Dict], output: List[Dict]):
     # dummy Question - don't care about input question JSON for this test...
-    question: Question = Question(question_json={}, result_limit=0)
+    query_id: UUID = uuid4()
+    question: Question = Question(query_id=query_id, question_json={}, result_limit=0)
     # ... 'cuz comparing sources tree directly
     formatted_sources = question._construct_sources_tree(sources)
     assert not DeepDiff(output, formatted_sources, ignore_order=True, report_repetition=True)
