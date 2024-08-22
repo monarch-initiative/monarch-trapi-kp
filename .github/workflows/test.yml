@@ -1,0 +1,43 @@
+name: Run tests
+# Run tests at each push to master, or through manual trigger for any branch
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths:
+    - 'pyproject.toml'
+    - 'poetry.lock'
+    - 'mmcq/**'
+    - 'tests/**'
+    - '.github/workflows/test.yml'
+  pull_request:
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-python@v5
+      name: setup python environment
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install poetry
+        poetry install --all-extras
+
+    - name: Test with pytest with coverage
+      run: |
+        poetry run pytest tests/* --cov
