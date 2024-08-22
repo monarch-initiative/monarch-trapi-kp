@@ -9,6 +9,10 @@ on:
 #    types: [published]
 
 jobs:
+
+  test:
+    uses: monarch-initiative/monarch-trapi-kp/.github/workflows/test.yml@main
+
   build-and-push-api-image:
     runs-on: ubuntu-latest
     steps:
