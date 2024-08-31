@@ -26,7 +26,7 @@ services:
   semsim:
     image: us-central1-docker.pkg.dev/monarch-initiative/monarch-api/semsimian-server:${SEMSIMIAN_IMAGE_TAG:-latest}
     volumes:
-      - "${HOST_PHENIO_DIR:-./data}:/data"
+      - "${HOST_DATA_DIR:-./data}:/data"
     environment:
       SEMSIM_SERVER_PORT: 9999
       PHENIO_PATH: "/data/phenio.db"
