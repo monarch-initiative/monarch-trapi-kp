@@ -132,26 +132,55 @@ class MonarchInterface:
             #   "limit": 5
             # }'
             #
-            query = {
-                "termset": query_terms,
-                "group": group.value,
-                "directionality": "object_to_subject",
-                "limit": result_limit
-            }
             headers = {
                 "accept": "application/json",
                 "Content-Type": "application/json"
             }
-            response = requests.post(
-                SEMSIMIAN_ENDPOINT,
-                json=query,
+            #
+            # TODO: the embedded SemSim likely expects a GET call, formatted something like the following:
+            #       http://{semsim_server_host}:{semsim_server_port}/search/{','.join(termset)}/{prefix}:/{metric}?limit={limit}&directionality={directionality}
+            #       for example, like this one:
+            #       http://semsim:9999/search/HP:0002104,HP:0012378/MONDO:/ancestor_information_content?limit=5&directionality=object_to_subject
+            #
+            path_params = f"{','.join(query_terms)}/{group.name}:/ancestor_information_content"
+            query_params: Dict = {
+                "directionality": "object_to_subject",
+                "limit": result_limit
+            }
+            get_url = f"{SEMSIMIAN_ENDPOINT}/{path_params}"
+            response = requests.get(
+                url=get_url,
+                params=query_params,
                 headers=headers
             )
 
+            #
+            # Deprecated SemSimian http POST operation?
+            # TODO: Does the original Monarch API SemSimian still expect this POST
+            #       (if the application runs with the original mode?)
+            #
+            # query = {
+            #     "termset": query_terms,
+            #     "group": group.value,
+            #     "directionality": "object_to_subject",
+            #     "limit": result_limit
+            # }
+            # response = requests.post(
+            #     SEMSIMIAN_ENDPOINT,
+            #     json=query,
+            #     headers=headers
+            # )
+            #
+            # if response.status_code != 200:
+            #     raise RuntimeError(
+            #         f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +
+            #         f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
+            #     )
+
             if response.status_code != 200:
                 raise RuntimeError(
-                    f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +
-                    f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
+                    f"Monarch SemSimian GET from '\nURL: '{get_url}', with query parameters" +
+                    f"Query: '{query_params}', returned HTTP error code: '{response.status_code}'"
                 )
 
             return response.json()
