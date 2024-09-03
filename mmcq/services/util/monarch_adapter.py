@@ -41,6 +41,13 @@ SEMSIMIAN_SEARCH = os.environ.get("SEMSIMIAN_SEARCH", "/v3/api/semsim/search")
 
 SEMSIMIAN_ENDPOINT = f"{SEMSIMIAN_SCHEME}{SEMSIMIAN_HOST}{SEMSIMIAN_PORT}{SEMSIMIAN_SEARCH}"
 
+# 'Direct' mode assumes the results as formatted by the
+# SemsimSearchResult class of the SemSimian Server
+SEMSIMIAN_SERVER_MODE = "server"
+
+# SEMSIMIAN_MODE can be 'server' or 'monarch' (latter, the result format via the Monarch API)
+SEMSIMIAN_MODE = os.environ.get("SEMSIMIAN_MODE", SEMSIMIAN_SERVER_MODE)
+
 
 class SemsimSearchCategory(Enum):
     HGNC = "Human Genes"
