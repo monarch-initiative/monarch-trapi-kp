@@ -193,7 +193,83 @@ class MonarchInterface:
             return response.json()
 
         @staticmethod
+        def parse_raw_server_result(entry, match_category: str, result: RESULTS_MAP):
+            # # Subtle reversion of assertion: SemSimian
+            # # 'subject' becomes the 'object' of interest
+            # subject_id = tag_value(entry, "subject.id")
+            # result[subject_id]: RESULT_ENTRY = dict()
+            # subject_name = tag_value(entry, "subject.name")
+            # result[subject_id]["name"] = subject_name
+            # subject_category = tag_value(entry, "subject.category")
+            # result[subject_id]["category"] = subject_category
+            # result[subject_id]["score"] = entry["score"]
+            #
+            # provided_by = tag_value(entry, "subject.provided_by")
+            # if provided_by:
+            #     result[subject_id]["provided_by"] = \
+            #         _map_source.setdefault(provided_by, f"infores:{provided_by}")
+            #
+            # # We only take the Similarity 'object_best_matches' for which the
+            # # 'match_source' values correspond to the original input query terms
+            # object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
+            # result[subject_id]["matches"]: MATCH_LIST = list()
+            # if object_best_matches:
+            #     for object_match in object_best_matches.values():
+            #         similarity: Dict = object_match["similarity"]
+            #         matched_term: str = similarity["ancestor_id"] \
+            #             if similarity["ancestor_id"] else object_match["match_target"]
+            #         term_data: TERM_DATA = {
+            #             "subject_id": object_match["match_target"],
+            #             "subject_name": object_match["match_target_label"],
+            #             "object_id": object_match["match_source"],
+            #             "object_name": object_match["match_source_label"],
+            #             "category": match_category,
+            #             "score": object_match["score"],
+            #             "matched_term": matched_term
+            #         }
+            #         result[subject_id]["matches"].append(term_data)
+            return result
+
+        @staticmethod
+        def parse_raw_monarch_result(entry, match_category: str, result: RESULTS_MAP):
+            # Subtle reversion of assertion: SemSimian
+            # 'subject' becomes the 'object' of interest
+            subject_id = tag_value(entry, "subject.id")
+            result[subject_id]: RESULT_ENTRY = dict()
+            subject_name = tag_value(entry, "subject.name")
+            result[subject_id]["name"] = subject_name
+            subject_category = tag_value(entry, "subject.category")
+            result[subject_id]["category"] = subject_category
+            result[subject_id]["score"] = entry["score"]
+
+            provided_by = tag_value(entry, "subject.provided_by")
+            if provided_by:
+                result[subject_id]["provided_by"] = \
+                    _map_source.setdefault(provided_by, f"infores:{provided_by}")
+
+            # We only take the Similarity 'object_best_matches' for which the
+            # 'match_source' values correspond to the original input query terms
+            object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
+            result[subject_id]["matches"]: MATCH_LIST = list()
+            if object_best_matches:
+                for object_match in object_best_matches.values():
+                    similarity: Dict = object_match["similarity"]
+                    matched_term: str = similarity["ancestor_id"] \
+                        if similarity["ancestor_id"] else object_match["match_target"]
+                    term_data: TERM_DATA = {
+                        "subject_id": object_match["match_target"],
+                        "subject_name": object_match["match_target_label"],
+                        "object_id": object_match["match_source"],
+                        "object_name": object_match["match_source_label"],
+                        "category": match_category,
+                        "score": object_match["score"],
+                        "matched_term": matched_term
+                    }
+                    result[subject_id]["matches"].append(term_data)
+            return result
+
         def parse_raw_semsim(
+                self,
                 full_result: List[Dict],
                 match_category: str
         ) -> RESULTS_MAP:
@@ -206,41 +282,11 @@ class MonarchInterface:
             """
             result: RESULTS_MAP = dict()
             for entry in full_result:
-                # Subtle reversion of assertion: SemSimian
-                # 'subject' becomes the 'object' of interest
-                subject_id = tag_value(entry, "subject.id")
-                result[subject_id]: RESULT_ENTRY = dict()
-                subject_name = tag_value(entry, "subject.name")
-                result[subject_id]["name"] = subject_name
-                subject_category = tag_value(entry, "subject.category")
-                result[subject_id]["category"] = subject_category
-                result[subject_id]["score"] = entry["score"]
-
-                provided_by = tag_value(entry, "subject.provided_by")
-                if provided_by:
-                    result[subject_id]["provided_by"] = \
-                        _map_source.setdefault(provided_by, f"infores:{provided_by}")
-
-                # We only take the Similarity 'object_best_matches' for which the
-                # 'match_source' values correspond to the original input query terms
-                object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
-                result[subject_id]["matches"]: MATCH_LIST = list()
-                if object_best_matches:
-                    for object_match in object_best_matches.values():
-                        similarity: Dict = object_match["similarity"]
-                        matched_term: str = similarity["ancestor_id"] \
-                            if similarity["ancestor_id"] else object_match["match_target"]
-                        term_data: TERM_DATA = {
-                            "subject_id": object_match["match_target"],
-                            "subject_name": object_match["match_target_label"],
-                            "object_id": object_match["match_source"],
-                            "object_name": object_match["match_source_label"],
-                            "category": match_category,
-                            "score": object_match["score"],
-                            "matched_term": matched_term
-                        }
-                        result[subject_id]["matches"].append(term_data)
-
+                if SEMSIMIAN_MODE == SEMSIMIAN_SERVER_MODE:
+                    self.parse_raw_server_result(entry, match_category, result)
+                else:
+                    # SEMSIMIAN_MODE == "Monarch" mode
+                    self.parse_raw_monarch_result(entry, match_category, result)
             return result
 
         async def phenotype_semsim_to_disease(
