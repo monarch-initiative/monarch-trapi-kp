@@ -30,6 +30,8 @@ logger = LoggingUtil.init_logging(
 # Mount open api at /1.5/openapi.json
 APP_TRAPI_1_5 = FastAPI(openapi_url="/openapi.json", docs_url="/docs", root_path='/1.5')
 
+MMCQ_TRAPI_EXAMPLE = "well-formed-mmcq-trapi-query"
+
 
 async def get_meta_knowledge_graph(
         graph_metadata: GraphMetadata = Depends(get_graph_metadata),
@@ -60,7 +62,7 @@ async def reasoner_api(
             ...,
             # Works for now but in deployment would be
             # replaced by a mount, specific to backend dataset
-            example=get_example("reasoner-trapi-1.5"),
+            example=get_example(MMCQ_TRAPI_EXAMPLE),
         ),
         monarch_interface: MonarchInterface = Depends(get_monarch_interface)
 ) -> Response:

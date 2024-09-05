@@ -243,6 +243,16 @@ class MonarchInterface:
             # code block triggers a reportable error
             result: RESULT = dict()
             try:
+                # Sanity check for fringe cases where the query input
+                # list of nodes list wth exactly one node containing
+                # the expected 'set_interpretation' directive
+                assert len(
+                    [
+                        node_data for node_data in nodes.values()
+                        if "set_interpretation" in node_data
+                    ]
+                ) == 1, "List of query input nodes does not have exactly one node with set_interpretation"
+
                 for qnode_id, qnode_details in nodes.items():
                     if is_mcq_subject_qnode(qnode_details):
                         set_interpretation = qnode_details["set_interpretation"]
@@ -257,7 +267,12 @@ class MonarchInterface:
                             if "categories" in qnode_details and qnode_details["categories"] \
                             else "biolink:NamedThing"
                         break
-            except RuntimeError as rte:
+
+                raise RuntimeError(
+                    "Input list of query nodes are missing at least one" +
+                    " well-formed Multi-CURIE Query annotated node"
+                )
+            except (AssertionError, RuntimeError) as rte:
                 logger.error(str(rte), query_id=query_id)
 
             if query_terms is not None:

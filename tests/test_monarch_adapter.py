@@ -6,6 +6,7 @@ from uuid import uuid4, UUID
 import pytest
 from deepdiff.diff import DeepDiff
 
+from mmcq.services.app_trapi_1_5 import MMCQ_TRAPI_EXAMPLE
 from mmcq.services.config import config
 from mmcq.services.util import (
     DEFAULT_PROVENANCE,
@@ -55,9 +56,12 @@ def test_missing_end_tag_path():
     assert not value
 
 
-TEST_TRAPI_QUERY: Dict = get_example("reasoner-trapi-1.5")
-TEST_TRAPI_MESSAGE = TEST_TRAPI_QUERY["message"]
+TEST_MCQ: Dict = get_example(MMCQ_TRAPI_EXAMPLE)
+TEST_TRAPI_MESSAGE = TEST_MCQ["message"]
 TEST_IDENTIFIERS = tag_value(TEST_TRAPI_MESSAGE, "query_graph.nodes.phenotypes.member_ids")
+
+TEST_MCQ_MISSING_SET_INTERPRETATION: Dict = get_example("mmcq-trapi-query_missing_set_interpretation")
+TEST_MCQ_DUPLICATING_SET_INTERPRETATION: Dict = get_example("mmcq-trapi-query_with_duplicated_set_interpretation")
 
 
 @pytest.mark.asyncio
@@ -115,6 +119,33 @@ async def test_run_query():
             term_data["object_id"] in ["HP:0002104", "HP:0012378"] and
             term_data["category"] == "biolink:PhenotypicFeature"
             for term_data in match_list
+        ]
+    )
+
+
+@pytest.mark.parametrize(
+    "test_message",
+    [
+        TEST_MCQ_MISSING_SET_INTERPRETATION["message"],
+        TEST_MCQ_DUPLICATING_SET_INTERPRETATION["message"]
+    ]
+)
+# Fringe cases
+@pytest.mark.asyncio
+async def test_run_query_on_ill_formed_mcq(test_message: Dict):
+    monarch_interface: MonarchInterface = get_monarch_interface()
+    query_id: UUID = uuid4()
+    result: RESULT
+    logs: List[Dict[str, str]]
+    result, logs = await monarch_interface.run_query(
+        query_id=query_id, trapi_message=test_message, result_limit=5
+    )
+    assert not result  # check the error messages
+    assert any(
+        [
+            entry['level'] == 'ERROR' and
+            entry['message'] == "List of query input nodes does not have exactly one node with set_interpretation"
+            for entry in logs
         ]
     )
 

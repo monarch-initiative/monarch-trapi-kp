@@ -1,0 +1,37 @@
+{
+   "message": {
+      "query_graph": {
+          "nodes": {
+            "phenotypes": {
+              "categories": [
+                "biolink:PhenotypicFeature"
+              ],
+              "ids": ["UUID:4403ddf2-f724-4b3b-a877-de08315b784f"],
+              "member_ids": [
+                "HP:0002104",
+                "HP:0012378"
+              ],
+              "set_interpretation": "MANY"
+            },
+            "diseases": {
+              "ids": null,
+              "categories": [
+                "biolink:Disease"
+              ],
+              "set_interpretation": "MANY"
+            }
+          },
+          "edges": {
+            "e01": {
+              "subject": "phenotypes",
+              "object": "diseases",
+              "predicates": [
+                "biolink:similar_to"
+              ]
+            }
+          }
+      }
+   },
+   "workflow": [{"id":  "lookup"}],
+   "limit": 10
+}
