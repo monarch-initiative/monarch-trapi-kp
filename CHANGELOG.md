@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.0.12
+
+- Input Query Graph list of nodes more robustly checked for constrain of having one and only one well-formed MCQ node with a set_interpretation directive
+
 ## 0.0.11
 
 - added new 'test.yml' workflow for CI validation of commits to the main branch

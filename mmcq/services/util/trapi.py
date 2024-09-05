@@ -69,9 +69,9 @@ def get_categories(category: str) -> List[str]:
 def is_mcq_subject_qnode(node_data: Dict) -> bool:
     if ("set_interpretation" in node_data and node_data["set_interpretation"] and
             node_data["set_interpretation"] in ["MANY", "ALL"]):
-        if ("ids" in node_data and len(node_data["ids"]) == 1 and
+        if ("ids" in node_data and node_data["ids"] and len(node_data["ids"]) == 1 and
                 str(node_data["ids"][0]).upper().startswith("UUID:") and
-                "member_ids" in node_data and len(node_data["member_ids"]) > 0):
+                "member_ids" in node_data and node_data["member_ids"] and len(node_data["member_ids"]) > 0):
             # Success: well-formed node of 'set_interpretation' type 'MANY' or 'ALL'!
             return True
         else:
@@ -193,6 +193,8 @@ def build_trapi_message(
             f"build_trapi_message(): exact two query nodes are required; saw: '{str(nodes)}'?"
         )
 
+    # Unlikely that this particular invocation of the
+    # is_mcq_subject_qnode() can raise and exception
     for qnode_id, node_data in nodes.items():
         if is_mcq_subject_qnode(node_data):
             qnode_subject_key = qnode_id

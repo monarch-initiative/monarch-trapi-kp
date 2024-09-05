@@ -1,0 +1,30 @@
+{
+   "message": {
+      "query_graph": {
+          "nodes": {
+            "phenotypes": {
+              "categories": [
+                "biolink:PhenotypicFeature"
+              ],
+              "ids": ["UUID:4403ddf2-f724-4b3b-a877-de08315b784f"]
+            },
+            "diseases": {
+              "categories": [
+                "biolink:Disease"
+              ]
+            }
+          },
+          "edges": {
+            "e01": {
+              "subject": "phenotypes",
+              "object": "diseases",
+              "predicates": [
+                "biolink:similar_to"
+              ]
+            }
+          }
+      }
+   },
+   "workflow": [{"id":  "lookup"}],
+   "limit": 10
+}
