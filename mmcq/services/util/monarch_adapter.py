@@ -27,6 +27,14 @@ logger = LoggingUtil.init_logging(
     config.get('logging_format'),
 )
 
+# 'Direct' mode assumes the results as formatted by the
+# SemsimSearchResult class of the SemSimian Server
+SEMSIMIAN_SERVER_MODE = "server"
+SEMSIMIAN_MONARCH_MODE = "monarch"
+
+# SEMSIMIAN_MODE can be 'server' or 'monarch' (latter, the result format via the Monarch API)
+SEMSIMIAN_MODE = os.environ.get("SEMSIMIAN_MODE", SEMSIMIAN_MONARCH_MODE)
+SEMSIMIAN_MODE = SEMSIMIAN_MODE.lower()  # normalize mode value, just to be safe
 
 SEMSIMIAN_SCHEME = os.environ.get('SEMSIMIAN_SCHEME', 'http')
 # TODO: not sure if an empty scheme is okay here?
@@ -40,13 +48,6 @@ SEMSIMIAN_PORT = f":{SEMSIMIAN_PORT}" if SEMSIMIAN_PORT else ""
 SEMSIMIAN_SEARCH = os.environ.get("SEMSIMIAN_SEARCH", "/v3/api/semsim/search")
 
 SEMSIMIAN_ENDPOINT = f"{SEMSIMIAN_SCHEME}{SEMSIMIAN_HOST}{SEMSIMIAN_PORT}{SEMSIMIAN_SEARCH}"
-
-# 'Direct' mode assumes the results as formatted by the
-# SemsimSearchResult class of the SemSimian Server
-SEMSIMIAN_SERVER_MODE = "server"
-
-# SEMSIMIAN_MODE can be 'server' or 'monarch' (latter, the result format via the Monarch API)
-SEMSIMIAN_MODE = os.environ.get("SEMSIMIAN_MODE", SEMSIMIAN_SERVER_MODE)
 
 
 class SemsimSearchCategory(Enum):
@@ -143,57 +144,175 @@ class MonarchInterface:
                 "accept": "application/json",
                 "Content-Type": "application/json"
             }
-            #
-            # TODO: the embedded SemSim likely expects a GET call, formatted something like the following:
-            #       http://{semsim_server_host}:{semsim_server_port}/search/{','.join(termset)}/{prefix}:/{metric}?limit={limit}&directionality={directionality}
-            #       for example, like this one:
-            #       http://semsim:9999/search/HP:0002104,HP:0012378/MONDO:/ancestor_information_content?limit=5&directionality=object_to_subject
-            #
-            path_params = f"{','.join(query_terms)}/{group.name}:/ancestor_information_content"
-            query_params: Dict = {
-                "directionality": "object_to_subject",
-                "limit": result_limit
-            }
-            get_url = f"{SEMSIMIAN_ENDPOINT}/{path_params}"
-            response = requests.get(
-                url=get_url,
-                params=query_params,
-                headers=headers
-            )
 
-            #
-            # Deprecated SemSimian http POST operation?
-            # TODO: Does the original Monarch API SemSimian still expect this POST
-            #       (if the application runs with the original mode?)
-            #
-            # query = {
-            #     "termset": query_terms,
-            #     "group": group.value,
-            #     "directionality": "object_to_subject",
-            #     "limit": result_limit
-            # }
-            # response = requests.post(
-            #     SEMSIMIAN_ENDPOINT,
-            #     json=query,
-            #     headers=headers
-            # )
-            #
-            # if response.status_code != 200:
-            #     raise RuntimeError(
-            #         f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +
-            #         f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
-            #     )
-
-            if response.status_code != 200:
-                raise RuntimeError(
-                    f"Monarch SemSimian GET from '\nURL: '{get_url}', with query parameters" +
-                    f"Query: '{query_params}', returned HTTP error code: '{response.status_code}'"
+            if SEMSIMIAN_MODE == SEMSIMIAN_SERVER_MODE:
+                #
+                # TODO: the embedded SemSim likely expects a GET call, formatted something like the following:
+                #       http://{semsim_server_host}:{semsim_server_port}/search/{','.join(termset)}/{prefix}:/{metric}?limit={limit}&directionality={directionality}
+                #       for example, like this one:
+                #       http://semsim:9999/search/HP:0002104,HP:0012378/MONDO:/ancestor_information_content?limit=5&directionality=object_to_subject
+                #
+                path_params = f"{','.join(query_terms)}/{group.name}:/ancestor_information_content"
+                query_params: Dict = {
+                    "directionality": "object_to_subject",
+                    "limit": result_limit
+                }
+                get_url = f"{SEMSIMIAN_ENDPOINT}/{path_params}"
+                response = requests.get(
+                    url=get_url,
+                    params=query_params,
+                    headers=headers
                 )
+                if response.status_code != 200:
+                    raise RuntimeError(
+                        f"Monarch SemSimian GET from '\nURL: '{get_url}', with query parameters" +
+                        f"Query: '{query_params}', returned HTTP error code: '{response.status_code}'"
+                    )
+            else:  # SEMSIMIAN_MODE == "Monarch"
+                #
+                # Deprecated SemSimian http POST operation?
+                # TODO: Does the original Monarch API SemSimian still expect this POST
+                #       (if the application runs with the original mode?)
+                #
+                query = {
+                    "termset": query_terms,
+                    "group": group.value,
+                    "directionality": "object_to_subject",
+                    "limit": result_limit
+                }
+                response = requests.post(
+                    SEMSIMIAN_ENDPOINT,
+                    json=query,
+                    headers=headers
+                )
+
+                if response.status_code != 200:
+                    raise RuntimeError(
+                        f"Monarch SemSimian at '\nUrl: '{SEMSIMIAN_ENDPOINT}', " +
+                        f"Query: '{query}' returned HTTP error code: '{response.status_code}'"
+                    )
 
             return response.json()
 
         @staticmethod
         def parse_raw_server_result(entry, match_category: str, result: RESULTS_MAP):
+            # Sample raw local 'SemSimian Server GET' result (to be parsed)
+            # [
+            #     13.190702260828903,
+            #     {
+            #         'subject_termset': [
+            #             {
+            #                 'HP:0010535': {
+            #                     'id': 'HP:0010535',
+            #                     'label': 'Sleep apnea'
+            #                 }
+            #             },
+            #             {
+            #                 'HP:0001699': {
+            #                     'id': 'HP:0001699',
+            #                     'label': 'Sudden death'
+            #                 }
+            #             }
+            #         ],
+            #         'subject_best_matches': {
+            #             'HP:0001699': {
+            #                 'match_source': 'HP:0001699',
+            #                 'match_source_label': 'Sudden death',
+            #                 'match_target': 'HP:0012378',
+            #                 'match_target_label': 'Fatigue',
+            #                 'score': '11.35921975446769',
+            #                 'score_metric': 'ancestor_information_content'
+            #             },
+            #             'HP:0010535': {
+            #                 'match_source': 'HP:0010535',
+            #                 'match_source_label': 'Sleep apnea',
+            #                 'match_target': 'HP:0002104',
+            #                 'match_target_label': 'Apnea',
+            #                 'score': '15.022184767190119',
+            #                 'score_metric': 'ancestor_information_content'
+            #             }
+            #         },
+            #         'subject_best_matches_similarity_map': {
+            #             'HP:0001699': {
+            #                 'ancestor_id': 'HP:0025142',
+            #                 'ancestor_information_content': '11.35921975446769',
+            #                 'ancestor_label': 'Constitutional symptom',
+            #                 'cosine_similarity': 'NaN',
+            #                 'jaccard_similarity': '0.8461538461538461',
+            #                 'object_id': 'HP:0012378',
+            #                 'phenodigm_score': '3.100265711926896',
+            #                 'subject_id': 'HP:0001699'
+            #             }, 'HP:0010535': {
+            #                 'ancestor_id': 'HP:0002104',
+            #                 'ancestor_information_content': '15.022184767190119',
+            #                 'ancestor_label': 'Apnea',
+            #                 'cosine_similarity': 'NaN',
+            #                 'jaccard_similarity': '0.6285714285714286',
+            #                 'object_id': 'HP:0002104',
+            #                 'phenodigm_score': '3.072867738672891',
+            #                 'subject_id': 'HP:0010535'
+            #             }
+            #         },
+            #         'object_termset': [
+            #             {
+            #                 'HP:0002104': {
+            #                     'id': 'HP:0002104',
+            #                     'label': 'Apnea'
+            #                 }
+            #             },
+            #             {
+            #                 'HP:0012378': {
+            #                     'id': 'HP:0012378',
+            #                     'label': 'Fatigue'
+            #                 }
+            #             }
+            #         ],
+            #         'object_best_matches': {
+            #             'HP:0002104': {
+            #                 'match_source': 'HP:0002104',
+            #                 'match_source_label': 'Apnea',
+            #                 'match_target': 'HP:0010535',
+            #                 'match_target_label': 'Sleep apnea',
+            #                 'score': '15.022184767190119',
+            #                 'score_metric': 'ancestor_information_content'
+            #             },
+            #             'HP:0012378': {
+            #                 'match_source': 'HP:0012378',
+            #                 'match_source_label': 'Fatigue',
+            #                 'match_target': 'HP:0001699',
+            #                 'match_target_label': 'Sudden death',
+            #                 'score': '11.35921975446769',
+            #                 'score_metric': 'ancestor_information_content'
+            #             }
+            #         },
+            #         'object_best_matches_similarity_map': {
+            #             'HP:0002104': {
+            #                 'ancestor_id': 'HP:0002104',
+            #                 'ancestor_information_content': '15.022184767190119',
+            #                 'ancestor_label': 'Apnea',
+            #                 'cosine_similarity': 'NaN',
+            #                 'jaccard_similarity': '0.6285714285714286',
+            #                 'object_id': 'HP:0010535',
+            #                 'phenodigm_score': '3.072867738672891',
+            #                 'subject_id': 'HP:0002104'
+            #             },
+            #             'HP:0012378': {
+            #                 'ancestor_id': 'HP:0025142',
+            #                 'ancestor_information_content': '11.35921975446769',
+            #                 'ancestor_label': 'Constitutional symptom',
+            #                 'cosine_similarity': 'NaN',
+            #                 'jaccard_similarity': '0.8461538461538461',
+            #                 'object_id': 'HP:0001699',
+            #                 'phenodigm_score': '3.100265711926896',
+            #                 'subject_id': 'HP:0012378'
+            #             }
+            #         },
+            #         'average_score': 13.190702260828903,
+            #         'best_score': 15.022184767190119,
+            #         'metric': 'AncestorInformationContent'
+            #     },
+            #     'MONDO:0008807'
+            # ]
             # # Subtle reversion of assertion: SemSimian
             # # 'subject' becomes the 'object' of interest
             # subject_id = tag_value(entry, "subject.id")
@@ -284,9 +403,12 @@ class MonarchInterface:
             for entry in full_result:
                 if SEMSIMIAN_MODE == SEMSIMIAN_SERVER_MODE:
                     self.parse_raw_server_result(entry, match_category, result)
-                else:
+                elif SEMSIMIAN_MODE == SEMSIMIAN_MONARCH_MODE:
                     # SEMSIMIAN_MODE == "Monarch" mode
                     self.parse_raw_monarch_result(entry, match_category, result)
+                else:
+                    logger.error(f"parse_raw_semsim(): unrecognized server mode '{SEMSIMIAN_MODE}'")
+
             return result
 
         async def phenotype_semsim_to_disease(
