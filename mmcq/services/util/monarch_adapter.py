@@ -126,20 +126,7 @@ class MonarchInterface:
             # sanity check: coerce 'result_limit' into positive integer range 1..50
             if result_limit < 1 or result_limit > 50:
                 result_limit = 50
-            #
-            # Example HTTP POST to SemSimian:
-            #
-            # curl -X 'POST' \
-            #   'http://api-v3.monarchinitiative.org/v3/api/semsim/search' \
-            #   -H 'accept: application/json' \
-            #   -H 'Content-Type: application/json' \
-            #   -d '{
-            #   "termset": ["HP:0002104", "HP:0012378"],
-            #   "group": "Human Diseases",
-            #   "directionality": "object_to_subject",
-            #   "limit": 5
-            # }'
-            #
+
             headers = {
                 "accept": "application/json",
                 "Content-Type": "application/json"
@@ -147,9 +134,13 @@ class MonarchInterface:
 
             if SEMSIMIAN_MODE == SEMSIMIAN_SERVER_MODE:
                 #
-                # TODO: the embedded SemSim likely expects a GET call, formatted something like the following:
+                # New SemSimian Server mode of operation:
+                #
+                # The embedded SemSim likely expects a GET call, formatted something like the following:
                 #       http://{semsim_server_host}:{semsim_server_port}/search/{','.join(termset)}/{prefix}:/{metric}?limit={limit}&directionality={directionality}
-                #       for example, like this one:
+                #
+                # for example, like this one:
+                #
                 #       http://semsim:9999/search/HP:0002104,HP:0012378/MONDO:/ancestor_information_content?limit=5&directionality=object_to_subject
                 #
                 path_params = f"{','.join(query_terms)}/{group.name}:/ancestor_information_content"
@@ -170,9 +161,20 @@ class MonarchInterface:
                     )
             else:  # SEMSIMIAN_MODE == "Monarch"
                 #
-                # Deprecated SemSimian http POST operation?
-                # TODO: Does the original Monarch API SemSimian still expect this POST
-                #       (if the application runs with the original mode?)
+                # Deprecated(?) "Monarch" mode SemSimian http POST operation?
+                #
+                # Example HTTP POST to SemSimian:
+                #
+                # curl -X 'POST' \
+                #   'http://api-v3.monarchinitiative.org/v3/api/semsim/search' \
+                #   -H 'accept: application/json' \
+                #   -H 'Content-Type: application/json' \
+                #   -d '{
+                #   "termset": ["HP:0002104", "HP:0012378"],
+                #   "group": "Human Diseases",
+                #   "directionality": "object_to_subject",
+                #   "limit": 5
+                # }'
                 #
                 query = {
                     "termset": query_terms,
@@ -221,7 +223,7 @@ class MonarchInterface:
             result[subject_id]["score"] = entry[0]
 
             # TODO: the original Monarch attribution of source is not visible from the
-            #       SemSimian server result so again, so we hard code to upheno for now
+            #       SemSimian server result so again, so we hard code to infores:upheno for now
             # provided_by = tag_value(entry, "subject.provided_by")
             # if provided_by:
             #     result[subject_id]["provided_by"] = \
@@ -233,31 +235,10 @@ class MonarchInterface:
             # 'match_source' values correspond to the original input query terms
             # object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
             object_best_matches: Dict = entry[1]["object_best_matches"]
-            #     "object_best_matches": {
-            #       "HP:0002104": {
-            #         "match_source": "HP:0002104",
-            #         "match_source_label": "Apnea",
-            #         "match_target": "HP:0010535",
-            #         "match_target_label": "Sleep apnea",
-            #         "score": "15.022184767190119",
-            #         "score_metric": "ancestor_information_content"
-            #       }, etc...
-            #
 
             # We need to consult the associated similarity map
             # to get at the intermediate ancestor id
             similarity_map: Dict = entry[1]["object_best_matches_similarity_map"]
-            #     "object_best_matches_similarity_map": {
-            #       "HP:0002104": {
-            #         "ancestor_id": "HP:0002104",
-            #         "ancestor_information_content": "15.022184767190119",
-            #         "ancestor_label": "Apnea",
-            #         "cosine_similarity": "NaN",
-            #         "jaccard_similarity": "0.6285714285714286",
-            #         "object_id": "HP:0010535",
-            #         "phenodigm_score": "3.072867738672891",
-            #         "subject_id": "HP:0002104"
-            #       }, etc...
             result[subject_id]["matches"]: MATCH_LIST = list()
             if object_best_matches:
                 for object_id, object_match in object_best_matches.items():

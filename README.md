@@ -114,6 +114,10 @@ A quicker way to deployment is to [install Docker Compose](https://docs.docker.c
     docker-compose down
   ```
 
+Note that use of Docker Compose allows local Docker container execution of the SemSimian Server image as the 'semsim' service. In such a case, the SEMSIMIAN_MODE environment variable (i.e. in .**`.env`**) should be set to value '**server**'.
+
+Note that the SemSimian server may be run by Compose, then accessed either by an independently running MMCQ application or the MMCQ can itself be run as a Compose service. However, the **`.env`** environment variable file should have the correct SEMSIMIAN parameters set for this (the **`.env_template`** file documents these various optional sets of parameters). The key difference is that an external MMCQ application sees the SemSimian Server running on localhost, but the the Compose managed MMCQ expects to see the SemSimian Server service on host 'semsim'. This is reflected in the environment variables.
+
 ## Viewing the System
 
 ### TRAPI API

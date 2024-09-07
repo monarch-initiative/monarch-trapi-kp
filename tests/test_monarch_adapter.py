@@ -103,140 +103,28 @@ async def test_semsim_search():
         object_termset: Dict = tag_value(semsim_entry, "similarity.object_termset")
         assert object_termset, "Similarity Object term set is empty?"
         assert all([entry in object_termset.keys() for entry in object_termset])
-        result: RESULTS_MAP = monarch_interface.parse_raw_semsim(
-            full_result=semsim_result,
-            match_category="biolink:PhenotypicFeature"
-        )
-        assert "MONDO:0008807" in result.keys()
-        match_list: MATCH_LIST = result["MONDO:0008807"]["matches"]
-        term_data: TERM_DATA
-        assert all(
-            [
-                term_data["object_id"] in ["HP:0002104", "HP:0012378"] and
-                term_data["category"] == "biolink:PhenotypicFeature"
-                for term_data in match_list
-            ]
-        )
     else:
-        # semsim_entry = [
-        #     13.190702260828903,
-        #     {
-        #         'subject_termset': [
-        #             {
-        #                 'HP:0010535': {
-        #                     'id': 'HP:0010535',
-        #                     'label': 'Sleep apnea'
-        #                 }
-        #             },
-        #             {
-        #                 'HP:0001699': {
-        #                     'id': 'HP:0001699',
-        #                     'label': 'Sudden death'
-        #                 }
-        #             }
-        #         ],
-        #         'subject_best_matches': {
-        #             'HP:0001699': {
-        #                 'match_source': 'HP:0001699',
-        #                 'match_source_label': 'Sudden death',
-        #                 'match_target': 'HP:0012378',
-        #                 'match_target_label': 'Fatigue',
-        #                 'score': '11.35921975446769',
-        #                 'score_metric': 'ancestor_information_content'
-        #             },
-        #             'HP:0010535': {
-        #                 'match_source': 'HP:0010535',
-        #                 'match_source_label': 'Sleep apnea',
-        #                 'match_target': 'HP:0002104',
-        #                 'match_target_label': 'Apnea',
-        #                 'score': '15.022184767190119',
-        #                 'score_metric': 'ancestor_information_content'
-        #             }
-        #         },
-        #         'subject_best_matches_similarity_map': {
-        #             'HP:0001699': {
-        #                 'ancestor_id': 'HP:0025142',
-        #                 'ancestor_information_content': '11.35921975446769',
-        #                 'ancestor_label': 'Constitutional symptom',
-        #                 'cosine_similarity': 'NaN',
-        #                 'jaccard_similarity': '0.8461538461538461',
-        #                 'object_id': 'HP:0012378',
-        #                 'phenodigm_score': '3.100265711926896',
-        #                 'subject_id': 'HP:0001699'
-        #             }, 'HP:0010535': {
-        #                 'ancestor_id': 'HP:0002104',
-        #                 'ancestor_information_content': '15.022184767190119',
-        #                 'ancestor_label': 'Apnea',
-        #                 'cosine_similarity': 'NaN',
-        #                 'jaccard_similarity': '0.6285714285714286',
-        #                 'object_id': 'HP:0002104',
-        #                 'phenodigm_score': '3.072867738672891',
-        #                 'subject_id': 'HP:0010535'
-        #             }
-        #         },
-        #         'object_termset': [
-        #             {
-        #                 'HP:0002104': {
-        #                     'id': 'HP:0002104',
-        #                     'label': 'Apnea'
-        #                 }
-        #             },
-        #             {
-        #                 'HP:0012378': {
-        #                     'id': 'HP:0012378',
-        #                     'label': 'Fatigue'
-        #                 }
-        #             }
-        #         ],
-        #         'object_best_matches': {
-        #             'HP:0002104': {
-        #                 'match_source': 'HP:0002104',
-        #                 'match_source_label': 'Apnea',
-        #                 'match_target': 'HP:0010535',
-        #                 'match_target_label': 'Sleep apnea',
-        #                 'score': '15.022184767190119',
-        #                 'score_metric': 'ancestor_information_content'
-        #             },
-        #             'HP:0012378': {
-        #                 'match_source': 'HP:0012378',
-        #                 'match_source_label': 'Fatigue',
-        #                 'match_target': 'HP:0001699',
-        #                 'match_target_label': 'Sudden death',
-        #                 'score': '11.35921975446769',
-        #                 'score_metric': 'ancestor_information_content'
-        #             }
-        #         },
-        #         'object_best_matches_similarity_map': {
-        #             'HP:0002104': {
-        #                 'ancestor_id': 'HP:0002104',
-        #                 'ancestor_information_content': '15.022184767190119',
-        #                 'ancestor_label': 'Apnea',
-        #                 'cosine_similarity': 'NaN',
-        #                 'jaccard_similarity': '0.6285714285714286',
-        #                 'object_id': 'HP:0010535',
-        #                 'phenodigm_score': '3.072867738672891',
-        #                 'subject_id': 'HP:0002104'
-        #             },
-        #             'HP:0012378': {
-        #                 'ancestor_id': 'HP:0025142',
-        #                 'ancestor_information_content': '11.35921975446769',
-        #                 'ancestor_label': 'Constitutional symptom',
-        #                 'cosine_similarity': 'NaN',
-        #                 'jaccard_similarity': '0.8461538461538461',
-        #                 'object_id': 'HP:0001699',
-        #                 'phenodigm_score': '3.100265711926896',
-        #                 'subject_id': 'HP:0012378'
-        #             }
-        #         },
-        #         'average_score': 13.190702260828903,
-        #         'best_score': 15.022184767190119,
-        #         'metric': 'AncestorInformationContent'
-        #     },
-        #     'MONDO:0008807'
-        # ]
-        #
-        # assert False, "monarch_interface.semsim_search(): Haven't yet implemented direct SemSimian Server validation"
-        pass  # we'll skip validaton for this for now
+        assert semsim_entry and len(semsim_entry) == 3
+        subject_id = semsim_entry[2]
+        assert subject_id == "MONDO:0008807", "Expected Subject ID 'MONDO:0008807' not returned"
+        assert "object_termset" in semsim_entry[1]
+        object_termset: Dict = semsim_entry[1]["object_termset"]
+        assert object_termset, "Similarity Object term set is empty?"
+
+    result: RESULTS_MAP = monarch_interface.parse_raw_semsim(
+        full_result=semsim_result,
+        match_category="biolink:PhenotypicFeature"
+    )
+    assert "MONDO:0008807" in result.keys()
+    match_list: MATCH_LIST = result["MONDO:0008807"]["matches"]
+    term_data: TERM_DATA
+    assert all(
+        [
+            term_data["object_id"] in ["HP:0002104", "HP:0012378"] and
+            term_data["category"] == "biolink:PhenotypicFeature"
+            for term_data in match_list
+        ]
+    )
 
 
 @pytest.mark.asyncio
