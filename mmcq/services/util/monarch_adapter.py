@@ -196,169 +196,106 @@ class MonarchInterface:
 
         @staticmethod
         def parse_raw_server_result(entry, match_category: str, result: RESULTS_MAP):
-            # Sample raw local 'SemSimian Server GET' result (to be parsed)
-            # [
-            #     13.190702260828903,
-            #     {
-            #         'subject_termset': [
-            #             {
-            #                 'HP:0010535': {
-            #                     'id': 'HP:0010535',
-            #                     'label': 'Sleep apnea'
-            #                 }
-            #             },
-            #             {
-            #                 'HP:0001699': {
-            #                     'id': 'HP:0001699',
-            #                     'label': 'Sudden death'
-            #                 }
-            #             }
-            #         ],
-            #         'subject_best_matches': {
-            #             'HP:0001699': {
-            #                 'match_source': 'HP:0001699',
-            #                 'match_source_label': 'Sudden death',
-            #                 'match_target': 'HP:0012378',
-            #                 'match_target_label': 'Fatigue',
-            #                 'score': '11.35921975446769',
-            #                 'score_metric': 'ancestor_information_content'
-            #             },
-            #             'HP:0010535': {
-            #                 'match_source': 'HP:0010535',
-            #                 'match_source_label': 'Sleep apnea',
-            #                 'match_target': 'HP:0002104',
-            #                 'match_target_label': 'Apnea',
-            #                 'score': '15.022184767190119',
-            #                 'score_metric': 'ancestor_information_content'
-            #             }
-            #         },
-            #         'subject_best_matches_similarity_map': {
-            #             'HP:0001699': {
-            #                 'ancestor_id': 'HP:0025142',
-            #                 'ancestor_information_content': '11.35921975446769',
-            #                 'ancestor_label': 'Constitutional symptom',
-            #                 'cosine_similarity': 'NaN',
-            #                 'jaccard_similarity': '0.8461538461538461',
-            #                 'object_id': 'HP:0012378',
-            #                 'phenodigm_score': '3.100265711926896',
-            #                 'subject_id': 'HP:0001699'
-            #             }, 'HP:0010535': {
-            #                 'ancestor_id': 'HP:0002104',
-            #                 'ancestor_information_content': '15.022184767190119',
-            #                 'ancestor_label': 'Apnea',
-            #                 'cosine_similarity': 'NaN',
-            #                 'jaccard_similarity': '0.6285714285714286',
-            #                 'object_id': 'HP:0002104',
-            #                 'phenodigm_score': '3.072867738672891',
-            #                 'subject_id': 'HP:0010535'
-            #             }
-            #         },
-            #         'object_termset': [
-            #             {
-            #                 'HP:0002104': {
-            #                     'id': 'HP:0002104',
-            #                     'label': 'Apnea'
-            #                 }
-            #             },
-            #             {
-            #                 'HP:0012378': {
-            #                     'id': 'HP:0012378',
-            #                     'label': 'Fatigue'
-            #                 }
-            #             }
-            #         ],
-            #         'object_best_matches': {
-            #             'HP:0002104': {
-            #                 'match_source': 'HP:0002104',
-            #                 'match_source_label': 'Apnea',
-            #                 'match_target': 'HP:0010535',
-            #                 'match_target_label': 'Sleep apnea',
-            #                 'score': '15.022184767190119',
-            #                 'score_metric': 'ancestor_information_content'
-            #             },
-            #             'HP:0012378': {
-            #                 'match_source': 'HP:0012378',
-            #                 'match_source_label': 'Fatigue',
-            #                 'match_target': 'HP:0001699',
-            #                 'match_target_label': 'Sudden death',
-            #                 'score': '11.35921975446769',
-            #                 'score_metric': 'ancestor_information_content'
-            #             }
-            #         },
-            #         'object_best_matches_similarity_map': {
-            #             'HP:0002104': {
-            #                 'ancestor_id': 'HP:0002104',
-            #                 'ancestor_information_content': '15.022184767190119',
-            #                 'ancestor_label': 'Apnea',
-            #                 'cosine_similarity': 'NaN',
-            #                 'jaccard_similarity': '0.6285714285714286',
-            #                 'object_id': 'HP:0010535',
-            #                 'phenodigm_score': '3.072867738672891',
-            #                 'subject_id': 'HP:0002104'
-            #             },
-            #             'HP:0012378': {
-            #                 'ancestor_id': 'HP:0025142',
-            #                 'ancestor_information_content': '11.35921975446769',
-            #                 'ancestor_label': 'Constitutional symptom',
-            #                 'cosine_similarity': 'NaN',
-            #                 'jaccard_similarity': '0.8461538461538461',
-            #                 'object_id': 'HP:0001699',
-            #                 'phenodigm_score': '3.100265711926896',
-            #                 'subject_id': 'HP:0012378'
-            #             }
-            #         },
-            #         'average_score': 13.190702260828903,
-            #         'best_score': 15.022184767190119,
-            #         'metric': 'AncestorInformationContent'
-            #     },
-            #     'MONDO:0008807'
-            # ]
-            # # Subtle reversion of assertion: SemSimian
-            # # 'subject' becomes the 'object' of interest
-            # subject_id = tag_value(entry, "subject.id")
-            # result[subject_id]: RESULT_ENTRY = dict()
+            """
+            Method to parse the raw output from direct calls to the SemSimian Server.
+            :param entry: single JSON list entry from a raw SemSimian Server result
+            :param match_category: the input term Biolink Model category
+            :param result: mutable result map, to which captured (presumed non-duplicate) results are recorded
+            :return: None
+            """
+            # See 'sample_semsimian_server_output.json' file in repository 'mmcq.examples' folder,
+            # for a sample of the kind of Monarch-specific SemSimian format that is processed here.
+
+            # SemSimian 'subject' (e.g. MONDO disease) matched by
+            # input 'object_best_matches' terms (e.g. HPO terms)
+
+            subject_id = entry[2]
+            result[subject_id]: RESULT_ENTRY = dict()
+
+            # TODO: how do I retrieve the actual name and category of the
+            #       subject, which is not returned by the SemSimian Server?
             # subject_name = tag_value(entry, "subject.name")
-            # result[subject_id]["name"] = subject_name
+            result[subject_id]["name"] = subject_id   # surrogate name is the term identifier
             # subject_category = tag_value(entry, "subject.category")
-            # result[subject_id]["category"] = subject_category
-            # result[subject_id]["score"] = entry["score"]
-            #
+            result[subject_id]["category"] = "biolink:Disease"   # hard coded for now, but there has to be a better way
+            result[subject_id]["score"] = entry[0]
+
+            # TODO: the original Monarch attribution of source is not visible from the
+            #       SemSimian server result so again, so we hard code to upheno for now
             # provided_by = tag_value(entry, "subject.provided_by")
             # if provided_by:
             #     result[subject_id]["provided_by"] = \
             #         _map_source.setdefault(provided_by, f"infores:{provided_by}")
             #
-            # # We only take the Similarity 'object_best_matches' for which the
-            # # 'match_source' values correspond to the original input query terms
+            result[subject_id]["provided_by"] = "infores:upheno"
+
+            # We only take the Similarity 'object_best_matches' for which the
+            # 'match_source' values correspond to the original input query terms
             # object_best_matches: Dict = tag_value(entry, f"similarity.object_best_matches")
-            # result[subject_id]["matches"]: MATCH_LIST = list()
-            # if object_best_matches:
-            #     for object_match in object_best_matches.values():
-            #         similarity: Dict = object_match["similarity"]
-            #         matched_term: str = similarity["ancestor_id"] \
-            #             if similarity["ancestor_id"] else object_match["match_target"]
-            #         term_data: TERM_DATA = {
-            #             "subject_id": object_match["match_target"],
-            #             "subject_name": object_match["match_target_label"],
-            #             "object_id": object_match["match_source"],
-            #             "object_name": object_match["match_source_label"],
-            #             "category": match_category,
-            #             "score": object_match["score"],
-            #             "matched_term": matched_term
-            #         }
-            #         result[subject_id]["matches"].append(term_data)
+            object_best_matches: Dict = entry[1]["object_best_matches"]
+            #     "object_best_matches": {
+            #       "HP:0002104": {
+            #         "match_source": "HP:0002104",
+            #         "match_source_label": "Apnea",
+            #         "match_target": "HP:0010535",
+            #         "match_target_label": "Sleep apnea",
+            #         "score": "15.022184767190119",
+            #         "score_metric": "ancestor_information_content"
+            #       }, etc...
+            #
+
+            # We need to consult the associated similarity map
+            # to get at the intermediate ancestor id
+            similarity_map: Dict = entry[1]["object_best_matches_similarity_map"]
+            #     "object_best_matches_similarity_map": {
+            #       "HP:0002104": {
+            #         "ancestor_id": "HP:0002104",
+            #         "ancestor_information_content": "15.022184767190119",
+            #         "ancestor_label": "Apnea",
+            #         "cosine_similarity": "NaN",
+            #         "jaccard_similarity": "0.6285714285714286",
+            #         "object_id": "HP:0010535",
+            #         "phenodigm_score": "3.072867738672891",
+            #         "subject_id": "HP:0002104"
+            #       }, etc...
+            result[subject_id]["matches"]: MATCH_LIST = list()
+            if object_best_matches:
+                for object_id, object_match in object_best_matches.items():
+                    term_data: TERM_DATA = {
+                        "subject_id": object_match["match_target"],
+                        "subject_name": object_match["match_target_label"],
+                        "object_id": object_match["match_source"],
+                        "object_name": object_match["match_source_label"],
+                        "category": match_category,
+                        "score": object_match["score"],
+                        "matched_term": similarity_map[object_id]["ancestor_id"]
+                    }
+                    result[subject_id]["matches"].append(term_data)
             return result
 
         @staticmethod
         def parse_raw_monarch_result(entry, match_category: str, result: RESULTS_MAP):
-            # Subtle reversion of assertion: SemSimian
-            # 'subject' becomes the 'object' of interest
+            """
+            Method to parse the raw output from direct calls to the
+            alternative SemSimian format returned by the Monarch API.
+            :param entry: single JSON list entry from a raw SemSimian Server result
+            :param match_category: the input term Biolink Model category
+            :param result: mutable result map, to which captured (presumed non-duplicate) results are recorded
+            :return: None
+            """
+            # See sample_monarch_semsian_output.json file in repository 'mmcq.examples' folder,
+            # for a sample of the kind of Monarch-specific SemSimian format that is processed here.
+
+            # SemSimian 'subject' (e.g. MONDO disease) matched by
+            # input 'object_best_matches' terms (e.g. HPO terms)
             subject_id = tag_value(entry, "subject.id")
             result[subject_id]: RESULT_ENTRY = dict()
             subject_name = tag_value(entry, "subject.name")
             result[subject_id]["name"] = subject_name
             subject_category = tag_value(entry, "subject.category")
             result[subject_id]["category"] = subject_category
+
+            # This is the 'average' score of the whole entry
             result[subject_id]["score"] = entry["score"]
 
             provided_by = tag_value(entry, "subject.provided_by")
@@ -404,7 +341,6 @@ class MonarchInterface:
                 if SEMSIMIAN_MODE == SEMSIMIAN_SERVER_MODE:
                     self.parse_raw_server_result(entry, match_category, result)
                 elif SEMSIMIAN_MODE == SEMSIMIAN_MONARCH_MODE:
-                    # SEMSIMIAN_MODE == "Monarch" mode
                     self.parse_raw_monarch_result(entry, match_category, result)
                 else:
                     logger.error(f"parse_raw_semsim(): unrecognized server mode '{SEMSIMIAN_MODE}'")
@@ -446,38 +382,20 @@ class MonarchInterface:
             # 'result' defined here in case the following
             # code block triggers a reportable error
             result: RESULT = dict()
-            try:
-                # Sanity check for fringe cases where the query input
-                # list of nodes list wth exactly one node containing
-                # the expected 'set_interpretation' directive
-                assert len(
-                    [
-                        node_data for node_data in nodes.values()
-                        if "set_interpretation" in node_data
-                    ]
-                ) == 1, "List of query input nodes does not have exactly one node with set_interpretation"
+            for qnode_id, qnode_details in nodes.items():
+                if is_mcq_subject_qnode(qnode_details):
+                    set_interpretation = qnode_details["set_interpretation"]
+                    # we assume only one uniquely identified
+                    # set of query terms for the node
+                    set_identifier = qnode_details["ids"][0]
+                    query_terms = qnode_details["member_ids"]
 
-                for qnode_id, qnode_details in nodes.items():
-                    if is_mcq_subject_qnode(qnode_details):
-                        set_interpretation = qnode_details["set_interpretation"]
-                        # we assume only one uniquely identified
-                        # set of query terms for the node
-                        set_identifier = qnode_details["ids"][0]
-                        query_terms = qnode_details["member_ids"]
-
-                        # TODO: blind assumption: associated query terms
-                        # 'category' is properly set here, in the query node
-                        category = qnode_details["categories"][0] \
-                            if "categories" in qnode_details and qnode_details["categories"] \
-                            else "biolink:NamedThing"
-                        break
-
-                raise RuntimeError(
-                    "Input list of query nodes are missing at least one" +
-                    " well-formed Multi-CURIE Query annotated node"
-                )
-            except (AssertionError, RuntimeError) as rte:
-                logger.error(str(rte), query_id=query_id)
+                    # TODO: blind assumption: associated query terms
+                    #      'category' is properly set here, in the query node
+                    category = qnode_details["categories"][0] \
+                        if "categories" in qnode_details and qnode_details["categories"] \
+                        else "biolink:NamedThing"
+                    break
 
             if query_terms is not None:
                 full_result: List[Dict] = await self.semsim_search(

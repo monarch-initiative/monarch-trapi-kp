@@ -75,16 +75,18 @@ def is_mcq_subject_qnode(node_data: Dict) -> bool:
             # Success: well-formed node of 'set_interpretation' type 'MANY' or 'ALL'!
             return True
         else:
-            # Node with 'set_interpretation' of type
-            # 'MANY' or 'ALL' node is not well-formed
-            raise RuntimeError(
-                "Query Graph Node 'set_interpretation' is 'MANY' or 'ALL', the node must be tagged "
-                "with 'is_set' True; the 'ids' list must have a single global ('UUID') set identifier "
-                "and query input identifiers for the set need to be listed in the 'member_ids' list."
+            # Annotation of the node tagged with 'set_interpretation' of type 'MANY' or 'ALL'
+            # is incomplete. Since this may correspond to a funny cascade node of a multi-step MCQ,
+            # we'll just issue a warning to the user, but not trigger an exception.
+            logger.warning(
+                "A query Graph Node tagged with 'set_interpretation' is 'MANY' or 'ALL' must generally "
+                "be annotated with an 'ids' list that must have a single global ('UUID') set identifier "
+                "and query input identifiers for the set need to be listed in the 'member_ids' list.  "
+                "This could be a proxy target node for a multi-step Multi-CURIE query?"
             )
-    else:
-        # Not a set of 'set_interpretation' of type 'MANY' or 'ALL'
-        return False
+
+    # Not a full Multi-CURIE Query node with 'set_interpretation' of type 'MANY' or 'ALL'
+    return False
 
 
 def build_trapi_message(

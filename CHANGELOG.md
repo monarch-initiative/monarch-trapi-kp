@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.0
+
+- Constraints relaxed for the filtering of Query Node specification of set_interpretation such that incomplete nodes (which may be specified as a part of multistep MCQ) generate a warning but are ignored (they don't now raise an exception).
+- minor release includes partial implementation (including SEMSIMIAN related environment variables, including a new SEMSIMIAN_MODE flag to tag two distinct layers of SemSimian access: server and (indirect) Monarch)
+
 ## 0.0.12
 
 - Input Query Graph list of nodes more robustly checked for constrain of having one and only one well-formed MCQ node with a set_interpretation directive

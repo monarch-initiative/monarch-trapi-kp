@@ -33,6 +33,7 @@ Please note that the MMCQ server itself must be running (see below) for the Jupy
     # SemSimian backend API for 'development' environment 
     # (see the '.env-template' file for possible alternat
     # parameters for a 'production' deployment)
+    SEMSIMIAN_MODE="monarch"
     SEMSIMIAN_SCHEME="http://"
     SEMSIMIAN_HOST="api-v3.monarchinitiative.org"
     SEMSIMIAN_PORT=""  # default is HTTP port '80'
