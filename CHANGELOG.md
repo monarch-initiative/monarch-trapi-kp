@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.1.1
+
+- use NodeNormalizer to add name and category to SemSimian Server similarity match nodes
+- some technical debt cleanup in documentation
+
 ## 0.1.0
 
 - Constraints relaxed for the filtering of Query Node specification of set_interpretation such that incomplete nodes (which may be specified as a part of multistep MCQ) generate a warning but are ignored (they don't now raise an exception).
