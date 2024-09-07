@@ -16,11 +16,13 @@ services:
       MMCQ_TITLE: "${MMCQ_TITLE}"
       MMCQ_VERSION: "${MMCQ_VERSION}"
       MODE: "${MODE}"
-      OTEL_ENABLED: "${OTEL_ENABLED}"
-      OTEL_USE_CONSOLE_EXPORTER: "${OTEL_USE_CONSOLE_EXPORTER}"
-      OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME}"
-      JAEGER_HOST: "${JAEGER_HOST}"
-      JAEGER_PORT: "${JAEGER_PORT}"
+      # Open Telemetry is not currently implemented within MMCQ
+      # ... the code needs to be put back in somewhere?
+      # OTEL_ENABLED: "${OTEL_ENABLED}"
+      # OTEL_USE_CONSOLE_EXPORTER: "${OTEL_USE_CONSOLE_EXPORTER}"
+      # OTEL_SERVICE_NAME: "${OTEL_SERVICE_NAME}"
+      # JAEGER_HOST: "${JAEGER_HOST}"
+      # JAEGER_PORT: "${JAEGER_PORT}"
     ports:
     - "8080:8080"
 

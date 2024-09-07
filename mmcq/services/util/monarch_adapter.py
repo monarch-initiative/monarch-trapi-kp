@@ -19,6 +19,7 @@ from mmcq.services.util import (
     tag_value
 )
 from mmcq.services.util.logutil import LoggingUtil
+from mmcq.services.util.nodeinfo import get_node_details
 from mmcq.services.util.trapi import is_mcq_subject_qnode
 
 logger = LoggingUtil.init_logging(
@@ -213,13 +214,15 @@ class MonarchInterface:
 
             subject_id = entry[2]
             result[subject_id]: RESULT_ENTRY = dict()
+            node_details: Optional[Tuple[str, str]] = get_node_details(subject_id)
+            if node_details:
+                result[subject_id]["name"] = node_details[0]
+                result[subject_id]["category"] = node_details[1]
+            else:
+                # Sanity check: some barely acceptable surrogate values
+                result[subject_id]["name"] = subject_id
+                result[subject_id]["category"] = "biolink:NamedThing"
 
-            # TODO: how do I retrieve the actual name and category of the
-            #       subject, which is not returned by the SemSimian Server?
-            # subject_name = tag_value(entry, "subject.name")
-            result[subject_id]["name"] = subject_id   # surrogate name is the term identifier
-            # subject_category = tag_value(entry, "subject.category")
-            result[subject_id]["category"] = "biolink:Disease"   # hard coded for now, but there has to be a better way
             result[subject_id]["score"] = entry[0]
 
             # TODO: the original Monarch attribution of source is not visible from the
