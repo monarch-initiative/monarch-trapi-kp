@@ -522,10 +522,12 @@ def build_trapi_message(
     #
     node_map[input_query_set_id] = {
         "id": input_query_set_id,
-        "members": query_terms.copy(),  # for safety, just use a copy of the original list
+        # commented out, not TRAPI 1.5 supported at this time
+        # "members": query_terms.copy(),
         "categories": get_categories(category=query_term_category),
-        "is_set": True,
-        "provided_by": ["infores:user-interface"]
+        "is_set": True,  # is a set, but how do we record them, LOL?
+        # commented out, not TRAPI 1.5 supported at this time
+        # "provided_by": ["infores:user-interface"]
     }
 
     for term_id in query_terms:
@@ -549,7 +551,8 @@ def build_trapi_message(
             # "name": "<some_name>",
             "categories": get_categories(category=query_term_category),
             "is_set": False,
-            "provided_by": ["infores:user-interface"]
+            # commented out, not TRAPI 1.5 supported at this time
+            # "provided_by": ["infores:user-interface"]
         }
 
         #
@@ -611,6 +614,7 @@ def build_trapi_message(
         if "provided_by" in result_entry:
             answer_sources.append(
                 {
+                    # this use of provided_by is ok: TRAPI 1.5 compliant for edges
                     "resource_id": result_entry["provided_by"],
                     "resource_role": "supporting_data_source"
                 }
@@ -900,7 +904,8 @@ def build_trapi_message(
                 "name": result_entry["name"],
                 "categories": get_categories(category=result_entry["category"]),
                 "is_set": False,
-                "provided_by": result_entry["provided_by"]
+                # commented out, not TRAPI 1.5 supported at this time
+                # "provided_by": result_entry["provided_by"]
             }
 
         #
