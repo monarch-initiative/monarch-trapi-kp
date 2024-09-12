@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.1.2
+
+- Removed 'provided_by' and 'members' properties from TRAPI response message Knowledge Graph nodes
+
 ## 0.1.1
 
 - use NodeNormalizer to add name and category to SemSimian Server similarity match nodes
