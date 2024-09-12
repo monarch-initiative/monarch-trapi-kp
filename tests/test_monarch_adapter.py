@@ -84,6 +84,7 @@ TEST_MCQ_MISSING_SET_INTERPRETATION: Dict = get_example("mmcq-trapi-query_missin
 TEST_MCQ_DUPLICATING_SET_INTERPRETATION: Dict = get_example("mmcq-trapi-query_with_duplicated_set_interpretation")
 
 
+@pytest.mark.skip(reason="Test failing due to Monarch SemSimian server issue... being investigated")
 @pytest.mark.asyncio
 async def test_semsim_search():
     monarch_interface: MonarchInterface = get_monarch_interface()
@@ -127,6 +128,7 @@ async def test_semsim_search():
     )
 
 
+@pytest.mark.skip(reason="Test failing due to Monarch SemSimian server issue... being investigated")
 @pytest.mark.asyncio
 async def test_run_query():
     monarch_interface: MonarchInterface = get_monarch_interface()
